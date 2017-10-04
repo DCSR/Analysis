@@ -1,4 +1,5 @@
 import codecs, struct
+import locale
 
 def read_str_file(filepath):
     ''' (string) -> list of [int, char]
@@ -25,14 +26,15 @@ def read_str_file(filepath):
     data = []
 
     #codecs.open() is a more powerful version of the built-in open() that can handle filestreams
-    file = codecs.open(filepath)
+    # These don't work
+    # file = codecs.open(filepath, encoding = "US-ASCII")
+    # file = open(filepath, encoding = "US-ASCII')
+    file = codecs.open(filepath, encoding = None)
 
     #this code is just determining how long the file is
     file.read()
     file_length = file.tell()
     file.seek(0)
-
-    
 
     while file.tell() < file_length:
         #struct.unpack reads binary data and translates them into readable strings
