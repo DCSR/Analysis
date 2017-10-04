@@ -7,7 +7,6 @@ import stream01
 import math
 import os
 import GraphLib
-import Samaha
 import model
 import Examples
 import numpy as np
@@ -223,10 +222,8 @@ class myGUI(object):
                               self.showModel(self.recordList[self.fileChoice.get()])).grid(row=5,column=0,sticky=N)
         testModelButton = Button(self.graphButtonFrame, text="TestModel", command= lambda: \
                               self.testModel()).grid(row=6,column=0,sticky=N)
-        samahaButton = Button(self.graphButtonFrame, text="Samaha Test", command= lambda: \
-                              self.openSamahaFile()).grid(row=7,column=0,sticky=N)
         histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
-                              self.showHistogram(self.recordList[self.fileChoice.get()])).grid(row=8,column=0,sticky=N)
+                              self.showHistogram(self.recordList[self.fileChoice.get()])).grid(row=7,column=0,sticky=N)
 
         self.graph_YaxisRadioButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
         self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 1)
