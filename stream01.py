@@ -29,7 +29,7 @@ def read_str_file(filepath):
     # These don't work
     # file = codecs.open(filepath, encoding = "US-ASCII")
     # file = open(filepath, encoding = "US-ASCII')
-    file = codecs.open(filepath, encoding = None)
+    file = codecs.open(filepath, encoding = 'utf-8')
 
     #this code is just determining how long the file is
     file.read()
