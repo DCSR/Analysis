@@ -26,21 +26,12 @@ def read_str_file(filepath):
     data = []
 
     #codecs.open() is a more powerful version of the built-in open() that can handle filestreams
-    # These don't work
-    # file = codecs.open(filepath, encoding = 'utf-8') - this does not work on MAC or PC
-    # file = codecs.open(filepath, encoding = 'latin-1') - throws error on Mac at event = struct.unpack()
-
-    print("Opening")
-    file = codecs.open(filepath, encoding = None)   # Works on Mac but not PC
-
-    # *******************************************************************
+    file = codecs.open(filepath, mode ='rb')
 
     #this code is just determining how long the file is
-    file.read()                  # Throws an error here
+    file.read()     
     file_length = file.tell()
     file.seek(0)
-
-    print('File Length =', file_length)
 
     while file.tell() < file_length:
         #struct.unpack reads binary data and translates them into readable strings
