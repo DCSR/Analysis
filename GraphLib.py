@@ -31,7 +31,7 @@ def drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, 
         aCanvas.create_line(x, y_zero, x, y_zero + 5, fill=color)
         aCanvas.create_text(x, y_zero + 20, text=str(int((max_x_scale/x_divisions)*divisions)), fill=color)
 
-def drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, color = "black"):
+def drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, format_int = False, color = "black"):
     """
     Draws an Y (verticle) axis using the following parameters:
     (aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions,  labelLeft, color):
@@ -46,7 +46,10 @@ def drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions,
         if labelLeft: offsetDirection = -1   # create_text and hash marks on left side of the axis          
         else: offsetDirection = 1            # create_text and hash marks on right side of the axis
         aCanvas.create_line(x_zero, y, x_zero+(5*offsetDirection), y, fill=color)
-        label = "{:.1f}".format((max_y_scale / y_divisions)*divisions)
+        if format_int:
+            label = "{:.0f}".format((max_y_scale / y_divisions)*divisions)
+        else:     # format with one significant 
+            label = "{:.1f}".format((max_y_scale / y_divisions)*divisions)
         # print("label", label)
         aCanvas.create_text(x_zero+(20*offsetDirection), y, fill = color, text=label)
 
@@ -340,6 +343,49 @@ def logLogPlot(aCanvas,x_zero,y_zero,x_pixel_width,y_pixel_height, \
                     aCanvas.create_line(x,y,new_x,new_y,fill=color)
             x = new_x
             y = new_y
+
+def histogram(aCanvas, aList, clear = True):
+        """
+        (LIst) -> None
+
+        Draws a histogram using a list of numbers. 
+        The procedure was written specifically for graphing data from IntA, but
+        it could be used for a variety of things. It expects a list of cummulative pump
+        times in 60 five second bins (12 bins/min * 5 min)
+
+        """
+        if clear:
+            aCanvas.delete('all')
+        aCanvas.create_text(100, 20, fill="blue", text = "Test of GraphLib.historgam")
+
+        def drawBar(aCanvas,x,y, pixel_height, width, color = "black"):
+            aCanvas.create_line(x, y, x, y-pixel_height, fill=color)
+            aCanvas.create_line(x, y-pixel_height, x+width, y - pixel_height, fill=color)
+            aCanvas.create_line(x+width, y-pixel_height, x+width, y, fill=color)
+        
+        x_zero = 75
+        y_zero = 450
+        x_pixel_width = 600
+        y_pixel_height = 300 
+        max_x_scale = 300
+        max_y_scale = 10000
+        x_divisions = 5
+        y_divisions = 10
+        labelLeft = True
+        drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
+        drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, \
+                  format_int = True, color = "black")
+
+        #unitPixelHeight = int(y_pixel_height/y_divisions)
+        width = int(x_pixel_width/(len(aList)))           
+        for i in range(len(aList)):           
+            x = x_zero + (i*width)
+            pixel_height = int(aList[i]*(y_pixel_height/max_y_scale))
+            drawBar(aCanvas,x,y_zero,pixel_height,width)
+              
+        
+
+    
 
     
 
