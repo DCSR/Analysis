@@ -224,6 +224,8 @@ class myGUI(object):
                               self.testModel()).grid(row=6,column=0,sticky=N)
         histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
                               self.showHistogram(self.recordList[self.fileChoice.get()])).grid(row=7,column=0,sticky=N)
+        IntA_histogramButton = Button(self.graphButtonFrame, text="Test Histogram", command= lambda: \
+                              self.testHistogram()).grid(row=8,column=0,sticky=N)
 
         self.graph_YaxisRadioButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
         self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 1)
@@ -888,9 +890,18 @@ class myGUI(object):
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-30,  x_pixel_width, max_x_scale, aRecord.dataList, ["G","E"], "Session")
         
 
+    def testHistogram(self):
+        aList = [0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
+                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
+                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
+                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
+                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0]
+        GraphLib.histogram(self.graphCanvas,aList)
+
+
     def showHistogram(self,aRecord, clear = True):
         """
-        Description of procedure
+        Draws a histogram using the dataList from aRecord.
 
         """
         def drawBar(aCanvas,x,y, pixelHeight, width, color = "black"):
