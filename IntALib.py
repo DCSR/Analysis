@@ -1,4 +1,5 @@
 import ListLib
+import stream01
 
 
 def sort_to_bins(pump_timelist):
@@ -13,7 +14,7 @@ def sort_to_bins(pump_timelist):
             count = count + 1
     return count
     
-def get_pump_timelist(aList):
+def get_pump_timelist(aList, block = 0):
     ''' (list) -> list
         From a datalist (of timestamps), returns a list of
         times and durations for the pump using the Pump On ("P")
@@ -22,9 +23,10 @@ def get_pump_timelist(aList):
         A timestamp is a pair of integer (time) and charcter (letter_code).
         The timestamp can be a list of lists or a list of tuples
 
-        Could convert all times to block times. 
+        All times coverted to block times.
 
-
+        block = -1  <- this accumulates all blocks, otherwise ..
+        eg. Block
         
     '''
     pump_timelist = []
@@ -33,6 +35,7 @@ def get_pump_timelist(aList):
     block_index = -1
     for timestamp in aList:
         if timestamp[1] == 'B':
+            block_index = block_index + 1
             block_start_time = timestamp[0]
         if timestamp[1] == 'P':
             pumpStartTime = timestamp[0]
@@ -42,7 +45,10 @@ def get_pump_timelist(aList):
                 duration = timestamp[0] - pumpStartTime
                 pumpOn = False
                 block_time = pumpStartTime - block_start_time
-                pump_timelist.append([block_time, duration])               
+                if (block == -1):
+                    pump_timelist.append([block_index,block_time, duration]) 
+                elif (block_index == block):
+                    pump_timelist.append([block_index,block_time, duration])               
     return pump_timelist    
 
 
@@ -63,9 +69,9 @@ def get_pumptimes_per_bin(pump_timelist, bin_size = 5000):
         durations_per_bin.append(0)
 
     for pair in pump_timelist:    # step through list
-        start_time = pair[0]
-        duration = pair[1]
-        bin_num = pair[0]//bin_size
+        start_time = pair[1]
+        duration = pair[2]
+        bin_num = pair[1]//bin_size
         remaining_bin_time = ((bin_num+1) * bin_size) - start_time
         # If the duration fits within one bin then add it to that bin and you are done
         if duration < remaining_bin_time:     # done
@@ -92,22 +98,17 @@ if __name__ == '__main__':
     #import doctest
     #doctest.testmod(verbose=True)    
 
-    aList = []
-    aFile = open('IntA_Example_File.dat','r')
-    for line in  aFile:
-        pair = line.split()
-        pair[0] = int(pair[0])
-        aList.append(pair)
-    aFile.close()
+    datalist = stream01.read_str_file('3_I164_Oct_4.str')
     # aList = [(1900, 'P'),(5000,'p')]
-    injection_count = ListLib.count_char('P',aList)
+    injection_count = ListLib.count_char('P',datalist)
     print('Number of injections:', injection_count)
-    times = ListLib.get_time_list_for_code('P', aList)    
-    print('Pump start times: ',times)    
-    pump_timelist = get_pump_timelist(aList)
-    print("pump_timeiist:", pump_timelist)
-    pumptimes_per_bin = get_pumptimes_per_bin(pump_timelist, bin_size = 10000)
-    print('pumptimes_per_bin = ', pumptimes_per_bin)
+    times = ListLib.get_time_list_for_code('P', datalist)    
+    # print('Pump start times: ',times)
+    for b in range(12):
+        pump_timelist = get_pump_timelist(datalist, block = b)
+        # print("pump_timeiist:", pump_timelist)
+        pumptimes_per_bin = get_pumptimes_per_bin(pump_timelist, bin_size = 10000)
+        print('pumptimes_per_bin = ', pumptimes_per_bin)
 
 
     

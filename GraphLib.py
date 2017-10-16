@@ -344,7 +344,8 @@ def logLogPlot(aCanvas,x_zero,y_zero,x_pixel_width,y_pixel_height, \
             x = new_x
             y = new_y
 
-def histogram(aCanvas, aList, clear = True):
+def histogram(aCanvas, aList, y_zero = 100, y_pixel_height = 40, clear = True, \
+              max_y_scale = 4000, y_divisions = 1):
         """
         (LIst) -> None
 
@@ -356,7 +357,6 @@ def histogram(aCanvas, aList, clear = True):
         """
         if clear:
             aCanvas.delete('all')
-        aCanvas.create_text(100, 20, fill="blue", text = "Test of GraphLib.historgam")
 
         def drawBar(aCanvas,x,y, pixel_height, width, color = "black"):
             aCanvas.create_line(x, y, x, y-pixel_height, fill=color)
@@ -364,17 +364,13 @@ def histogram(aCanvas, aList, clear = True):
             aCanvas.create_line(x+width, y-pixel_height, x+width, y, fill=color)
         
         x_zero = 75
-        y_zero = 450
         x_pixel_width = 600
-        y_pixel_height = 300 
         max_x_scale = 300
-        max_y_scale = 10000
         x_divisions = 5
-        y_divisions = 10
         labelLeft = True
         drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
-        drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, \
-                  format_int = True, color = "black")
+        #drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, \
+        #             format_int = True, color = "black")
 
         #unitPixelHeight = int(y_pixel_height/y_divisions)
         width = int(x_pixel_width/(len(aList)))           

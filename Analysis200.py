@@ -2,6 +2,7 @@
 # adapted from Dropbox/SelfAdministration/Analysis/Analysis102.py
 from tkinter import *
 from tkinter.ttk import Notebook
+from tkinter import filedialog
 from datetime import datetime
 import stream01
 import math
@@ -10,6 +11,7 @@ import GraphLib
 import model
 import Examples
 import numpy as np
+import IntALib
 
 """
 Models, Views and Controllers (MCV) design: keep the representation of the data separate
@@ -30,9 +32,9 @@ def main(argv=None):
 
 
 class DataRecord:
-    def __init__(self, dataList, fileName):
+    def __init__(self, datalist, fileName):
         self.fileName = fileName
-        self.dataList = dataList
+        self.datalist = datalist
         self.numberOfL1Responses = 0
         self.numberOfL2Responses = 0
         self.numberOfInfusions = 0
@@ -92,7 +94,7 @@ class DataRecord:
         lastTime = 0
         self.deltaList = []
         delta = 0
-        for pairs in self.dataList:                   
+        for pairs in self.datalist:                   
             if pairs[1] == 'L':
                 self.numberOfL1Responses = self.numberOfL1Responses + 1
             if pairs[1] == 'J':
@@ -199,8 +201,8 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
-        loadZimmmerButton = Button(headerFrame, text="Ben's data", command= lambda: \
-                              self.openWakeFile("Bens_TH_example.str")).grid(row=0,column=4,sticky=N)
+        loadTestButton = Button(headerFrame, text="3_I164_Oct_4.str", command= lambda: \
+                              self.openWakeFile("3_I164_Oct_4.str")).grid(row=0,column=4,sticky=N)
 
         #************** Graph Tab ******************
         self.columnFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
@@ -224,11 +226,17 @@ class myGUI(object):
                               self.testModel()).grid(row=6,column=0,sticky=N)
         histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
                               self.showHistogram(self.recordList[self.fileChoice.get()])).grid(row=7,column=0,sticky=N)
-        IntA_histogramButton = Button(self.graphButtonFrame, text="Test Histogram", command= lambda: \
-                              self.testHistogram()).grid(row=8,column=0,sticky=N)
+
+        self.graph_IntA_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
+        self.graph_IntA_frame.grid(column = 0, row = 1)
+        IntA_frame_lable = Label(self.graph_IntA_frame, text = "IntA").grid(row = 0, column=0)
+        IntA_histogram_block_Button = Button(self.graph_IntA_frame, text="Histogram (blocks)", command= lambda: \
+            self.IntAHistogram_blocks()).grid(row=1,column=0,sticky=N)
+        IntA_histogram_all_Button = Button(self.graph_IntA_frame, text="Histogram (All)", command= lambda: \
+            self.IntAHistogram_all()).grid(row=2,column=0,sticky=N)
 
         self.graph_YaxisRadioButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 1)
+        self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 2)
         y_axisButtonLabel = Label(self.graph_YaxisRadioButtonFrame, text = "Y axis").grid(row = 0, column=0)
         y_scaleRadiobutton250 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="250", variable=self.max_y_scale, value=250)
         y_scaleRadiobutton250.grid(column = 0, row = 1)
@@ -388,6 +396,8 @@ class myGUI(object):
                               self.testText1()).grid(row=2,column=0,sticky=N)
         testText2Button = Button(self.textButtonFrame, text="Test Button", command= lambda: \
                               self.testText2()).grid(row=3,column=0,sticky=N)
+        intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
+                              self.intA_text()).grid(row=4,column=0,sticky=N)
 
         #*************** bottom row ****************
         padding = 20
@@ -618,7 +628,7 @@ class myGUI(object):
             aCanvas.create_text(500, 160, fill="blue", text="Alpha = "+alphaStr)
             aCanvas.create_text(500, 180, fill="blue", text="k = "+str(k_value))
         
-        GraphLib.eventRecord(self.thresholdCanvas, x_zero+50, y_zero-450, x_pixel_width-50, 120, aDataRecord.dataList, ["P"], "")
+        GraphLib.eventRecord(self.thresholdCanvas, x_zero+50, y_zero-450, x_pixel_width-50, 120, aDataRecord.datalist, ["P"], "")
         
         if self.responseCurveVar.get():
             GraphLib.drawYaxis(self.thresholdCanvas, x_zero+x_pixel_width, y_zero, y_pixel_height, response_max_y_scale, y_divisions, False)
@@ -719,7 +729,7 @@ class myGUI(object):
 
     def testText2(self):
         num = 0
-        for pairs in self.recordList[self.fileChoice.get()].dataList:
+        for pairs in self.recordList[self.fileChoice.get()].datalist:
             num = num + 1
             if num < 50:
                 tempString = str(pairs[0])+" : "+pairs[1]
@@ -743,7 +753,7 @@ class myGUI(object):
         # print(fileName)
         if len(fileName) > 0:
             selected = self.fileChoice.get()
-            self.recordList[selected].dataList = []
+            self.recordList[selected].datalist = []
             name = fileName[fileName.rfind('/')+1:]
             path = fileName[0:fileName.rfind('/')+1]
             # print('path =',path)
@@ -755,13 +765,13 @@ class myGUI(object):
             self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
             # textBox.insert('1.0', name+" opened \n\n")
             if fileName.find(".str") > 0:
-                self.recordList[selected].dataList = stream01.read_str_file(fileName)               
+                self.recordList[selected].datalist = stream01.read_str_file(fileName)               
             elif fileName.find(".dat") > 0:
                 aFile = open(fileName,'r')
                 for line in  aFile:
                     pair = line.split()
                     pair[0] = int(pair[0])
-                    self.recordList[selected].dataList.append(pair)
+                    self.recordList[selected].datalist.append(pair)
                 aFile.close()
             self.recordList[selected].extractStatsFromList()
 
@@ -773,7 +783,7 @@ class myGUI(object):
         leverTotal = 0       
         pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
         responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
-        for pairs in self.recordList[selected].dataList:
+        for pairs in self.recordList[selected].datalist:
             if pairs[1] == 'B':
                 blockNum = blockNum + 1
             elif pairs[1] == 'P':
@@ -838,11 +848,11 @@ class myGUI(object):
         max_y_scale = self.max_y_scale.get()
         y_divisions = 10
         aTitle = aRecord.fileName
-        # def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, dataList, aTitle)
+        # def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, datalist, aTitle)
         GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
         GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True)
         GraphLib.cumRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, \
-                           aRecord.dataList, self.showBPVar.get(), aTitle)
+                           aRecord.datalist, self.showBPVar.get(), aTitle)
 
     def drawEventRecords(self):
         # canvas is 800 x 600
@@ -855,13 +865,13 @@ class myGUI(object):
         GraphLib.drawXaxis(self.graphCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
         y_zero = 30
         box = 0
-        # eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, dataList, charList, aLabel)
+        # eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, datalist, charList, aLabel)
         # aTitle = aRecord.fileName
         for record in self.recordList:
             y_zero = y_zero + 40
             box = box + 1
             aTitle = "Box "+str(box)
-            GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, record.dataList, ["P"], aTitle)
+            GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, record.datalist, ["P"], aTitle)
         # print("event Records")
 
     def timeStamps(self,aRecord):
@@ -874,34 +884,94 @@ class myGUI(object):
         max_x_scale = self.max_x_scale.get()
         if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
         GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-360, x_pixel_width, max_x_scale, aRecord.dataList, ["L"], "L1 active")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-340, x_pixel_width, max_x_scale, aRecord.dataList, [">"], "L1 inactive")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-310, x_pixel_width, max_x_scale, aRecord.dataList, ["J"], "L2 active")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-290, x_pixel_width, max_x_scale, aRecord.dataList, ["<"], "L2 inactive") 
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-260, x_pixel_width, max_x_scale, aRecord.dataList, ["P","p"], "Pump")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-230, x_pixel_width, max_x_scale, aRecord.dataList, ["S","s"], "Stim 1")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-210, x_pixel_width, max_x_scale, aRecord.dataList, ["C","c"], "Stim 2")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-180, x_pixel_width, max_x_scale, aRecord.dataList, ["=","."], "Lever 1")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-160, x_pixel_width, max_x_scale, aRecord.dataList, ["-",","], "Lever 2")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-130,  x_pixel_width, max_x_scale, aRecord.dataList, ["t","T"], "Timeout")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-100,  x_pixel_width, max_x_scale, aRecord.dataList, ["F"], "Food Tray")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-70,  x_pixel_width, max_x_scale, aRecord.dataList, ["B","b"], "Access")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-50,  x_pixel_width, max_x_scale, aRecord.dataList, ["H","h"], "Houselight")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-30,  x_pixel_width, max_x_scale, aRecord.dataList, ["G","E"], "Session")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-360, x_pixel_width, max_x_scale, aRecord.datalist, ["L"], "L1 active")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-340, x_pixel_width, max_x_scale, aRecord.datalist, [">"], "L1 inactive")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-310, x_pixel_width, max_x_scale, aRecord.datalist, ["J"], "L2 active")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-290, x_pixel_width, max_x_scale, aRecord.datalist, ["<"], "L2 inactive") 
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-260, x_pixel_width, max_x_scale, aRecord.datalist, ["P","p"], "Pump")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-230, x_pixel_width, max_x_scale, aRecord.datalist, ["S","s"], "Stim 1")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-210, x_pixel_width, max_x_scale, aRecord.datalist, ["C","c"], "Stim 2")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-180, x_pixel_width, max_x_scale, aRecord.datalist, ["=","."], "Lever 1")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-160, x_pixel_width, max_x_scale, aRecord.datalist, ["-",","], "Lever 2")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-130,  x_pixel_width, max_x_scale, aRecord.datalist, ["t","T"], "Timeout")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-100,  x_pixel_width, max_x_scale, aRecord.datalist, ["F"], "Food Tray")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-70,  x_pixel_width, max_x_scale, aRecord.datalist, ["B","b"], "Access")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-50,  x_pixel_width, max_x_scale, aRecord.datalist, ["H","h"], "Houselight")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-30,  x_pixel_width, max_x_scale, aRecord.datalist, ["G","E"], "Session")
         
 
-    def testHistogram(self):
-        aList = [0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
-                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
-                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
-                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0, \
-                 0, 100, 300, 1000, 3000, 10000, 10000, 3000, 1000, 300, 100, 0]
-        GraphLib.histogram(self.graphCanvas,aList)
+    def intA_text(self):
+        aRecord = self.recordList[self.fileChoice.get()]
+        pump_timelist = IntALib.get_pump_timelist(aRecord.datalist, block = -1)
+        # print(pump_timelist)     # prints a list of [pump_start_time, duration]  in mSec
+        pumptimes_per_bin = IntALib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
+        self.textBox.insert(END,"Total Pump Time (mSec): "+str(aRecord.totalPumpDuration)+"\n")
+        self.textBox.insert(END,"Cummulative pump time per 5 second bin\n")
+        aString = ""
+        for t in range(len(pumptimes_per_bin)):
+            aString = aString+str(pumptimes_per_bin[t])+' '
+            #aString = aString + '{0:6d}'.format(pumptimes_per_bin[t])     
+        self.textBox.insert(END,aString+"\n")
+        total_pump_time = 0
+        for t in range(len(pumptimes_per_bin)):
+            total_pump_time = total_pump_time + pumptimes_per_bin[t]
+        self.textBox.insert(END,"Total Pump Time (sum of bins): "+str(total_pump_time)+"\n")
+        dose = (total_pump_time * 5 * 0.000025) / 0.33
+        aString = "Total dose (mg/kg): {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
+        self.textBox.insert(END, aString)
 
+    def IntAHistogram_blocks(self):
+        '''
+
+        '''
+        self.clearCanvas()
+        aRecord = self.recordList[self.fileChoice.get()]
+        pump_total = 0
+        for b in range (12):
+            total_pump_time = 0
+            pump_timelist = IntALib.get_pump_timelist(aRecord.datalist, block = b)
+            pumptimes_per_bin = IntALib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
+            for t in range(len(pumptimes_per_bin)):
+                total_pump_time = total_pump_time + pumptimes_per_bin[t]
+            pump_total = pump_total + total_pump_time
+            y = (b*45)+50
+            GraphLib.histogram(self.graphCanvas,pumptimes_per_bin, y_zero = y, y_pixel_height = 35, clear = False)
+            self.graphCanvas.create_text(750, y, fill="blue", text = "Sum = "+str(total_pump_time))
+            dose = (total_pump_time * 5 * 0.000025) / 0.33
+            aString = "{0:6.2f} mg/kg".format(dose)     #eg. 4000 mSec * 5 mg/ml *0.000025 mls/mSec / 0.330 kg = 1.5 mg/kg
+            self.graphCanvas.create_text(750, y + 12, fill="blue", text = aString)
+        self.graphCanvas.create_text(750, y + 45, fill="blue", text = "Total "+str(pump_total))
+
+    def IntAHistogram_all(self):
+        self.clearCanvas()
+        aRecord = self.recordList[self.fileChoice.get()]
+        pump_total = 0
+        x_zero = 75
+        y_zero = 550
+        x_pixel_width = 600
+        y_pixel_height = 400
+        max_x_scale = 300
+        max_y_scale = 20000
+        x_divisions = 5
+        y_divisions = 10
+        labelLeft = True
+        GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, \
+                  format_int = True, color = "black")
+        pump_timelist = IntALib.get_pump_timelist(aRecord.datalist, block = -1)
+        pumptimes_per_bin = IntALib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
+        for t in range(len(pumptimes_per_bin)):
+                pump_total = pump_total + pumptimes_per_bin[t]
+        GraphLib.histogram(self.graphCanvas,pumptimes_per_bin, y_zero = 550, y_pixel_height = 400, clear = False, \
+                           max_y_scale = 20000, y_divisions = 4)
+
+        self.graphCanvas.create_text(300, 100, fill="blue", text = "Total Pump Time: "+str(pump_total))
+        dose = (pump_total * 5 * 0.000025) / 0.33
+        aString = "Total: {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
+        self.graphCanvas.create_text(300, 130, fill="blue", text = aString)
 
     def showHistogram(self,aRecord, clear = True):
         """
-        Draws a histogram using the dataList from aRecord.
+        Draws a histogram using the datalist from aRecord.
 
         """
         def drawBar(aCanvas,x,y, pixelHeight, width, color = "black"):
@@ -921,7 +991,7 @@ class myGUI(object):
         max_x_scale = self.max_x_scale.get()
         if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
         self.graphCanvas.create_text(200, y_zero-50 , fill = "blue", text = aRecord.fileName)
-        GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, aRecord.dataList, ["P"], "")
+        GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "")
         # Populate bin array
         binSize = 1   # in minutes
         intervals = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -929,7 +999,7 @@ class myGUI(object):
         numInj = 0
         numIntervals = 0
         outOfRange = 0
-        for pairs in aRecord.dataList:
+        for pairs in aRecord.datalist:
             if pairs[1] == "P":
                 numInj = numInj + 1
                 T2 = pairs[0]
@@ -983,12 +1053,12 @@ class myGUI(object):
         if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
         # max_y_scale = self.max_y_scale.get()
         # max_y_scale = 25
-        GraphLib.eventRecord(self.graphCanvas, x_zero, 100, x_pixel_width, max_x_scale, aRecord.dataList, ["P"], "Test")
+        GraphLib.eventRecord(self.graphCanvas, x_zero, 100, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "Test")
         GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "red")
         GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "blue")
         x_scaler = x_pixel_width / (max_x_scale*60*1000)
         y_scaler = y_pixel_height / max_y_scale
-        cocConcXYList = model.calculateCocConc(aRecord.dataList,aRecord.cocConc, aRecord.pumpSpeed, resolution)
+        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc, aRecord.pumpSpeed, resolution)
         # print(modelList)
         x = x_zero
         y = y_zero
@@ -1037,7 +1107,7 @@ class myGUI(object):
         """        
         # testRecord1  5 sec infusion
         testRecord1 = DataRecord([],"5 sec") 
-        testRecord1.dataList = [[10000, 'P'],[15000, 'p']]
+        testRecord1.datalist = [[10000, 'P'],[15000, 'p']]
         testRecord1.pumpSpeed = 0.025   # Wake default 0.1 mls/4 sec = 0.025 / sec
         testRecord1.cocConc = 4.0
         testRecord1.TH_PumpTimes = WakePumpTimes
@@ -1048,7 +1118,7 @@ class myGUI(object):
         # testRecord2  50 sec infusion
         duration = 50
         testRecord2 = DataRecord([],"50 sec") 
-        testRecord2.dataList = [[10000, 'P'],[15000, 'p'], [15000, 'P'],[20000, 'p'], \
+        testRecord2.datalist = [[10000, 'P'],[15000, 'p'], [15000, 'P'],[20000, 'p'], \
                                 [20000, 'P'],[25000, 'p'], [25000, 'P'],[30000, 'p'], \
                                 [30000, 'P'],[35000, 'p'], [35000, 'P'],[40000, 'p'], \
                                 [40000, 'P'],[45000, 'p'], [45000, 'P'],[50000, 'p'], \
@@ -1063,7 +1133,7 @@ class myGUI(object):
         # testRecord3  90 sec infusion
         duration = 90
         testRecord3 = DataRecord([],"90 sec") 
-        testRecord3.dataList = [[10000, 'P'],[15000, 'p'], [15000, 'P'],[20000, 'p'], \
+        testRecord3.datalist = [[10000, 'P'],[15000, 'p'], [15000, 'P'],[20000, 'p'], \
                                 [20000, 'P'],[25000, 'p'], [25000, 'P'],[30000, 'p'], \
                                 [30000, 'P'],[35000, 'p'], [35000, 'P'],[40000, 'p'], \
                                 [40000, 'P'],[45000, 'p'], [45000, 'P'],[50000, 'p'], \
@@ -1223,7 +1293,7 @@ class myGUI(object):
                         sectionIdentified = False
             myOpenFile.close()
             print("Found", dataPoints,"dataPoints in Zimmer file:", fileName)
-            aDataRecord.dataList = tempList
+            aDataRecord.datalist = tempList
 
     
             """
@@ -1249,7 +1319,7 @@ class myGUI(object):
             aDataRecord.responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
             aDataRecord.consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
             aDataRecord.priceList = [0,0,0,0,0,0,0,0,0,0,0,0]
-            for pairs in aDataRecord.dataList:              # Fill pumpTimeList and responseList
+            for pairs in aDataRecord.datalist:              # Fill pumpTimeList and responseList
                 if pairs[1] == 'P':
                     time = pairs[0]
                     blockNum = int(time/600000)

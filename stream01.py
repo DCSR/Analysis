@@ -76,8 +76,8 @@ def read_str_file(filepath):
             file.read(104) 
             # 
             print("Omni version:", omni_version)
-            print("Investigator:", investigator)
-            print("Rack:", rack)
+            # print("Investigator:", investigator)
+            # print("Rack:", rack)
             print("Program Start Time:", program_start_time)
             print("Date (y/m/d):", year, month, day)
             
