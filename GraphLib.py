@@ -344,8 +344,8 @@ def logLogPlot(aCanvas,x_zero,y_zero,x_pixel_width,y_pixel_height, \
             x = new_x
             y = new_y
 
-def histogram(aCanvas, aList, y_zero = 100, y_pixel_height = 40, clear = True, \
-              max_y_scale = 4000, y_divisions = 1):
+def histogram(aCanvas, aList, x_zero = 75,  max_x_scale = 300,  x_divisions = 5, x_pixel_width = 600, \
+                              y_zero = 100, max_y_scale = 4000, y_divisions = 1, y_pixel_height = 400, clear = True):
         """
         (LIst) -> None
 
@@ -358,17 +358,25 @@ def histogram(aCanvas, aList, y_zero = 100, y_pixel_height = 40, clear = True, \
         if clear:
             aCanvas.delete('all')
 
-        def drawBar(aCanvas,x,y, pixel_height, width, color = "black"):
+        def draw_filled_bar(aCanvas,x,y,pixel_height,width, color = "black"):
+            x1 = x
+            y1 = y
+            x2 = x
+            y2 = y - pixel_height
+            x3 = x + width
+            y3 = y - pixel_height
+            x4 = x + width
+            y4 = y
+            aCanvas.create_polygon(x1,y1,x2,y2,x3,y3,x4,y4, fill = 'red')
+
+        def draw_bar(aCanvas,x,y, pixel_height, width, color = "black"):
             aCanvas.create_line(x, y, x, y-pixel_height, fill=color)
             aCanvas.create_line(x, y-pixel_height, x+width, y - pixel_height, fill=color)
             aCanvas.create_line(x+width, y-pixel_height, x+width, y, fill=color)
         
-        x_zero = 75
-        x_pixel_width = 600
-        max_x_scale = 300
-        x_divisions = 5
         labelLeft = True
-        drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
+        aCanvas.create_line(x_zero, y_zero, x_zero + x_pixel_width, y_zero, fill="blue")
+        #drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
         #drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, \
         #             format_int = True, color = "black")
 
@@ -377,7 +385,9 @@ def histogram(aCanvas, aList, y_zero = 100, y_pixel_height = 40, clear = True, \
         for i in range(len(aList)):           
             x = x_zero + (i*width)
             pixel_height = int(aList[i]*(y_pixel_height/max_y_scale))
-            drawBar(aCanvas,x,y_zero,pixel_height,width)
+            #drawBar(aCanvas,x,y_zero,pixel_height,width)
+            draw_filled_bar(aCanvas,x,y_zero,pixel_height,width)
+
               
         
 

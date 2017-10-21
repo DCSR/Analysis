@@ -11,7 +11,7 @@ import GraphLib
 import model
 import Examples
 import numpy as np
-import IntALib
+import ListLib
 
 """
 Models, Views and Controllers (MCV) design: keep the representation of the data separate
@@ -123,7 +123,7 @@ class myGUI(object):
         "root" is the base level; all other frames and widgets are in relation to "root".
 
         """
-        self.version = "Analysis200.01"
+        self.version = "Analysis200.02"
         self.root = Tk()
         self.root.title(self.version)
         canvas_width = 800
@@ -212,31 +212,23 @@ class myGUI(object):
         self.graphButtonFrame.grid(column = 0, row = 0, sticky=N)
         clearCanvasButton = Button(self.graphButtonFrame, text="Clear", command= lambda: \
                               self.clearCanvas()).grid(row=0,column=0,sticky=N)
-        testButton = Button(self.graphButtonFrame, text="Test", command= lambda: \
-                              self.test()).grid(row=1,column=0,sticky=N)
         cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
                               self.drawCumulativeRecord(self.recordList[self.fileChoice.get()])).grid(row=2,column=0,sticky=N)
+        self.showBPVar = BooleanVar(value = True)      
+        showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
+                                   command= lambda: self.drawCumulativeRecord(self.recordList[self.fileChoice.get()]))
+        showBPButton.grid(row = 3,column=0)      
         eventRecButton = Button(self.graphButtonFrame, text="Event Rec", command= lambda: \
-                              self.drawEventRecords()).grid(row=3,column=0,sticky=N)
+                              self.drawEventRecords()).grid(row=4,column=0,sticky=N)
         timeStampButton = Button(self.graphButtonFrame, text="Timestamps", command= lambda: \
-                              self.timeStamps(self.recordList[self.fileChoice.get()])).grid(row=4,column=0,sticky=N)
+                              self.timeStamps(self.recordList[self.fileChoice.get()])).grid(row=5,column=0,sticky=N)
         modelButton = Button(self.graphButtonFrame, text="Model Coc", command= lambda: \
-                              self.showModel(self.recordList[self.fileChoice.get()])).grid(row=5,column=0,sticky=N)
-        testModelButton = Button(self.graphButtonFrame, text="TestModel", command= lambda: \
-                              self.testModel()).grid(row=6,column=0,sticky=N)
+                              self.showModel(self.recordList[self.fileChoice.get()])).grid(row=6,column=0,sticky=N)
         histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
                               self.showHistogram(self.recordList[self.fileChoice.get()])).grid(row=7,column=0,sticky=N)
 
-        self.graph_IntA_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_IntA_frame.grid(column = 0, row = 1)
-        IntA_frame_lable = Label(self.graph_IntA_frame, text = "IntA").grid(row = 0, column=0)
-        IntA_histogram_block_Button = Button(self.graph_IntA_frame, text="Histogram (blocks)", command= lambda: \
-            self.IntAHistogram_blocks()).grid(row=1,column=0,sticky=N)
-        IntA_histogram_all_Button = Button(self.graph_IntA_frame, text="Histogram (All)", command= lambda: \
-            self.IntAHistogram_all()).grid(row=2,column=0,sticky=N)
-
         self.graph_YaxisRadioButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 2)
+        self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 1)
         y_axisButtonLabel = Label(self.graph_YaxisRadioButtonFrame, text = "Y axis").grid(row = 0, column=0)
         y_scaleRadiobutton250 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="250", variable=self.max_y_scale, value=250)
         y_scaleRadiobutton250.grid(column = 0, row = 1)
@@ -247,30 +239,53 @@ class myGUI(object):
         y_scaleRadiobutton1500 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="1500", variable=self.max_y_scale, value=1500)
         y_scaleRadiobutton1500.grid(column = 0, row = 4)
 
-        self.showBPVar = BooleanVar(value = True)      
-        showBPButton = Checkbutton(self.columnFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
-                                   command= lambda: self.drawCumulativeRecord(self.recordList[self.fileChoice.get()]))
-        showBPButton.grid(column = 0, row = 2)
+        # ******  IntA Frame ************
+
+        self.graph_IntA_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
+        self.graph_IntA_frame.grid(column = 0, row = 2)
+        IntA_frame_lable = Label(self.graph_IntA_frame, text = "IntA").grid(row = 0, column=0)
+        IntA_event_button = Button(self.graph_IntA_frame, text="Event records", command= lambda: \
+            self.IntA_event_records()).grid(row=1,column=0,sticky=N)
+        IntA_durations_button = Button(self.graph_IntA_frame, text="Pump durations", command= lambda: \
+            self.IntA_durations()).grid(row=2,column=0,sticky=N)        
+        IntA_histogram_block_Button = Button(self.graph_IntA_frame, text="Histogram (blocks)", command= lambda: \
+            self.IntAHistogram_blocks()).grid(row=3,column=0,sticky=N)
+        IntA_histogram_all_Button = Button(self.graph_IntA_frame, text="Histogram (All)", command= lambda: \
+            self.IntAHistogram_all()).grid(row=4,column=0,sticky=N)
+
+
+        # ******  Example Frame *********
+
+        self.graph_example_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
+        self.graph_example_frame.grid(column = 0, row = 3)
+        example_frame_lable = Label(self.graph_example_frame, text = "Examples").grid(row = 0, column=0)
+        model_example_button = Button(self.graph_example_frame, text="Test Model", command= lambda: \
+                self.testModel()).grid(row=1,column=0,sticky=N)
+        axes_example_button = Button(self.graph_example_frame, text="Axes", command= lambda: \
+                              self.test()).grid(row=2,column=0,sticky=N)
+        
+
 
         # *************************************
         
         self.graph_XaxisRadioButtonFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
         self.graph_XaxisRadioButtonFrame.grid(column = 1, row = 1, sticky=EW)
+        x_axisButtonLabel = Label(self.graph_XaxisRadioButtonFrame, text = "X axis").grid(row = 0, column=0)
 
         x_scaleRadiobutton10 = Radiobutton(self.graph_XaxisRadioButtonFrame, text="10", variable=self.max_x_scale, value=10)
-        x_scaleRadiobutton10.grid(column = 0, row = 0)
+        x_scaleRadiobutton10.grid(column = 1, row = 0)
         x_scaleRadiobutton30 = Radiobutton(self.graph_XaxisRadioButtonFrame, text="30", variable=self.max_x_scale, value=30)
-        x_scaleRadiobutton30.grid(column = 1, row = 0)
+        x_scaleRadiobutton30.grid(column = 2, row = 0)
         x_scaleRadiobutton60 = Radiobutton(self.graph_XaxisRadioButtonFrame, text="60", variable=self.max_x_scale, value=60)
-        x_scaleRadiobutton60.grid(column = 2, row = 0)
+        x_scaleRadiobutton60.grid(column = 3, row = 0)
         x_scaleRadiobutton120 = Radiobutton(self.graph_XaxisRadioButtonFrame, text="120", variable=self.max_x_scale, value=120)
-        x_scaleRadiobutton120.grid(column = 3, row = 0)
+        x_scaleRadiobutton120.grid(column = 4, row = 0)
         x_scaleRadiobutton180 = Radiobutton(self.graph_XaxisRadioButtonFrame, text="180", variable=self.max_x_scale, value=180)
-        x_scaleRadiobutton180.grid(column = 4, row = 0)
+        x_scaleRadiobutton180.grid(column = 5, row = 0)
         x_scaleRadiobutton360 = Radiobutton(self.graph_XaxisRadioButtonFrame, text="360", variable=self.max_x_scale, value=360)
-        x_scaleRadiobutton360.grid(column = 5, row = 0)
+        x_scaleRadiobutton360.grid(column = 6, row = 0)
         x_scaleRadiobutton720 = Radiobutton(self.graph_XaxisRadioButtonFrame, text="720", variable=self.max_x_scale, value=720)
-        x_scaleRadiobutton720.grid(column = 6, row = 0)
+        x_scaleRadiobutton720.grid(column = 7, row = 0)
         
         self.graphCanvasFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
         self.graphCanvasFrame.grid(column = 1, row = 0)
@@ -398,6 +413,8 @@ class myGUI(object):
                               self.testText2()).grid(row=3,column=0,sticky=N)
         intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
                               self.intA_text()).grid(row=4,column=0,sticky=N)
+        TH_text_button = Button(self.textButtonFrame, text="Threshold (TH)", command= lambda: \
+                              self.threshold_text()).grid(row=4,column=0,sticky=N)
 
         #*************** bottom row ****************
         padding = 20
@@ -900,11 +917,64 @@ class myGUI(object):
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-30,  x_pixel_width, max_x_scale, aRecord.datalist, ["G","E"], "Session")
         
 
-    def intA_text(self):
+    def threshold_text(self):
         aRecord = self.recordList[self.fileChoice.get()]
-        pump_timelist = IntALib.get_pump_timelist(aRecord.datalist, block = -1)
-        # print(pump_timelist)     # prints a list of [pump_start_time, duration]  in mSec
-        pumptimes_per_bin = IntALib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
+        aList = aRecord.datalist
+        count = ListLib.count_char('L',aList)
+        aString = 'Nunber of responses: '+str(count)
+        self.textBox.insert(END,aString+"\n")
+        
+        count = ListLib.count_char('P',aList)
+        aString = 'Nunber of injections: '+str(count)
+        self.textBox.insert(END,aString+"\n")
+
+        count = ListLib.count_char('B',aList)
+        aString = 'Nunber of blocks: '+str(count)
+        self.textBox.insert(END,aString+"\n")
+
+        pump_count_list = ListLib.get_pump_count_per_block(aList)
+        aString = 'Injections per block: '
+        for item in pump_count_list:
+            aString = aString + str(item) + ' '
+        self.textBox.insert(END,aString+"\n")
+
+        for b in range (12):    
+            pump_duration_list = ListLib.get_pump_duration_list(aList, b)
+            aString = 'Block '+str(b)+': '
+            for i in range (len(pump_duration_list)):
+                list_item = pump_duration_list[i]
+                aString = aString + str(list_item[2]) + ' '
+            self.textBox.insert(END,aString+"\n")
+        #print("Block "+str(b), pump_duration_list)
+        
+
+    def intA_text(self):
+
+        aRecord = self.recordList[self.fileChoice.get()]
+        self.textBox.insert(END,aRecord.fileName+"\n")
+        aList = aRecord.datalist
+
+        count = ListLib.count_char('L',aList)
+        aString = 'Number of Responses: '+str(count)
+        self.textBox.insert(END,aString+"\n")
+
+        count = ListLib.count_char('P',aList)
+        aString = 'Number of Injections: '+str(count)
+        self.textBox.insert(END,aString+"\n")
+
+        count = ListLib.count_char('B',aList)
+        aString = 'Number of Blocks: '+str(count)
+        self.textBox.insert(END,aString+"\n")
+
+        durations_list = ListLib.pump_durations_per_block(aList)
+        print("Total durations per block:", durations_list)
+
+        pump_duration_list = ListLib.get_pump_duration_list(aRecord.datalist, block = -1)
+        print(pump_duration_list)     # prints a list of [pump_start_time, duration]  in mSec
+        # pumptimes_per_bin = ListLib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
+
+        """
+        # ***********************************************
         self.textBox.insert(END,"Total Pump Time (mSec): "+str(aRecord.totalPumpDuration)+"\n")
         self.textBox.insert(END,"Cummulative pump time per 5 second bin\n")
         aString = ""
@@ -919,7 +989,61 @@ class myGUI(object):
         dose = (total_pump_time * 5 * 0.000025) / 0.33
         aString = "Total dose (mg/kg): {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
         self.textBox.insert(END, aString)
+        """
 
+    def IntA_event_records(self):
+        # canvas is 800 x 600
+        self.clearCanvas()
+        aRecord = self.recordList[self.fileChoice.get()]
+        x_zero = 75
+        x_pixel_width = 600
+        x_divisions = 12
+        max_x_scale = 5
+        x_divisions = 5
+        GraphLib.drawXaxis(self.graphCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
+        y_zero = 50
+        for block in range(12):
+            aTitle = str(block+1)
+            pump_timestamps = ListLib.get_pump_timestamps(aRecord.datalist,block)
+            GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, pump_timestamps, ["P","p"], aTitle)
+            y_zero = y_zero + 45
+
+    def IntA_durations(self):
+        '''
+
+        '''
+        aCanvas = self.graphCanvas
+        self.clearCanvas()
+        aRecord = self.recordList[self.fileChoice.get()]
+        pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist, -1)
+        duration_list = []
+        for data in pump_timelist:
+            duration_list.append(data[2])
+        x_zero = 75
+        y_zero = 50
+        x_pixel_width = 600
+        x_divisions = 12
+        max_x_scale = 5
+        x_divisions = 5
+        GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
+        x_scaler = x_pixel_width / (max_x_scale*60*1000)
+        y_zero = 50
+        block = 0
+        for block in range(12):
+            x = x_zero
+            y = y_zero
+            aLabel = str(block+1)
+            pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist,block)
+            aCanvas.create_text(x_zero-30, y_zero-5, fill="blue", text = aLabel) 
+            for data in pump_timelist:
+                newX = (x_zero + data[1] * x_scaler // 1)
+                aCanvas.create_line(x, y, newX, y)
+                height = int(data[2]/40)
+                aCanvas.create_line(newX, y, newX, y-height)                        
+                x = newX
+            y_zero = y_zero + 45
+            
+        
     def IntAHistogram_blocks(self):
         '''
 
@@ -929,8 +1053,8 @@ class myGUI(object):
         pump_total = 0
         for b in range (12):
             total_pump_time = 0
-            pump_timelist = IntALib.get_pump_timelist(aRecord.datalist, block = b)
-            pumptimes_per_bin = IntALib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
+            pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist, block = b)
+            pumptimes_per_bin = ListLib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
             for t in range(len(pumptimes_per_bin)):
                 total_pump_time = total_pump_time + pumptimes_per_bin[t]
             pump_total = pump_total + total_pump_time
@@ -957,8 +1081,8 @@ class myGUI(object):
         labelLeft = True
         GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, \
                   format_int = True, color = "black")
-        pump_timelist = IntALib.get_pump_timelist(aRecord.datalist, block = -1)
-        pumptimes_per_bin = IntALib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
+        pump_duration_list = ListLib.get_pump_duration_list(aRecord.datalist, block = -1)
+        pumptimes_per_bin = ListLib.get_pumptimes_per_bin(pump_duration_list, bin_size = 5000)
         for t in range(len(pumptimes_per_bin)):
                 pump_total = pump_total + pumptimes_per_bin[t]
         GraphLib.histogram(self.graphCanvas,pumptimes_per_bin, y_zero = 550, y_pixel_height = 400, clear = False, \
@@ -968,10 +1092,13 @@ class myGUI(object):
         dose = (pump_total * 5 * 0.000025) / 0.33
         aString = "Total: {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
         self.graphCanvas.create_text(300, 130, fill="blue", text = aString)
+        
 
     def showHistogram(self,aRecord, clear = True):
         """
         Draws a histogram using the datalist from aRecord.
+
+        To Do: There is another histogram procedure in GraphLib. Should be merged. 
 
         """
         def drawBar(aCanvas,x,y, pixelHeight, width, color = "black"):
