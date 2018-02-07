@@ -776,8 +776,11 @@ class myGUI(object):
             # print('path =',path)
             self.recordList[selected].fileName = name
             self.fileNameList[selected].set(name)
-            self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
-                                                      0.100,0.056,0.031,0.018,0.010,0.0056]
+            # OMNI pump times
+            # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
+            #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
+            self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
+                                                      0.200,0.130,0.080,0.050,0.030,0.020]
             self.recordList[selected].cocConc = 5.0
             self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
             # textBox.insert('1.0', name+" opened \n\n")
