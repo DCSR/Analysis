@@ -392,6 +392,12 @@ class myGUI(object):
                               self.testTHGraphicsDisplay_2()).grid(row=20,column=0,sticky=S)
         test3Button = Button(self.thresholdButtonFrame, text="Test Button 3", command= lambda: \
                               self.testTHGraphicsDisplay_3()).grid(row=21,column=0,sticky=S)
+        PaulsButton1 = Button(self.thresholdButtonFrame, text="Paul's Button 1", \
+                                 command = lambda: self.simpletest_1()).grid(row=22,column=0,sticky=N)
+        PaulsButton2 = Button(self.thresholdButtonFrame, text="Paul's Button 2", \
+                                 command = lambda: self.simpletest_2()).grid(row=23,column=0,sticky=N)
+        PaulsButton3 = Button(self.thresholdButtonFrame, text="Paul's Button 3", \
+                                 command = lambda: self.simpletest_3()).grid(row=24,column=0,sticky=N)
 
         self.thresholdCanvas = Canvas(self.thresholdTab, width = canvas_width, height = canvas_height)
         self.thresholdCanvas.grid(row=0,column=1)
@@ -448,6 +454,18 @@ class myGUI(object):
 
 
         # *************  The Controllers  **********
+
+    def simpletest_1(self):
+        label = "Paul's Label 1"
+        self.thresholdCanvas.create_text(300,100, text=label)
+
+    def simpletest_2(self):
+        label = "Paul's Label 2"
+        self.thresholdCanvas.create_text(300,200, text=label)
+
+    def simpletest_3(self):
+        label = "Paul's Label 3"
+        self.thresholdCanvas.create_text(300,300, text=label)
   
 
     def testText1(self):
