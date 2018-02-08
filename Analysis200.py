@@ -123,7 +123,7 @@ class myGUI(object):
         "root" is the base level; all other frames and widgets are in relation to "root".
 
         """
-        self.version = "Analysis200.02"
+        self.version = "Analysis200"
         self.root = Tk()
         self.root.title(self.version)
         canvas_width = 800
@@ -171,10 +171,12 @@ class myGUI(object):
         self.respMax = IntVar()
         self.respMax.set(200)
         self.rangeEnd = IntVar()
-        self.rangeEnd.set(10)
+        self.rangeEnd.set(11)
         self.rangeBegin = IntVar()
-        self.rangeBegin.set(0)
-
+        self.rangeBegin.set(1)
+        self.average_TH_FilesVar = BooleanVar(value=False)
+        self.pumpTimes = IntVar()
+        self.pumpTimes.set(0)
 
         #*************  The View ************       
 
@@ -201,8 +203,12 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
-        loadTestButton = Button(headerFrame, text="3_I164_Oct_4.str", command= lambda: \
-                              self.openWakeFile("3_I164_Oct_4.str")).grid(row=0,column=4,sticky=N)
+        loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
+                              self.openWakeFile("TH_OMNI_test.str")).grid(row=0,column=4,sticky=N, padx = 20)
+        loadTestButton2 = Button(headerFrame, text="TH_FEATHER_test.dat", command= lambda: \
+                              self.openWakeFile("TH_FEATHER_test.dat")).grid(row=0,column=5,sticky=N, padx = 20)
+        loadTestButton2 = Button(headerFrame, text="IntA_Example_File.dat", command= lambda: \
+                              self.openWakeFile("IntA_Example_File.dat")).grid(row=0,column=6,sticky=N, padx = 20)
 
         #************** Graph Tab ******************
         self.columnFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
@@ -252,7 +258,6 @@ class myGUI(object):
             self.IntAHistogram_blocks()).grid(row=3,column=0,sticky=N)
         IntA_histogram_all_Button = Button(self.graph_IntA_frame, text="Histogram (All)", command= lambda: \
             self.IntAHistogram_all()).grid(row=4,column=0,sticky=N)
-
 
         # ******  Example Frame *********
 
@@ -306,47 +311,45 @@ class myGUI(object):
         self.drawThresholdFrame.grid(row = 1, column = 0, sticky = EW)
 
         thresholdButton = Button(self.drawThresholdFrame, text="Draw Threshold", command= lambda: \
-                                 self.drawThreshold(self.recordList[self.fileChoice.get()])).grid(row=0,column=0, sticky = N)
+                                 self.drawThreshold()).grid(row = 0, column = 0, columnspan = 2)
+
+        self.average_TH_FilesCheckButton = Checkbutton(self.drawThresholdFrame, text = "Average Files", variable = self.average_TH_FilesVar, \
+                                        onvalue = True, offvalue = False).grid(row = 1, column = 0, columnspan = 2, sticky=W)
+
+        pumpTimesLabel = Label(self.drawThresholdFrame, text="Pump Times").grid(row = 2, column = 0)
+        pumpTimesOMNI = Radiobutton(self.drawThresholdFrame, text = "OMNI", variable = self.pumpTimes, value = 0).grid(row = 3,column = 0)
+        cumRecButton2 = Radiobutton(self.drawThresholdFrame, text = "M0 ", variable = self.pumpTimes, value = 1).grid(row = 3,column = 1)
 
         self.curveFitVar = BooleanVar(value = True)
         self.curveFitCheckButton = Checkbutton(self.drawThresholdFrame, text = "Auto Curve Fit", variable = self.curveFitVar, \
-                                        onvalue = True, offvalue = False).grid(row = 1, column = 0, columnspan = 2)
+                                        onvalue = True, offvalue = False).grid(row = 4, column = 0, columnspan = 2, stick=W)
         
         self.logXVar = BooleanVar(value = True)      
         logLogCheckButton = Checkbutton(self.drawThresholdFrame, text = "Log X", variable = self.logXVar, \
-                                        onvalue = True, offvalue = False).grid(row = 2, column = 0)
+                                        onvalue = True, offvalue = False).grid(row = 5, column = 0, sticky = W)
         self.logYVar = BooleanVar(value = True)      
         logLogCheckButton = Checkbutton(self.drawThresholdFrame, text = "Log Y", variable = self.logYVar, \
-                                        onvalue = True, offvalue = False).grid(row = 2, column = 1)
+                                        onvalue = True, offvalue = False).grid(row = 5, column = 1)
         self.showPmaxLine = BooleanVar(value = True)      
         showPmaxCheckButton = Checkbutton(self.drawThresholdFrame, text = "Pmax line", variable = self.showPmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 3, column = 0)
+                                        onvalue = True, offvalue = False).grid(row = 6, column = 0, stick = W)
         self.showOmaxLine = BooleanVar(value = True)
         showOmaxCheckButton = Checkbutton(self.drawThresholdFrame, text = "Omax line", variable = self.showOmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 3, column = 1)
+                                        onvalue = True, offvalue = False).grid(row = 7, column = 0, sticky = W)
         self.AssignQzeroVar = DoubleVar()
-        
         self.QzeroVar = DoubleVar()
-        self.QzeroLabel = Label(self.drawThresholdFrame, text = "Qzero").grid(row=4,column=0,columnspan = 2,sticky=EW) 
+        self.QzeroLabel = Label(self.drawThresholdFrame, text = "Qzero").grid(row=8,column=0,columnspan = 2,sticky=EW)
         self.scale_Q_zero = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.05, \
                                   from_=0.25, to=5.0, variable = self.QzeroVar)
         self.scale_Q_zero.set(1.0)
-        self.scale_Q_zero.grid(row=5,column=0, columnspan = 2)
+        self.scale_Q_zero.grid(row=9,column=0, columnspan = 2)
 
         self.alphaVar = DoubleVar()
-        self.alphaLabel = Label(self.drawThresholdFrame, text = "alpha").grid(row=6,column=0,columnspan = 2,sticky=EW)        
+        self.alphaLabel = Label(self.drawThresholdFrame, text = "alpha").grid(row=10,column=0,columnspan = 2,sticky=EW)
         self.scale_alpha = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.00025, \
                                  from_= 0.0005, to = 0.02, variable = self.alphaVar)
         self.scale_alpha.set(0.005)
-        self.scale_alpha.grid(row=7,column=0, columnspan = 2)
-
-        self.kVar = DoubleVar(value = 2.0)
-        self.kLabel = Label(self.drawThresholdFrame, text = "k").grid(row=8,column=0,columnspan = 2,sticky=EW)
-        self.scale_k = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.2, \
-                             from_=2.0, to=8.0, variable = self.kVar)
-        self.scale_k.set(4.0)
-        self.scale_k.grid(row=9,column=0, columnspan = 2)
-
+        self.scale_alpha.grid(row=11,column=0, columnspan = 2)
     
         self.startStopFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.startStopFrame.grid(columnspan=2, row = 9, column = 0)
@@ -467,11 +470,8 @@ class myGUI(object):
             return y       
         
   
-    def drawThreshold(self,aDataRecord):
+    def drawThreshold(self):
 
-        # price = 2.53, 4.49, 8.00, 14.23, 25.32, 42.55, 80.00, 142.86, 258.06, 444.44, 800.00, 1428.57
-        # k
-        # >>> math.log10(1428.57-4.49) = 3.15
         """
         Definitions from Hursch spreadsheet
         alpha: Essential value is the rate of change in log consumption with price
@@ -481,18 +481,75 @@ class myGUI(object):
         Normalized price = (FR x Q0)/100 = Responses per 1 percent of Q0
         Normalized consumption = (Reinforcers/Q0) x 100 = Reinforcers as Percent of Q0
 
-
         Fletcher Cox pegged k at 4.18967505739766 - don't know why.
         Is this log or log10?
         0.001 is substituted for a zero - so our range (k) is probably 1 to 0.001 or four log units.
 
+        ************************************************
+        Notes - Feb 8
+
+        Issue 1:
+        k is presumably the range in log units "from Q0 to minimum"
+        It is presently set at 4, but this needs to be corrected. 
+        Also it should be adjusted when selecting different start and stop values.
+        try: math.log10(priceList[rangeEnd]-priceList[rangeBegin])
+
+        Issue 2:
+        Numpy is throwing warnings:
+        RuntimeWarning: overflow encountered in power
+        and
+        RuntimeWarning: overflow encountered in exp
+
+        See for possible solution:
+        https://stackoverflow.com/questions/15624070/why-does-scipy-optimize-curve-fit-not-fit-to-the-data
+
+        Issue 3:
+        The event record needs to be adjusted to correspond to the bins. This could be a little complictaed
+        because the first bin is variable. The second bin starts at the time of the fourth injection. This time
+        point needs to be pulled from the data file and used to peg the second data point. The length of the
+        remaining data (110 min) needs to correspond to the X axis.
+
+        Issue 4:
+        It would be too easy for a user to make a mistake and not select the correct pumptimes. Note that
+        the pump times are stored in the datafile, so it should be straightforward to double check and select
+        it automatically.
 
         """
         from scipy.optimize import curve_fit
         from scipy.stats.stats import pearsonr
 
-        priceList = aDataRecord.priceList
-        consumptionList = aDataRecord.consumptionList          
+        k_value = 4      # See issue 2 above
+
+        selectedPumpTimesValues = self.pumpTimes.get()
+        if (selectedPumpTimesValues == 0):
+            print("OMNI pumpTimes")
+            TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.018,0.010,0.0056]
+        else:
+            print("Feather M0 pumpTimes")
+            TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, 0.200,0.130,0.080,0.050,0.030,0.020]
+        print("TH_PumpTimes:", TH_PumpTimes)
+
+        priceList = []
+        for i in range(12):
+            dosePerResponse = TH_PumpTimes[i] * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+            price = round(1/dosePerResponse,2)
+            priceList.append(price)
+        print("priceList",priceList)
+
+        useMultipleFiles = self.average_TH_FilesVar.get()
+        if (useMultipleFiles == True):
+            print("Averaging multiple files")
+            datalist = []        # Empty - so will not draw an event record
+            consumptionList = []
+            responseList = []
+            # consumptionList = self.getConsumptionList()
+            # responseList = self.getResponseList()
+        else:
+            print("Using an individual file")
+            aDataRecord = self.recordList[self.fileChoice.get()]
+            datalist = aDataRecord.datalist    # Event record needs this.
+            consumptionList = aDataRecord.consumptionList
+            responseList = aDataRecord.responseList
 
         x_zero = 100
         y_zero = 500
@@ -549,16 +606,11 @@ class myGUI(object):
             popt, pcov = curve_fit(self.demandFunction, numpy_x_list, numpy_y_list)
             alpha = popt[0]
             Qzero = popt[1]
-            #k_value = popt[2]
-            k_value = 4
             self.scale_alpha.set(alpha)
             self.scale_Q_zero.set(Qzero)
-            self.scale_k.set(k_value)
-            
         else:            
             alpha = self.scale_alpha.get()
             Qzero = self.scale_Q_zero.get()
-            k_value = self.scale_k.get()
         """
         numpy_x_list = np.array(truncX)
         numpy_y_list = np.array(truncY)
@@ -568,23 +620,18 @@ class myGUI(object):
             popt, pcov = curve_fit(self.demandFunction, numpy_x_list, numpy_y_list)
             alpha = popt[0]
             Qzero = popt[1]
-            k_value = 4
             self.scale_alpha.set(alpha)
             self.scale_Q_zero.set(Qzero)
-            self.scale_k.set(k_value)
             
         else:            
             alpha = self.scale_alpha.get()
             Qzero = self.scale_Q_zero.get()
-            # k_value = self.scale_k.get()
             # popt, pcov = curve_fit(self.demandFunction, numpy_x_list, numpy_y_list)
-            k_value = 4
 
 
         # Calculate the correlation using only the points in the truncated list
         fitLine = []
         for i in range(0,len(truncX)):
-            #y = self.demandFunction(truncX[i],alpha,Qzero,k_value)
             y = self.demandFunction(truncX[i],alpha,Qzero)
             fitLine.append(y)
         r = pearsonr(truncY,fitLine)
@@ -645,13 +692,13 @@ class myGUI(object):
             aCanvas.create_text(500, 160, fill="blue", text="Alpha = "+alphaStr)
             aCanvas.create_text(500, 180, fill="blue", text="k = "+str(k_value))
         
-        GraphLib.eventRecord(self.thresholdCanvas, x_zero+50, y_zero-450, x_pixel_width-50, 120, aDataRecord.datalist, ["P"], "")
+        GraphLib.eventRecord(self.thresholdCanvas, x_zero+50, y_zero-450, x_pixel_width-50, 120, datalist, ["P"], "")
         
         if self.responseCurveVar.get():
             GraphLib.drawYaxis(self.thresholdCanvas, x_zero+x_pixel_width, y_zero, y_pixel_height, response_max_y_scale, y_divisions, False)
             GraphLib.betaTestCurve(aCanvas,x_zero,y_zero,x_pixel_width,y_pixel_height, \
                                    x_startValue, y_startValue, x_logRange, y_logRange, max_x_scale, response_max_y_scale, \
-                                   aDataRecord.priceList,aDataRecord.responseList, logX, False, drawLine = True, color = "black")
+                                   priceList,responseList, logX, False, drawLine = True, color = "black")
 
     def testTHGraphicsDisplay_1(self):
         """
@@ -1299,177 +1346,6 @@ class myGUI(object):
         offset = 0      
         GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "blue")
         GraphLib.drawYaxis(self.graphCanvas, x_zero+x_pixel_width +10, y_zero, y_pixel_height, max_y_scale, y_divisions, False)
-
-    def loadZimmerFile(self):
-        selected = self.fileChoice.get()    
-        aFileName = "/Users/daveroberts/Dropbox/Programming/Python/Analysis101/TH_ BAZ15-033.txt"
-        #             /Users/daveroberts/Dropbox/Programming/Python/Analysis101/TH_BAZ15-033.txt  
-        aFileName = filedialog.askopenfilename()
-        print(aFileName)
-        self.recordList[selected] = self.getZimmerFile(self.recordList[selected],aFileName)
-        self.recordList[selected].extractStatsFromList()
-        print(self.recordList[selected])
-        self.fileNameList[selected].set(self.recordList[selected].fileName)
-        
-        
-    def getZimmerFile(self,aDataRecord,aFileName):
-    
-        """
-        A data record is passed in (which may or may not be empty). It is reset
-        then filled with data from a chosen file and returned.
- 
-        Notes: 
-        Uses the D: field to discriminate an FR1 file from a TH file.
-        If it is an FR1 file it substitutes a pump time of 5 sec - probably wrong...
-        If it is a TH file it uses the array of pumptimes.
-        The pump times are preassigned and NOT read from the datafile
-
-        To Do: Because values of zero throw errors in log functions, every log function needs
-           to check and handle such data, or (perhaps in the interim) the data file should substitute
-           0.00001 for any zero value (as often happens in the last consumption bin)
-        
-        Parsing the injections listed in Q: into bins matches the totals listed in H: 
-
-        Codes for Zimmer files
-    
-        A = Active responses
-        B = Infusions
-        C = Inactive responses
-      * D = List for pump times   
-      * H = Number of infusions per 10 minute bin
-      * I = Number of ResponsconsumptionListes per 10 minute bin
-      * J = Number of Inactive responses per 10 minute bin
-
-        M = Session duration (minutes)
-      * N = 10 min counter
-      * P = Time that pump, cue lights, and tone are on  
-        Q = Time (in seconds) of each infusion
-        R = Time (in seconds) of each response
-        S = Each infusion duration (in centiseconds)
-        U = Time out (seconds)
-        W = Weight of animal - ignore
-        X = Subscript for Q array - ignore
-        Y = Subscript for R array - ignore
- 
-       * = used in TH file
-    
-       """
-        # empty dataRecord
-        aDataRecord.fileName = "Zimmer test"
-        aDataRecord.numberOfL1Responses = 0
-        aDataRecord.numberOfL2Responses = 0
-        aDataRecord.numberOfInfusions = 0
-        aDataRecord.totalPumpDuration = 0
-        #   Check these assumptions
-        #   These are values provided by Brandon (I think)
-        #   MUSC: 2.73 mg/ml * 0.0000176 mls/mSec = 0.000048048 mg/mSec
-        #   WAKE: 5 mg/ml * 0.000025 = 0.000125 mg/mSec 
-        aDataRecord.cocConc = 2.73
-        aDataRecord.pumpSpeed = 0.0176
-        aDataRecord.averagePumpTime = 0.0
-        # For comparison:
-        # WakePumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188,0.100,0.056,0.031,0.018,0.010,0.0056]
-        aDataRecord.TH_PumpTimes = [8.175,4.597,2.585,1.454,0.818,0.460,0.259,0.145,0.082,0.046,0.026,0.0146]
-        aDataRecord.priceList = []
-        aDataRecord.consumptionList = []
-        aDataRecord.deltaList = []
-        aDataRecord.notes = "Zimmer file"
-        """
-          A: and B: contain the number of active responses and infusions respectively. These should be
-          the same, but they are not. So, as a first pass, this analysis uses the injection data only.
-          That is, the program uses the timestamps for the infusions and counts it as a pump time and
-          a response time. 
-        """
-        sectionStartIdentfier = "Q:"
-        sectionEndIdentifier = "R:"
-        directory = os.path.split(aFileName)[0]
-        fileName = os.path.split(aFileName)[1]
-        # print(fileName)
-        aDataRecord.fileName = fileName
-        tempList = []
-        # print("Looking for section preceded by "+sectionStartIdentfier+" in "+fileName+"\n")
-        dataPoints = 0
-        lineNumber = 0
-        sectionIdentified = False
-        FR1_File = False
-        with open(aFileName) as myOpenFile:    # aFileName is complete string passed to procedure
-            for line in myOpenFile:            # This runs through the file one line at a time
-                lineNumber = lineNumber + 1            # count the lines
-                if "D:       0.000" in line:   # This is used to descriminate between FR1 and TH files.
-                    FR1_File = True            
-                elif sectionStartIdentfier in line:  # if it finds "Q:" then it knows that it is in the right section of the datafile
-                    sectionIdentified = True           
-                    # print("Infusion data ('Q:') begins at line ", lineNumber)
-                elif (sectionIdentified):   # If True, it should be in the right section and trying to parse the data 
-                    if line[0] == " ":      # Looks for an indented section of text by checking that the first character is a space. 
-                        numberList = line.split()               # splits the line up into a "list" of text values (turned into numbers later)
-                        for dataNumber in numberList:           # goes through each "number" in the list (they are actually strings)
-                            if dataNumber.find(".") > 0:        # It ignores "numbers" that doesn't have a decimal point - i.e. the 1st number
-                                data = float(dataNumber)        # Convert the text value into a float (number with a decimal value)
-                                time = int(data*1000)           # time in mSec
-                                pair = [time, "P"]              # Cteate a timestamp pair: "Pump On" timestamp
-                                tempList.append(pair)           # Add to list
-                                pair = [time, "L"]              # Lever response timestamp
-                                tempList.append(pair)
-                                blockNum = int(time/600000)
-                                if FR1_File:
-                                    time = time+5000            # Pump Off time stamp. 
-                                else:
-                                    time = time+(aDataRecord.TH_PumpTimes[blockNum]*1000)   # Get pump duration from pump time array
-                                pair = [time, "p"]
-                                tempList.append(pair)
-                                dataPoints = dataPoints + 1     # Count number of data points                     
-                    elif sectionEndIdentifier in line:          # Look for end of section i.e. "R:"
-                        sectionIdentified = False
-            myOpenFile.close()
-            print("Found", dataPoints,"dataPoints in Zimmer file:", fileName)
-            aDataRecord.datalist = tempList
-
-    
-            """
-            There are two ways to calculate cocaine consumption during the bins.
-      
-            Option 1 assumes that timestamp data stream contained all the information,
-            such as the beginning and end of each Block ("B","b") and pump interval ("P","p").
-            This would tie the analysis directly to the data and would be able to handle situations in
-            which the interval length was changed (eg. 10 to 5 or 12 min) or the pumptimes were altered.
-
-            Option 2. Unfortunately, not all datastreams contain this information. The "work around" is to calculate
-            everything using only the pump start times. The duration of each infusion is calculated from the
-            pumptime list which is assigned when the datastream is loaded. This option assumes that the pumptime list
-            is accurate and that the bin length is always 10 min.
-
-            """
-
-            pumpStarttime = 0
-            blockNum = -1 
-            pumpOn = False
-            leverTotal = 0       
-            pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
-            aDataRecord.responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
-            aDataRecord.consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
-            aDataRecord.priceList = [0,0,0,0,0,0,0,0,0,0,0,0]
-            for pairs in aDataRecord.datalist:              # Fill pumpTimeList and responseList
-                if pairs[1] == 'P':
-                    time = pairs[0]
-                    blockNum = int(time/600000)
-                    aDataRecord.responseList[blockNum] = aDataRecord.responseList[blockNum] + 1  # inc Bin_responses
-                    leverTotal = leverTotal + 1                          # using pump for responses
-                    duration = aDataRecord.TH_PumpTimes[blockNum]
-                    pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration                     
-            mgPerSec = aDataRecord.cocConc * aDataRecord.pumpSpeed
-            for i in range(12):
-                aDataRecord.consumptionList[i] = pumpTimeList[i] * mgPerSec
-            
-            for i in range(12):
-                # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
-                dosePerResponse = aDataRecord.TH_PumpTimes[i] * aDataRecord.cocConc * aDataRecord.pumpSpeed
-                price = round(1/dosePerResponse,2)
-                aDataRecord.priceList[i] = price
-
-            return aDataRecord         
-
-    
 
     # ******************** End Draw Threshold ***********
 
