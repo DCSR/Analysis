@@ -392,8 +392,8 @@ class myGUI(object):
                               self.testTHGraphicsDisplay_2()).grid(row=20,column=0,sticky=S)
         test3Button = Button(self.thresholdButtonFrame, text="Test Button 3", command= lambda: \
                               self.testTHGraphicsDisplay_3()).grid(row=21,column=0,sticky=S)
-        PaulsButton1 = Button(self.thresholdButtonFrame, text="Paul's Button 1", \
-                                 command = lambda: self.simpletest_1()).grid(row=22,column=0,sticky=N)
+        testCurveFitButton = Button(self.thresholdButtonFrame, text="Test CurveFit", \
+                                 command = lambda: self.testCurveFit()).grid(row=22,column=0,sticky=N)
         PaulsButton2 = Button(self.thresholdButtonFrame, text="Paul's Button 2", \
                                  command = lambda: self.simpletest_2()).grid(row=23,column=0,sticky=N)
         PaulsButton3 = Button(self.thresholdButtonFrame, text="Paul's Button 3", \
@@ -455,8 +455,15 @@ class myGUI(object):
 
         # *************  The Controllers  **********
 
-    def simpletest_1(self):
-        label = "Paul's Label 1"
+    def testCurveFit(self):
+
+        def demandFunction(self, x, alpha, Qzero):
+            k = 4
+            y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            return y
+
+        
+        label = "Test Curve Fit"
         self.thresholdCanvas.create_text(300,100, text=label)
 
     def simpletest_2(self):
@@ -475,15 +482,16 @@ class myGUI(object):
     def demandFunction(self, x, alpha, Qzero, k):
             y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
             return y
+    From Hursh's spreadsheet
+    log(Q)=log(Q0)+k*(e-a*Q0*C-1)
     """ 
     def demandFunction(self, x, alpha, Qzero):
             k = 4
             y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
             return y
 
-    def testFunction(self, x, alpha):
-            k = 4
-            Qzero = self.scale_Q_zero.get()
+    def testFunction(self, x, k_value, alpha, Qzero):
+            k = k_value
             y = np.exp(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
             return y       
         
@@ -535,8 +543,6 @@ class myGUI(object):
         """
         from scipy.optimize import curve_fit
         from scipy.stats.stats import pearsonr
-
-        k_value = 4      # See issue 2 above
 
         selectedPumpTimesValues = self.pumpTimes.get()
         if (selectedPumpTimesValues == 0):
@@ -595,6 +601,10 @@ class myGUI(object):
         x_logRange = 3              # 3 Orders of magnitude: 1-1000
         y_logRange = 3              # 3 Orders of magnitude: 0.01-10
 
+        # k_value = math.log10(priceList[endRange]-priceList[startRange])
+        # print("k_value",k_value)
+        k_value = 4      # See issue 2 above
+
         x_caption = "Price (responses/mg cocaine)"
         y_caption = "Y"
         self.thresholdCanvas.delete('all')
@@ -636,6 +646,7 @@ class myGUI(object):
 
         if self.curveFitVar.get():
             popt, pcov = curve_fit(self.demandFunction, numpy_x_list, numpy_y_list)
+
             alpha = popt[0]
             Qzero = popt[1]
             self.scale_alpha.set(alpha)
