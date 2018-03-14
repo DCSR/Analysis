@@ -505,11 +505,11 @@ class myGUI(object):
             max_y_scale = self.max_y_scale.get()
             y_divisions = 10
             aTitle = aRecord.fileName
-            # def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, datalist, aTitle)
+            # def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, datalist, aTitle, leverChar = 'L')
             GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
             GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True)
             GraphLib.cumRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, \
-                           aRecord.datalist, self.showBPVar.get(), aTitle)
+                           aRecord.datalist, self.showBPVar.get(), aTitle, leverChar = 'J')
             
     def TwoLeverGraphTest1(self):
             label = "TwoLeverGraphTest1"
