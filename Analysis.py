@@ -446,7 +446,7 @@ class myGUI(object):
         self.text_2LPR_Frame = Frame(self.textTab, borderwidth=5, relief="sunken")
         self.text_2LPR_Frame.grid(column = 0, row = 1, sticky="NEW")
         TwoLeverTextButton = Button(self.text_2LPR_Frame, text="2L-PR Summary", command= lambda: \
-                              self.TwoLeverSummaryText()).grid(row=0,column=0,sticky=W)
+                              self.TwoLeverTextReport()).grid(row=0,column=0,sticky=W)
         TwoLeverTest1Button = Button(self.text_2LPR_Frame, text="2L-PR Test1", command= lambda: \
                               self.TwoLeverTest1()).grid(row=1,column=0,sticky=W)
         TwoLeverTest2Button = Button(self.text_2LPR_Frame, text="2L-PR Test2", command= lambda: \
@@ -520,8 +520,64 @@ class myGUI(object):
             self.graphCanvas.delete('all')
             self.graphCanvas.create_text(300,200, text=label)
 
-    def TwoLeverSummaryText(self):
-            self.textBox.insert("1.0","TwoLeverSummaryText\n")
+    def TwoLeverTextReport(self):
+            """
+            Access to drug is defined by 'B' and 'b'
+            Don't know what 'T' and 't' represent
+        
+
+            """
+            self.textBox.insert("1.0","Two Lever Summary\n")
+            binResponses = 0            
+            totalResponses = 0
+            binPumpTime = 0
+            totalPumpTime = 0
+            accessStartTime = 0
+            totalAccessTime = 0
+            pumpStarttime = 0
+            drugAccessIntervals = 0 
+            pumpOn = False
+            Total = 0       
+            pumpTimeList = []
+            responseList = []
+            aRecord = self.recordList[self.fileChoice.get()]
+            for pairs in aRecord.datalist:
+                if pairs[1] == 'B':  # Start of Drug Access - (also end of PR lever access)
+                    drugAccessIntervals = drugAccessIntervals + 1
+                    responseList.append(binResponses)
+                    binResponses = 0
+                    accessStartTime = pairs[0]
+                elif pairs[1] == 'J':
+                    binResponses = binResponses + 1
+                    totalResponses = totalResponses + 1
+                elif pairs[1] == 'P':
+                    pumpStartTime = pairs[0]
+                    pumpOn = True
+                elif pairs[1] == 'p':
+                    if pumpOn:
+                        pumpDuration = pairs[0]-pumpStartTime
+                        binPumpTime = binPumpTime + pumpDuration
+                        totalPumpTime = totalPumpTime + pumpDuration
+                        pumpOn = False
+                elif pairs[1] == 'b':   # End of Drug Access Period
+                    pumpTimeList.append(binPumpTime)
+                    binPumpTime = 0
+                    binAccessTime = pairs[0]-accessStartTime
+                    print(binAccessTime)
+                    totalAccessTime = totalAccessTime + binAccessTime
+                                       
+            responseList.append(binResponses)    # Non reinforced responses at the end of the session
+            self.textBox.insert(END,"Number of Drug Access Intervals = "+str(drugAccessIntervals)+'\n')
+            self.textBox.insert(END,"Total Responses = "+str(totalResponses)+'\n')
+            self.textBox.insert(END,"Total Pump Time = "+str(totalPumpTime)+'\n')
+            print(totalAccessTime)
+            accessIntervalLength = int((totalAccessTime/drugAccessIntervals)/1000)
+            self.textBox.insert(END,"Access Interval = "+str(accessIntervalLength)+' seconds \n')
+            print(responseList)
+            print(pumpTimeList)
+
+
+        
         
     def TwoLeverTest1(self):
             self.textBox.insert("1.0","TwoLeverTest1\n")
@@ -1060,13 +1116,14 @@ class myGUI(object):
         self.clearCanvas()
         aCanvas = self.graphCanvas
         x_zero = 100
-        y_zero = 400
+        y_zero = 500
         x_pixel_width = 650
         x_divisions = 12
         max_x_scale = self.max_x_scale.get()
         if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
         GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-360, x_pixel_width, max_x_scale, aRecord.datalist, ["L"], "L1 active")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-400, x_pixel_width, max_x_scale, aRecord.datalist, ["L"], "L1 active")       
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-360, x_pixel_width, max_x_scale, aRecord.datalist, ["A","a"], "A a")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-340, x_pixel_width, max_x_scale, aRecord.datalist, [">"], "L1 inactive")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-310, x_pixel_width, max_x_scale, aRecord.datalist, ["J"], "L2 active")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-290, x_pixel_width, max_x_scale, aRecord.datalist, ["<"], "L2 inactive") 
@@ -1075,7 +1132,7 @@ class myGUI(object):
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-210, x_pixel_width, max_x_scale, aRecord.datalist, ["C","c"], "Stim 2")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-180, x_pixel_width, max_x_scale, aRecord.datalist, ["=","."], "Lever 1")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-160, x_pixel_width, max_x_scale, aRecord.datalist, ["-",","], "Lever 2")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-130,  x_pixel_width, max_x_scale, aRecord.datalist, ["t","T"], "Timeout")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-130,  x_pixel_width, max_x_scale, aRecord.datalist, ["T"], "T")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-100,  x_pixel_width, max_x_scale, aRecord.datalist, ["F"], "Food Tray")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-70,  x_pixel_width, max_x_scale, aRecord.datalist, ["B","b"], "Access")
         GraphLib.eventRecord(aCanvas, x_zero, y_zero-50,  x_pixel_width, max_x_scale, aRecord.datalist, ["H","h"], "Houselight")
