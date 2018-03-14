@@ -123,7 +123,7 @@ class myGUI(object):
         "root" is the base level; all other frames and widgets are in relation to "root".
 
         """
-        self.version = "Analysis200"
+        self.version = "Analysis"
         self.root = Tk()
         self.root.title(self.version)
         canvas_width = 800
@@ -209,6 +209,8 @@ class myGUI(object):
                               self.openWakeFile("TH_FEATHER_test.dat")).grid(row=0,column=5,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="IntA_Example_File.dat", command= lambda: \
                               self.openWakeFile("IntA_Example_File.dat")).grid(row=0,column=6,sticky=N, padx = 20)
+        loadTestButton2 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
+                              self.openWakeFile("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
 
         #************** Graph Tab ******************
         self.columnFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
@@ -259,10 +261,26 @@ class myGUI(object):
         IntA_histogram_all_Button = Button(self.graph_IntA_frame, text="Histogram (All)", command= lambda: \
             self.IntAHistogram_all()).grid(row=4,column=0,sticky=N)
 
+
+        # ******  2L - PR Frame *********
+
+        self.graph_2LPR_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
+        self.graph_2LPR_frame.grid(column = 0, row = 3)
+        TwoLever_frame_lable = Label(self.graph_2LPR_frame, text = "2L-PR").grid(row = 0, column=0)
+        TwoLever_CR_button = Button(self.graph_2LPR_frame, text="Cum Rec", command= lambda: \
+            self.TwoLeverCR()).grid(row=1,column=0,sticky=N)
+        TwoLever_Test1_button = Button(self.graph_2LPR_frame, text="Test 1", command= lambda: \
+            self.TwoLeverGraphTest1()).grid(row=2,column=0,sticky=N)
+        TwoLever_Test2_button = Button(self.graph_2LPR_frame, text="Test 2", command= lambda: \
+            self.TwoLeverGraphTest2()).grid(row=3,column=0,sticky=N)
+
+
+
+
         # ******  Example Frame *********
 
         self.graph_example_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_example_frame.grid(column = 0, row = 3)
+        self.graph_example_frame.grid(column = 0, row = 4)
         example_frame_lable = Label(self.graph_example_frame, text = "Examples").grid(row = 0, column=0)
         model_example_button = Button(self.graph_example_frame, text="Test Model", command= lambda: \
                 self.testModel()).grid(row=1,column=0,sticky=N)
@@ -413,7 +431,7 @@ class myGUI(object):
         cleartextButton = Button(self.textButtonFrame, text="Clear", command= lambda: \
                               self.clearText()).grid(row=0,column=0,sticky=N)
         self.textBox = Text(self.textTab, width=100, height=43)
-        self.textBox.grid(column = 1, row = 0)
+        self.textBox.grid(column = 1, row = 0, rowspan = 2)
         summarytextButton = Button(self.textButtonFrame, text="Summary", command= lambda: \
                               self.summaryText()).grid(row=1,column=0,sticky=N)
         testText1Button = Button(self.textButtonFrame, text="Text Formatting Examples", command= lambda: \
@@ -424,6 +442,18 @@ class myGUI(object):
                               self.intA_text()).grid(row=4,column=0,sticky=N)
         TH_text_button = Button(self.textButtonFrame, text="Threshold (TH)", command= lambda: \
                               self.threshold_text()).grid(row=4,column=0,sticky=N)
+
+        self.text_2LPR_Frame = Frame(self.textTab, borderwidth=5, relief="sunken")
+        self.text_2LPR_Frame.grid(column = 0, row = 1, sticky="NEW")
+        TwoLeverTextButton = Button(self.text_2LPR_Frame, text="2L-PR Summary", command= lambda: \
+                              self.TwoLeverSummaryText()).grid(row=0,column=0,sticky=W)
+        TwoLeverTest1Button = Button(self.text_2LPR_Frame, text="2L-PR Test1", command= lambda: \
+                              self.TwoLeverTest1()).grid(row=1,column=0,sticky=W)
+        TwoLeverTest2Button = Button(self.text_2LPR_Frame, text="2L-PR Test2", command= lambda: \
+                              self.TwoLeverTest2()).grid(row=3,column=0,sticky="W")
+
+
+        
 
         #*************** bottom row ****************
         padding = 20
@@ -454,6 +484,52 @@ class myGUI(object):
 
 
         # *************  The Controllers  **********
+
+
+    # *************** Two Lever ********************
+
+    def TwoLeverCR(self):
+            self.graphCanvas.delete('all')
+            # label = "TwoLever Cum Rec"
+            # self.graphCanvas.create_text(300,200, text=label)
+            aRecord = self.recordList[self.fileChoice.get()]
+            # print(aRecord)
+            # canvas is 800 x 600
+            x_zero = 50
+            y_zero = 550
+            x_pixel_width = 700                               
+            y_pixel_height = 500
+            x_divisions = 12
+            max_x_scale = self.max_x_scale.get()
+            if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
+            max_y_scale = self.max_y_scale.get()
+            y_divisions = 10
+            aTitle = aRecord.fileName
+            # def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, datalist, aTitle)
+            GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
+            GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True)
+            GraphLib.cumRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, \
+                           aRecord.datalist, self.showBPVar.get(), aTitle)
+            
+    def TwoLeverGraphTest1(self):
+            label = "TwoLeverGraphTest1"
+            self.graphCanvas.delete('all')
+            self.graphCanvas.create_text(300,200, text=label)
+    def TwoLeverGraphTest2(self):
+            label = "TwoLeverGraphTest2"
+            self.graphCanvas.delete('all')
+            self.graphCanvas.create_text(300,200, text=label)
+
+    def TwoLeverSummaryText(self):
+            self.textBox.insert("1.0","TwoLeverSummaryText\n")
+        
+    def TwoLeverTest1(self):
+            self.textBox.insert("1.0","TwoLeverTest1\n")
+
+    def TwoLeverTest2(self):
+            self.textBox.insert("1.0","TwoLeverTest2\n")
+
+    # ************ End Two Lever *******************
 
     def testCurveFit(self):
 
@@ -879,9 +955,19 @@ class myGUI(object):
         leverTotal = 0       
         pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
         responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
+        """
+        This procedure assumes the datafile if a Threshold file and fills the
+        response and consumption lists according - i.e. 12 bins.
+        But a PR daatfile could have many more bins which could throw an error.
+        So for now, if the bin number will not count higher than 11.
+
+        Eventually, 
+
+        """
         for pairs in self.recordList[selected].datalist:
             if pairs[1] == 'B':
-                blockNum = blockNum + 1
+                if blockNum < 11:
+                    blockNum= blockNum + 1
             elif pairs[1] == 'P':
                 pumpStartTime = pairs[0]
                 pumpOn = True
