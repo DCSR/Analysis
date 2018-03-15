@@ -489,6 +489,12 @@ class myGUI(object):
     # *************** Two Lever ********************
 
     def TwoLeverCR(self):
+
+            def draw_bar(x,y, pixel_height, width, color = "black"):
+                self.graphCanvas.create_line(x, y, x, y-pixel_height, fill=color)
+                self.graphCanvas.create_line(x, y-pixel_height, x+width, y - pixel_height, fill=color)
+                self.graphCanvas.create_line(x+width, y-pixel_height, x+width, y, fill=color)
+        
             self.graphCanvas.delete('all')
             # label = "TwoLever Cum Rec"
             # self.graphCanvas.create_text(300,200, text=label)
@@ -496,9 +502,9 @@ class myGUI(object):
             # print(aRecord)
             # canvas is 800 x 600
             x_zero = 50
-            y_zero = 550
+            y_zero = 400
             x_pixel_width = 700                               
-            y_pixel_height = 500
+            y_pixel_height = 350
             x_divisions = 12
             max_x_scale = self.max_x_scale.get()
             if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
@@ -506,10 +512,48 @@ class myGUI(object):
             y_divisions = 10
             aTitle = aRecord.fileName
             # def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, datalist, aTitle, leverChar = 'L')
-            GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
+            self.graphCanvas.create_line(x_zero, y_zero, x_pixel_width, y_zero)
             GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True)
             GraphLib.cumRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, \
                            aRecord.datalist, self.showBPVar.get(), aTitle, leverChar = 'J')
+            # Get pump times
+            binPumpTime = 0
+            pumpStarttime = 0
+            pumpOn = False     
+            pumpTimeList = []
+            for pairs in aRecord.datalist:
+                if pairs[1] == 'B':  # Start of Drug Access
+                    binStartTime = pairs[0]
+                elif pairs[1] == 'P':
+                    pumpStartTime = pairs[0]
+                    pumpOn = True
+                elif pairs[1] == 'p':
+                    if pumpOn:
+                        pumpDuration = pairs[0]-pumpStartTime
+                        binPumpTime = binPumpTime + pumpDuration
+                        pumpOn = False
+                elif pairs[1] == 'b':   # End of Drug Access Period
+                    dataPoint = [binStartTime,binPumpTime]
+                    pumpTimeList.append(dataPoint)
+                    binPumpTime = 0
+            print(pumpTimeList)
+            # adapted from GraphLib.eventRecord()
+            y_zero = 525
+            x = x_zero
+            y = y_zero
+            scale_height = 90
+            scale_max = 10000
+            x_scaler = x_pixel_width / (max_x_scale*60*1000)
+            for pairs in pumpTimeList:
+                x = (x_zero + pairs[0] * x_scaler // 1)
+                y = (pairs[1]/scale_max * scale_height) // 1
+                draw_bar(x,y_zero,y,5)
+                # self.graphCanvas.create_line(x, y, newX, y)
+                # self.graphCanvas.create_line(newX, y, newX, y-10)                        
+                # x = newX
+            GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
+            self.graphCanvas.create_text(400, y_zero+50, fill="blue", text = 'Session Time (min)') 
+            
             
     def TwoLeverGraphTest1(self):
             label = "TwoLeverGraphTest1"
@@ -537,7 +581,7 @@ class myGUI(object):
             pumpStarttime = 0
             drugAccessIntervals = 0 
             pumpOn = False
-            Total = 0       
+            # Total = 0       
             pumpTimeList = []
             responseList = []
             aRecord = self.recordList[self.fileChoice.get()]
