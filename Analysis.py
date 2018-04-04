@@ -368,6 +368,13 @@ class myGUI(object):
                                  from_= 0.0005, to = 0.02, variable = self.alphaVar)
         self.scale_alpha.set(0.005)
         self.scale_alpha.grid(row=11,column=0, columnspan = 2)
+
+        self.k_Var = DoubleVar()
+        self.k_Label = Label(self.drawThresholdFrame, text = "k").grid(row=12,column=0,columnspan = 2,sticky=EW)
+        self.scale_k = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.1, \
+                                 from_= 0.0, to = 9.9, variable = self.k_Var)
+        self.scale_k.set(4.0)
+        self.scale_k.grid(row=13,column=0, columnspan = 2)
     
         self.startStopFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.startStopFrame.grid(columnspan=2, row = 9, column = 0)
@@ -410,11 +417,8 @@ class myGUI(object):
                               self.testTHGraphicsDisplay_2()).grid(row=20,column=0,sticky=S)
         test3Button = Button(self.thresholdButtonFrame, text="testCurveFit", \
                                  command= lambda: self.testCurveFit()).grid(row=21,column=0,sticky=S)
-        test4Button = Button(self.thresholdButtonFrame, text="unused").grid(row=22,column=0,sticky=N)
-        test5Button = Button(self.thresholdButtonFrame, text="simpletest_2", \
-                                 command = lambda: self.simpletest_2()).grid(row=23,column=0,sticky=N)
-        test6Button = Button(self.thresholdButtonFrame, text="simpletest_3", \
-                                 command = lambda: self.simpletest_3()).grid(row=24,column=0,sticky=N)
+        test4Button = Button(self.thresholdButtonFrame, text="simpleTest()", \
+                                 command = lambda: self.simpleTest()).grid(row=23,column=0,sticky=N)
 
         self.thresholdCanvas = Canvas(self.thresholdTab, width = canvas_width, height = canvas_height)
         self.thresholdCanvas.grid(row=0,column=1)
@@ -627,18 +631,12 @@ class myGUI(object):
 
     # ************ End Two Lever *******************
 
-    def simpletest_2(self):
-        label = "simpletest_2"
+    def simpleTest(self):
+        label = "simpleTest"
         self.thresholdCanvas.create_text(300,200, text=label)
-
-    def simpletest_3(self):
-        label = "simpletest_3"
-        self.thresholdCanvas.create_text(300,300, text=label)
-  
 
     def testText1(self):
         Examples.showTextFormatExamples(self.textBox)
-
 
     def demandFunction(self, x, alpha, Qzero):
             k = 2
@@ -985,6 +983,11 @@ class myGUI(object):
 
         Have 100% confidence about Hursh's formula
 
+        Qzero, alpha, k
+        These look identical:
+
+        1.0, 0.3, 6
+        1.0, 0.5, 4.2
     
 
         To Do:
@@ -1069,8 +1072,7 @@ class myGUI(object):
         
         def demandFunction(x, k, alpha, Qzero):
             #y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
-            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
-            #y = np.power(10,(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)))
+            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))       # Hursh - I think.  
             return y
 
         
@@ -1080,7 +1082,7 @@ class myGUI(object):
         y_zero = 550
         x_pixel_width = 600
         y_pixel_height = 500
-        x_startValue = 0.1
+        x_startValue = 1.0
         y_startValue = 0.001
         x_logRange = 4
         y_logRange = 4
@@ -1093,7 +1095,7 @@ class myGUI(object):
         max_x_scale = 1000  # used if not log
         max_y_scale = 10    # used if not log
 
-
+        """
         dose_ug = [383.5, 215.6, 121.3, 68.2, 38.3, 21.6, 12.1, 6.8, 3.8, 2.2, 1.2]  # Aston-Jones
         doseList = []
         priceList = []       
@@ -1103,32 +1105,31 @@ class myGUI(object):
             doseList.append(round(dose,4))            
             priceList.append(round(price,2))
 
-        priceList = []
+        """
+
+        # Generate priceList from 1 to 10,000
         exponent = 0
+        priceList = []        
         for i in range(17):      
             price = np.power(10,exponent)
             exponent = exponent + 0.25
             priceList.append(price)
-        print(priceList)        
 
-        #priceList = [2.53, 4.0, 6.35, 10.13, 16.0, 25.0, 40.0, 61.54, 100.0, 160.0, 266.67, 400.0]           
+        #print(priceList)
 
-        # print("doseList", doseList)            
-        # print("priceList",priceList)
-        #alpha = self.scale_alpha.get()
-        #Qzero = self.scale_Q_zero.get()
         logX = self.logXVar.get()
-        logY = self.logYVar.get()
+        logY = self.logYVar.get()            
+
+        alpha = self.scale_alpha.get()
+        Qzero = self.scale_Q_zero.get()
+        k = self.scale_k.get()       
         alphaList = []
         pmaxList = []
-        Qzero = 0.8
-        k = 4
-        alpha = 0.0035
+       
         for x in range(1):
             fitLineY = []
             for i in range(len(priceList)):
                 x = priceList[i]
-                # y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
                 y = demandFunction(priceList[i],k,alpha,Qzero)
                 fitLineY.append(y)
             GraphLib.betaTestCurve(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, \
@@ -1145,7 +1146,7 @@ class myGUI(object):
                         Pmax = x 
                         PmaxFound = True
                         pmaxList.append(Pmax)
-        print(fitLineY)
+        # print(fitLineY)
         
         # print(alphaList)
         # print(pmaxList)
