@@ -405,16 +405,15 @@ class myGUI(object):
 
 
         test1Button = Button(self.thresholdButtonFrame, text="Axes examples", command= lambda: \
-                              self.testTHGraphicsDisplay_1()).grid(row=19,column=0,sticky=S)
+                              self.testAxisExamples()).grid(row=19,column=0,sticky=S)
         test2Button = Button(self.thresholdButtonFrame, text="Test Pmax calc", command= lambda: \
                               self.testTHGraphicsDisplay_2()).grid(row=20,column=0,sticky=S)
-        test3Button = Button(self.thresholdButtonFrame, text="Test Button 3", command= lambda: \
-                              self.testTHGraphicsDisplay_3()).grid(row=21,column=0,sticky=S)
-        testCurveFitButton = Button(self.thresholdButtonFrame, text="Test CurveFit", \
-                                 command = lambda: self.testCurveFit()).grid(row=22,column=0,sticky=N)
-        PaulsButton2 = Button(self.thresholdButtonFrame, text="Paul's Button 2", \
+        test3Button = Button(self.thresholdButtonFrame, text="testCurveFit", \
+                                 command= lambda: self.testCurveFit()).grid(row=21,column=0,sticky=S)
+        test4Button = Button(self.thresholdButtonFrame, text="unused").grid(row=22,column=0,sticky=N)
+        test5Button = Button(self.thresholdButtonFrame, text="simpletest_2", \
                                  command = lambda: self.simpletest_2()).grid(row=23,column=0,sticky=N)
-        PaulsButton3 = Button(self.thresholdButtonFrame, text="Paul's Button 3", \
+        test6Button = Button(self.thresholdButtonFrame, text="simpletest_3", \
                                  command = lambda: self.simpletest_3()).grid(row=24,column=0,sticky=N)
 
         self.thresholdCanvas = Canvas(self.thresholdTab, width = canvas_width, height = canvas_height)
@@ -618,10 +617,7 @@ class myGUI(object):
             accessIntervalLength = int((totalAccessTime/drugAccessIntervals)/1000)
             self.textBox.insert(END,"Access Interval = "+str(accessIntervalLength)+' seconds \n')
             print(responseList)
-            print(pumpTimeList)
-
-
-        
+            print(pumpTimeList)       
         
     def TwoLeverTest1(self):
             self.textBox.insert("1.0","TwoLeverTest1\n")
@@ -631,38 +627,21 @@ class myGUI(object):
 
     # ************ End Two Lever *******************
 
-    def testCurveFit(self):
-
-        def demandFunction(self, x, alpha, Qzero):
-            k = 4
-            y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
-            return y
-
-        
-        label = "Test Curve Fit"
-        self.thresholdCanvas.create_text(300,100, text=label)
-
     def simpletest_2(self):
-        label = "Paul's Label 2"
+        label = "simpletest_2"
         self.thresholdCanvas.create_text(300,200, text=label)
 
     def simpletest_3(self):
-        label = "Paul's Label 3"
+        label = "simpletest_3"
         self.thresholdCanvas.create_text(300,300, text=label)
   
 
     def testText1(self):
         Examples.showTextFormatExamples(self.textBox)
 
-    """
-    def demandFunction(self, x, alpha, Qzero, k):
-            y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
-            return y
-    From Hursh's spreadsheet
-    log(Q)=log(Q0)+k*(e-a*Q0*C-1)
-    """ 
+
     def demandFunction(self, x, alpha, Qzero):
-            k = 4
+            k = 2
             y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
             return y
 
@@ -750,6 +729,10 @@ class myGUI(object):
             datalist = aDataRecord.datalist    # Event record needs this.
             consumptionList = aDataRecord.consumptionList
             responseList = aDataRecord.responseList
+
+        # Test list generated with k = 2, Qzero = 1.0, alpha = 0.0035
+        # but this doesn't 
+        #consumptionList = [0.885, 0.8777, 0.865, 0.845, 0.815, 0.773, 0.710, 0.632, 0.524, 0.407, 0.288, 0.214]
 
         x_zero = 100
         y_zero = 500
@@ -905,7 +888,7 @@ class myGUI(object):
                                    x_startValue, y_startValue, x_logRange, y_logRange, max_x_scale, response_max_y_scale, \
                                    priceList,responseList, logX, False, drawLine = True, color = "black")
 
-    def testTHGraphicsDisplay_1(self):
+    def testAxisExamples(self):
         """
          Test the drawLogYAxis() function with various parameters
         """ 
@@ -962,40 +945,220 @@ class myGUI(object):
         k  =  4
         for x in range(30,40):
             print(x, -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x))
+
+
+    def testCurveFit(self):
+        """
+        What I learned on Sunday April 1.
+
+        k = 4, alpha = 0.0035, Qzero = 0.8
+
+        y = np.power(10,(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)))
+
+        The above was used to generate a hypothetical curve in Python. The cost and "consumption"
+        data were entered into Hursh's spreadsheet. The "predicted" was then entered into the
+        spreadsheet.
+
+        It was not an exact fit, even when I manually entered k, alpha and Qzero into the spreadsheet.
+
+        If the "predicted" values were entered as the observed data, as one would expect, it fit perfectly.
+
+        Conclusion, Python isn't generating the same curve.
         
 
-    def testTHGraphicsDisplay_3(self):
+
+        Not clear how "predicted" relates to FitLineY.
+
+        Issues:
+        You would think 
+
+        -------------------------------------------       
+        Natural Log
+        Python: np.log() is inverse of np.exp()
+        Excel: LN() is inverse of EXP()
+        
+        Base 10 log
+        Python: np.log10() is inverse of np.power(10,x)
+        Excel: LOG10() IS INVERSE OF POWER(10,X)
+        np.e**
+        -------------------------------------------
+
+        Have 100% confidence about Hursh's formula
+
+    
+
+        To Do:
+        change to: (add k)
+        def demandFunction(x, k, alpha, Qzero):
+
+        1. Are these equivalent:
+            y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            y = np.exp(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            
+        2. Which is faster? (Use timeit)
+
+        3. Does y = np.power(10,(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)))
+        produces the same answer as Hursh?
+
+        4. Warnings: Does numpy expect data in np.array([12, 22, ...])?
+
+        5. Add a k-scale back to Analysis
+
+        Done:
+        Change x axis range to 4 log units
+
+
+        Lookup timeit
+        - timeit.timeit("np.exp(x)", setup="import numpy as np; x = np.array([99, 100, 101])")
+
+        *************************************
+        
+        def demandFunction(x, k alpha, Qzero, k):
+            y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            return y
+
+
+        In Excel
+        LN is the inverse of EXP
+        LOG is the inverse of POWER(10,x)
+
+    
+        From Hursh's spreadsheet
+        log(Q)=log(Q0)+k*(e-a*Q0*C-1)
+
+        True/False:
+        log(Q)=log(Q0)+k*(EXP(-a*Q0*C-1))
+
+        True/False:
+        EXP(log(Q)) = EXP(log(Q0)+k*(EXP(-a*Q0*C-1)))
+
+        Equals: True/False
+        log(y) = (np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)
+
+        OMNI 
+        pumpTimes [3.162, 1.78, 1.0, 0.562, 0.316, 0.188, 0.1, 0.056, 0.031, 0.018, 0.01, 0.0056]
+        doseList [0.395, 0.223, 0.125, 0.07, 0.04, 0.024, 0.013, 0.007, 0.004, 0.002, 0.001, 0.001]
+        priceList [2.53, 4.49, 8.0, 14.23, 25.32, 42.55, 80.0, 142.86, 258.06, 444.44, 800.0, 1428.57]
+
+        Feather
+        pumpTimes [3.16, 2.0, 1.26, 0.79, 0.5, 0.32, 0.2, 0.13, 0.08, 0.05, 0.03, 0.02]
+        doseList [0.395, 0.25, 0.158, 0.099, 0.062, 0.04, 0.025, 0.016, 0.01, 0.006, 0.004, 0.003]
+        priceList [2.53, 4.0, 6.35, 10.13, 16.0, 25.0, 40.0, 61.54, 100.0, 160.0, 266.67, 400.0]
+
+        Aston-Jones
+        doseList [0.3835, 0.2156, 0.1213, 0.0682, 0.0383, 0.0216, 0.0121, 0.0068, 0.0038, 0.0022, 0.0012]
+        priceList [2.61, 4.64, 8.24, 14.66, 26.11, 46.3, 82.64, 147.06, 263.16, 454.55, 833.33]
+
+        eg.
+        pumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.018,0.010,0.0056]
+        doseList = []
+        priceList = []
+        for i in range(12):
+            dose = pumpTimes[i] * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+            price = round(1/dose,2)
+            #dose = round(dose,3)
+            doseList.append(round(dose,3))            
+            priceList.append(price)
+        print('pumpTimes',pumpTimes)
+        print("doseList", doseList)            
+        print("priceList",priceList)
+
+        """ 
+
+        from scipy.stats.stats import pearsonr
+        
+        def demandFunction(x, k, alpha, Qzero):
+            #y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            #y = np.power(10,(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)))
+            return y
+
+        
         aCanvas = self.thresholdCanvas
+        aCanvas.create_text(300,30, text="testCurveFit_1")
         x_zero = 100
         y_zero = 550
         x_pixel_width = 600
         y_pixel_height = 500
-        x_startValue = 1
-        y_startValue = 0.01
-        x_logRange = 3
-        y_logRange = 3
+        x_startValue = 0.1
+        y_startValue = 0.001
+        x_logRange = 4
+        y_logRange = 4
         x_caption = "Price (responses/mg cocaine)"
         y_caption = "Y"
         #leftLabel = True
-        GraphLib.drawLog_X_Axis(aCanvas,x_zero,y_zero,x_pixel_width,x_startValue,x_logRange,x_caption, test = True)
-        GraphLib.drawLog_Y_Axis(aCanvas,x_zero,y_zero,y_pixel_height,y_startValue,y_logRange,y_caption, test = True)
+        GraphLib.drawLog_X_Axis(aCanvas,x_zero,y_zero,x_pixel_width,x_startValue,x_logRange,x_caption)
+        GraphLib.drawLog_Y_Axis(aCanvas,x_zero,y_zero,y_pixel_height,y_startValue,y_logRange,y_caption)
 
         max_x_scale = 1000  # used if not log
         max_y_scale = 10    # used if not log
-        xList = [3,10,30,100,300,1000]
-        yList = [1,1,1,1,1,1]
-        logX = True
-        logY = True
 
-        GraphLib.betaTestCurve(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, \
+
+        dose_ug = [383.5, 215.6, 121.3, 68.2, 38.3, 21.6, 12.1, 6.8, 3.8, 2.2, 1.2]  # Aston-Jones
+        doseList = []
+        priceList = []       
+        for i in range(len(dose_ug)):
+            dose = dose_ug[i] / 1000
+            price = round(1/dose,4)
+            doseList.append(round(dose,4))            
+            priceList.append(round(price,2))
+
+        priceList = []
+        exponent = 0
+        for i in range(17):      
+            price = np.power(10,exponent)
+            exponent = exponent + 0.25
+            priceList.append(price)
+        print(priceList)        
+
+        #priceList = [2.53, 4.0, 6.35, 10.13, 16.0, 25.0, 40.0, 61.54, 100.0, 160.0, 266.67, 400.0]           
+
+        # print("doseList", doseList)            
+        # print("priceList",priceList)
+        #alpha = self.scale_alpha.get()
+        #Qzero = self.scale_Q_zero.get()
+        logX = self.logXVar.get()
+        logY = self.logYVar.get()
+        alphaList = []
+        pmaxList = []
+        Qzero = 0.8
+        k = 4
+        alpha = 0.0035
+        for x in range(1):
+            fitLineY = []
+            for i in range(len(priceList)):
+                x = priceList[i]
+                # y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+                y = demandFunction(priceList[i],k,alpha,Qzero)
+                fitLineY.append(y)
+            GraphLib.betaTestCurve(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, \
                                x_startValue, y_startValue, x_logRange, y_logRange, max_x_scale, max_y_scale, \
-                               xList, yList, logX, logY, drawLine = False, color = "black")
+                               priceList, fitLineY, logX, logY, drawSymbol = False, color = "blue")
+                               # priceList, consumptionList, logX, logY, drawLine = False, color = "red")
+            alphaList.append(alpha)
+            PmaxFound = False
+            for x in range(10,1500):
+                if (PmaxFound != True):
+                    slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
+                    #if (slope < -0.9): print("slope at ",x," = ", slope)                
+                    if slope < -1.0:
+                        Pmax = x 
+                        PmaxFound = True
+                        pmaxList.append(Pmax)
+        print(fitLineY)
+        
+        # print(alphaList)
+        # print(pmaxList)
+        # r = pearsonr(alphaList, pmaxList)
+        # label = "r = {:.3f}, N = {}".format(r[0],len(alphaList))
+        # print(label)
 
-        GraphLib.betaTestCurve(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, \
-                               x_startValue, y_startValue, x_logRange, y_logRange, max_x_scale, max_y_scale, \
-                               xList, yList, logX, logY, drawLine = True, color = "blue")
-
-
+        # r = -0.861, N = 20   - k = 4
+        # r = -0.861, N = 20   - k = 6
+        # r = -0.863, N = 20   - k = 8
+        
+        
+        
     def testText2(self):
         num = 0
         for pairs in self.recordList[self.fileChoice.get()].datalist:
