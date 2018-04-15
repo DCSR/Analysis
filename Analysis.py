@@ -128,14 +128,14 @@ class myGUI(object):
         It uses the Tk tookkit imported from tkinter.
         "root" is the base level; all other frames and widgets are in relation to "root".
 
+        Note that widgets can be called from Tk or ttk. Here the default is to Tk widgets. 
+
         """
         self.version = "Analysis"
         self.root = Tk()
         self.root.title(self.version)
         canvas_width = 800
         canvas_height = 600
-
-        self.fig = plt.figure()
 
         #Construct ten empty dataRecords
         self.record0 = DataRecord([],"empty")         
@@ -284,9 +284,6 @@ class myGUI(object):
         TwoLever_Test2_button = Button(self.graph_2LPR_frame, text="Test 2", command= lambda: \
             self.TwoLeverGraphTest2()).grid(row=3,column=0,sticky=N)
 
-
-
-
         # ******  Example Frame *********
 
         self.graph_example_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
@@ -297,8 +294,6 @@ class myGUI(object):
         axes_example_button = Button(self.graph_example_frame, text="Axes", command= lambda: \
                               self.test()).grid(row=2,column=0,sticky=N)
         
-
-
         # *************************************
         
         self.graph_XaxisRadioButtonFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
@@ -364,7 +359,7 @@ class myGUI(object):
         self.showOmaxLine = BooleanVar(value = True)
         showOmaxCheckButton = Checkbutton(self.drawThresholdFrame, text = "Omax line", variable = self.showOmaxLine, \
                                         onvalue = True, offvalue = False).grid(row = 7, column = 0, sticky = W)
-        self.AssignQzeroVar = DoubleVar()
+        
         self.QzeroVar = DoubleVar()
         self.QzeroLabel = Label(self.drawThresholdFrame, text = "Qzero").grid(row=8,column=0,columnspan = 2,sticky=EW)
         self.scale_Q_zero = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.05, \
@@ -383,7 +378,7 @@ class myGUI(object):
         self.k_Label = Label(self.drawThresholdFrame, text = "k").grid(row=12,column=0,columnspan = 2,sticky=EW)
         self.scale_k = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.1, \
                                  from_= 0.0, to = 9.9, variable = self.k_Var)
-        self.scale_k.set(4.0)
+        self.scale_k.set(9.0)
         self.scale_k.grid(row=13,column=0, columnspan = 2)
     
         self.startStopFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
@@ -421,17 +416,22 @@ class myGUI(object):
         respMaxButton4 = Radiobutton(self.responseButtonFrame, text = "200   ", variable=self.respMax, value = 200).grid(row=3,column=1)
 
 
-        test1Button = Button(self.thresholdButtonFrame, text="Axes examples", command= lambda: \
-                              self.testAxisExamples()).grid(row=19,column=0,sticky=S)
+        test1Button = Button(self.thresholdButtonFrame, text="Place Holder", command= lambda: \
+                              self.placeHolder()).grid(row=19,column=0,sticky=S)
         test2Button = Button(self.thresholdButtonFrame, text="Test Pmax calc", command= lambda: \
                               self.testTHGraphicsDisplay_2()).grid(row=20,column=0,sticky=S)
-        test3Button = Button(self.thresholdButtonFrame, text="testCurveFit", \
-                                 command= lambda: self.testCurveFit()).grid(row=21,column=0,sticky=S)
+        test3Button = Button(self.thresholdButtonFrame, text="Clear Figure", \
+                                 command= lambda: self.placeHolder()).grid(row=21,column=0,sticky=S)
         test4Button = Button(self.thresholdButtonFrame, text="testMatPlotFit", \
                                  command = lambda: self.testMatPlotFit()).grid(row=23,column=0,sticky=N)
 
-        self.thresholdCanvas = Canvas(self.thresholdTab, width = canvas_width, height = canvas_height)
-        self.thresholdCanvas.grid(row=0,column=1)
+        self.thresholdCanvasFrame = Frame(self.thresholdTab, borderwidth=2, relief="sunken")
+        self.thresholdCanvasFrame.grid(row = 0, column = 1, sticky = EW)
+
+        self.fig = plt.figure() 
+        
+        self.thresholdCanvas = Canvas(self.thresholdCanvasFrame, width = canvas_width, height = canvas_height)
+        self.thresholdCanvas.grid(row=0,column=0)
         self.thresholdCanvas.create_text(100,10,text = "Threshold Canvas")
 
 
@@ -468,21 +468,16 @@ class myGUI(object):
         Button1 = Button(self.testAreaButtonFrame, text="Sine Wave", command= lambda: \
                               self.testAreaTest1()).grid(row=0,column=0,sticky=N)
         Button2 = Button(self.testAreaButtonFrame, text="Demand Curve", command= lambda: \
-                              self.testAreaTest2()).grid(row=1,column=0,sticky=N)
-        Button3 = Button(self.testAreaButtonFrame, text="Two Plots", command= lambda: \
-                              self.testAreaTest3()).grid(row=2,column=0,sticky=N)
+                              self.demandCurveTest()).grid(row=1,column=0,sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="Save Figure.png", command= lambda: \
-                              self.saveFigure()).grid(row=3,column=0,sticky=N)
+                              self.saveFigure()).grid(row=2,column=0,sticky=N)        
+        Button3 = Button(self.testAreaButtonFrame, text="Curve Fit Exp", command= lambda: \
+                              self.curveFitExp()).grid(row=3,column=0,sticky=N)
+        Button4 = Button(self.testAreaButtonFrame, text="Curve Fit Linear", command= lambda: \
+                              self.curveFitLinear()).grid(row=4,column=0,sticky=N)
+
         self.testAreaCanvasFrame = Frame(self.testAreaTab, borderwidth=5, relief="sunken")
         self.testAreaCanvasFrame.grid(column = 1, row = 0, sticky=N)
-
-        """
-        self.testCanvas = Canvas(self.testAreaTab, width = canvas_width, height = canvas_height)
-        self.testCanvas.grid(row=0,column=1)
-        self.testCanvas.create_text(100,10,text = "Test Area Canvas")    
-        """
-
-
 
         #*************** FileSelectorFrame stuff ****************
         padding = 20
@@ -512,7 +507,139 @@ class myGUI(object):
         
 
 
-    # *************  The Controllers  **********
+        # *************  The Controllers  **********
+
+    def placeHolder(self):
+        #plt.figure.clf()
+        plt.clf()
+
+    def saveFigure(self):
+        """
+        None > save a "Figure.png" in current directory.
+        The will overwrite current file. Rename if you want to keep it. 
+        See matplotlib.pyplot.savefig(*args, **kwargs)
+        self.fig is defined in myGUI and used as a container in all pyplot plots.
+        This procedure saves the current self.fig to Figure.png
+        Changing the extension will change the format:  eg. ".pdf" 
+
+        """
+        # Spawn an Info dialog box
+        self.fig.savefig('Figure.png')
+
+    def testMatPlotFit(self):
+        """
+        dose_ug = [383.5, 215.6, 121.3, 68.2, 38.3, 21.6, 12.1, 6.8, 3.8, 2.2, 1.2]  # Aston-Jones
+        doseList = []
+        priceList = []       
+        for i in range(len(dose_ug)):
+            dose = dose_ug[i] / 1000
+            price = round(1/dose,4)
+            doseList.append(round(dose,4))            
+            priceList.append(round(price,2))
+        
+        """
+        MIN_X_SCALE = 0.1
+        MAX_X_SCALE = 3000
+        MIN_Y_SCALE = 0.001
+        MAX_Y_SCALE = 3
+        
+        from scipy.optimize import curve_fit
+        
+        def demandFunction(x, k, alpha, Qzero):
+            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)) 
+            return y
+
+        selectedPumpTimesValues = self.pumpTimes.get()
+        if (selectedPumpTimesValues == 0):
+            print("OMNI pumpTimes")
+            TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.018,0.010,0.0056]
+        else:
+            print("Feather M0 pumpTimes")
+            TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, 0.200,0.130,0.080,0.050,0.030,0.020]
+        #print("TH_PumpTimes:", TH_PumpTimes)
+
+        priceList = []
+        for i in range(12):
+            dosePerResponse = TH_PumpTimes[i] * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+            price = round(1/dosePerResponse,2)
+            priceList.append(price)
+        print("priceList",priceList)
+
+        useMultipleFiles = self.average_TH_FilesVar.get()
+        if (useMultipleFiles == True):
+            print("Averaging multiple files")
+            datalist = []        # Empty - so will not draw an event record
+            consumptionList = []
+            responseList = []
+            # consumptionList = self.getConsumptionList()
+            # responseList = self.getResponseList()
+        else:
+            print("Using an individual file")
+            aDataRecord = self.recordList[self.fileChoice.get()]
+            datalist = aDataRecord.datalist    # Event record needs this.
+            consumptionList = aDataRecord.consumptionList
+            responseList = aDataRecord.responseList
+        print(consumptionList)
+        
+        #***** Set up Figure with axes - possibly move this to myGUI.__init__  ******
+        self.fig = plt.figure(clear=True, figsize=(6,6))   # clear contents
+        self.fig.add_subplot(111)                          # The Figure contains 1 x 1 matrix of plots and this is number 1
+        plt.ylabel('Consumption')
+        plt.xlabel("Price (responses/mg cocaine)")
+        plt.title('testMatPlotFit\nSecond Line of Title')
+        if self.logXVar.get() == True:  plt.xscale('log')
+        else: plt.xscale("linear")
+        if self.logYVar.get() == True: plt.yscale('log')
+        else: plt.yscale("linear")
+        plt.xlim(MIN_X_SCALE, MAX_X_SCALE)                                   # x = 1 to 1000
+        plt.ylim(MIN_Y_SCALE, MAX_Y_SCALE);                               # y = 0.001 to 3.0
+        
+
+        #***** Calculate Qzero **************
+        print("Default Qzero", self.QzeroVar)
+        if len(consumptionList) == 12:
+            Qzero = (consumptionList[0]+consumptionList[1]+consumptionList[2])/3
+            print("Qzero =", Qzero)
+            self.scale_Q_zero.set(Qzero)           
+            if self.showOmaxLine.get():            
+                x = [MIN_X_SCALE,MAX_X_SCALE]
+                y = [Qzero,Qzero]
+                plt.plot(x, y, color='green', lw=1)       
+
+        #***** Generate a curvefit line ******
+        x = np.arange(MIN_X_SCALE,MAX_X_SCALE, 0.1)
+        alpha = self.scale_alpha.get()
+        Qzero = self.scale_Q_zero.get()
+        k = self.scale_k.get() 
+        y = demandFunction(x,k,alpha,Qzero)
+        plt.plot(x, y, color='blue', lw=1)
+
+        #***** If file loaded, plot scattergram
+        if len(consumptionList) == len(priceList):
+            plt.scatter(priceList,consumptionList)
+
+        #plt.legend()
+
+        if self.showPmaxLine.get():
+            PmaxFound = False
+            for x in range(10,1500):
+                if (PmaxFound != True):
+                    slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
+                    #if (slope < -0.9): print("slope at ",x," = ", slope)                
+                    if slope < -1.0:
+                        Pmax = x 
+                        PmaxFound = True
+            if PmaxFound:
+                print(Pmax)
+                x = [Pmax,Pmax]
+                y = [0.001,3.0]
+                plt.plot(x, y, color='red', lw=1)
+
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self.thresholdCanvasFrame)
+        self.canvas.draw()    #canvas.show() deprecated
+        self.canvas.get_tk_widget().grid(row=0,column=0)               
+
 
     def testAreaTest1(self):
         """
@@ -533,17 +660,51 @@ class myGUI(object):
         canvas.get_tk_widget().grid(row=0,column=0)
 
 
-    def testAreaTest2(self):
+    def demandCurveTest(self):
         """
         Called from testAreaTab Button2
         """
-        
-        def demandFunction(x, k, alpha, Qzero):
+
+        def demandFunction(x,alpha):
+            Qzero = 1.81
+            k = 9
             y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)) 
             return y
+
+        priceList = [2.53, 4.00, 6.35, 10.13, 16.00, 25.00, 40.00, 61.54, 100.00, 160.00, 266.67, 400.00]
+        consumptionList = [2.370, 2.212, 0.875, 2.310, 2.680, 1.328, 0.975, 0.590, 0.110, 0.075, 0.145, 0.010]
+
+        #priceList = [2.53, 4.00, 6.35, 10.13, 16.00, 25.00, 40.00, 61.54, 100.00]
+        #consumptionList = [2.370, 2.212, 0.875, 2.310, 2.680, 1.328, 0.475, 1.290, 0.010]
+
+        #Qzero = (consumptionList[0]+consumptionList[1]+consumptionList[2])/3
+
+        xList = np.array(priceList, dtype=np.float64)
+        yList = np.array(consumptionList, dtype=np.float64)
+
+        test = []
+
+        for x in xList:
+            y = demandFunction(x, 0.01)
+            print(x,y)
+            test.append(y)
+            
+        #noisy = test + 0.25*np.random.normal(size=len(test))
+        npTest = np.array(test)
+        print(npTest)
         
-        #import matplotlib.pyplot as plt
+        from scipy.optimize import curve_fit
+
+        param_bounds=([0.001],[0.02])
         
+        fitParams, fitCovariances = curve_fit(demandFunction, xList, npTest,bounds=param_bounds)
+
+        # popt, pcov = curve_fit(sigmoidscaled, xdata, ydata, p0, bounds=((-np.inf, -np.inf, 0, 0), (np.inf, np.inf, 1, 1)))
+        alpha = fitParams[0]
+        alphaString = "alpha = {0:3f}".format(alpha)         
+        print (alphaString)
+        #print (fitCovariances)
+                
         fig = plt.figure()
         #fig.subplots_adjust(top=0.8)
         fig.add_subplot(111)
@@ -553,91 +714,110 @@ class myGUI(object):
         plt.xscale('log')
         plt.yscale('log')
 
-        x = np.arange(0.0, 1000, 1)
-        k = 9.0
-        alpha = 0.0035
-        Qzero = 0.8
+        print("length x:", len(priceList))
+        print("length test:", len(test))
+
+        plt.scatter(xList,npTest)
+
+        x = np.arange(1.0, 1000, 1)
         
-        y = demandFunction(x,k,alpha,Qzero)
+        y = demandFunction(x,alpha)
         line = plt.plot(x, y, color='blue', lw=2, label='blue')
-
-        y = demandFunction(x,k,alpha,Qzero)+0.1
-        line = plt.plot(x, y, color='red', lw=2, label='red')
-
-        plt.legend()
         
         canvas = FigureCanvasTkAgg(fig, self.testAreaCanvasFrame)
         canvas.draw()    #canvas.show() deprecated
         canvas.get_tk_widget().grid(row=0,column=0)
         
 
-    def testAreaTest3(self):
+    def curveFitExp(self):
         """
-        Called from testAreaTab Button3
-        """
-        print("Test Area Test3")
-        #import matplotlib.pyplot as plt
+        Called from testAreaTab Button
+
+        I don't really understand this, but it might be a good template
         
-        fig = plt.figure()
-        fig.subplots_adjust(top=0.8)
-        ax1 = fig.add_subplot(211)
-        ax1.set_ylabel('volts')
-        ax1.set_title('a sine wave')
-
-        t = np.arange(0.0, 1.0, 0.01)
-        s = np.sin(2*np.pi*t)
-        line, = ax1.plot(t, s, color='blue', lw=2)
-
-        # Fixing random state for reproducibility
-        np.random.seed(19680801)
-
-        ax2 = fig.add_axes([0.15, 0.1, 0.7, 0.3])
-        n, bins, patches = ax2.hist(np.random.randn(1000), 50,
-            facecolor='yellow', edgecolor='yellow')
-        ax2.set_xlabel('time (s)')
-
         """
-        toolbar = NavigationToolbar2TkAgg(fig, self.testAreaCanvasFrame)
-        toolbar.update()
-        canvas._tkcanvas.pack(side = tk.TOP, fill=tk.BOTH, expand = True)
-        """
-        canvas = FigureCanvasTkAgg(fig, self.testAreaCanvasFrame)
+
+        def fitFunc(t, a, b, c):
+            return a*np.exp(-b*t) + c
+
+        from scipy.optimize import curve_fit
+
+        self.fig = plt.figure(clear=True, figsize=(6,6))   # clear contents
+        self.fig.add_subplot(111)  
+        t = np.linspace(0,4,50)
+        temp = fitFunc(t, 2.5, 1.3, 0.5)
+        noisy = temp + 0.25*np.random.normal(size=len(temp))
+
+        fitParams, fitCovariances = curve_fit(fitFunc, t, noisy)
+        print (fitParams)
+        print (fitCovariances)
+
+        
+        plt.ylabel('Temperature (C)', fontsize = 16)
+        plt.xlabel('time (s)', fontsize = 16)
+        plt.xlim(0,4.1)
+        # plot the data as red circles with vertical errorbars
+        plt.errorbar(t, noisy, fmt = 'ro', yerr = 0.2)
+        # now plot the best fit curve and also +- 1 sigma curves
+        # (the square root of the diagonal covariance matrix  
+        # element is the uncertianty on the fit parameter.)
+        sigma = [fitCovariances[0,0], \
+                 fitCovariances[1,1], \
+                 fitCovariances[2,2] \
+                 ]
+        plt.plot(t, fitFunc(t, fitParams[0], fitParams[1], fitParams[2]),\
+                 t, fitFunc(t, fitParams[0] + sigma[0], fitParams[1] - sigma[1], fitParams[2] + sigma[2]),\
+                 t, fitFunc(t, fitParams[0] - sigma[0], fitParams[1] + sigma[1], fitParams[2] - sigma[2]))
+        
+        canvas = FigureCanvasTkAgg(self.fig, self.testAreaCanvasFrame)
         canvas.draw()    #canvas.show() deprecated
         canvas.get_tk_widget().grid(row=0,column=0)
-        
-    def saveFigure(self):
+
+
+    def curveFitLinear(self):
         """
-        https://stackoverflow.com/questions/9622163/save-plot-to-image-file-instead-of-displaying-it-using-matplotlib
+        Called from testAreaTab Button       
+        """
+        def fitFunc(x,a,b):
+            # y = ax + b
+            return (a * x) + b
 
-        Also if not using pylab, the figure object has a savefig method too.
-        So you can call fig = plt.figure() then fig.savefig(...)
+        from scipy.optimize import curve_fit
 
-        Many of the answers lower down the page mention plt.close(fig)
-        which is especially important in big loops. Otherwise the figures
-        remain open and waiting in memory and all open figures will be shown
-        upon executing plt.show()
-
-        I'd like to add some useful tips when using savefig. The file format can be specified by the extension:
-
-        savefig('foo.png')
-        savefig('foo.pdf')
-        Will give a rasterized or vectorized output respectively, both which could be useful.
-        In addition, you'll find that pylab leaves a generous, often undesirable, whitespace around the image. Remove it with:
-
-        savefig('foo.png', bbox_inches='tight')
-
-        https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig
-
-        See       matplotlib.pyplot.savefig(*args, **kwargs)
-
+        self.fig = plt.figure(clear=True, figsize=(6,6))   # clear contents
+        self.fig.add_subplot(111)  
+        x = np.arange(0,10,0.1)
+        y = fitFunc(x, 2.5, 10)
+        noisy = y + 5*np.random.normal(size=len(y))
 
         """
-        print("Saving Figure.png")
-        self.fig.savefig('Figure.png')
-        
-        
+        popt, pcov = curve_fit(func, xdata, ydata)
+        plt.plot(xdata, func(xdata, *popt), 'r-', label='fit')
+        """
 
+        fitParams, fitCovariances = curve_fit(fitFunc, x, noisy)
+        print (fitParams)
+        print (fitCovariances)
+        
+        plt.ylabel('Temperature (C)', fontsize = 16)
+        plt.xlabel('time (s)', fontsize = 16)
+        plt.xlim(0,10)
+        # plot the data as red circles with vertical errorbars
+        plt.errorbar(x, noisy, fmt = 'ro', yerr = 0.2)
+        # now plot the best fit curve and also +- 1 sigma curves
+        # (the square root of the diagonal covariance matrix  
+        # element is the uncertianty on the fit parameter.)
+        sigma = [fitCovariances[0,0], \
+                 fitCovariances[1,1]]
+        plt.plot(x, fitFunc(x, fitParams[0], fitParams[1]),\
+                 x, fitFunc(x, fitParams[0] + sigma[0], fitParams[1] - sigma[1]),\
+                 x, fitFunc(x, fitParams[0] - sigma[0], fitParams[1] + sigma[1]))
+                
+        canvas = FigureCanvasTkAgg(self.fig, self.testAreaCanvasFrame)
+        canvas.draw()    #canvas.show() deprecated
+        canvas.get_tk_widget().grid(row=0,column=0)       
 
+        
     # *************** Two Lever ********************
 
     def TwoLeverCR(self):
@@ -798,46 +978,7 @@ class myGUI(object):
     def drawThreshold(self):
 
         """
-        Definitions from Hursch spreadsheet
-        alpha: Essential value is the rate of change in log consumption with price
-        Q0: Level of demand is indicated by the predicted consumption at a price of 0
-        k: The range of the exponential demand curve from Q0 to minimum
-        Pmax: The price at unit elasticity and at the peak of the response output function.
-        Normalized price = (FR x Q0)/100 = Responses per 1 percent of Q0
-        Normalized consumption = (Reinforcers/Q0) x 100 = Reinforcers as Percent of Q0
 
-        Fletcher Cox pegged k at 4.18967505739766 - don't know why.
-        Is this log or log10?
-        0.001 is substituted for a zero - so our range (k) is probably 1 to 0.001 or four log units.
-
-        ************************************************
-        Notes - Feb 8
-
-        Issue 1:
-        k is presumably the range in log units "from Q0 to minimum"
-        It is presently set at 4, but this needs to be corrected. 
-        Also it should be adjusted when selecting different start and stop values.
-        try: math.log10(priceList[rangeEnd]-priceList[rangeBegin])
-
-        Issue 2:
-        Numpy is throwing warnings:
-        RuntimeWarning: overflow encountered in power
-        and
-        RuntimeWarning: overflow encountered in exp
-
-        See for possible solution:
-        https://stackoverflow.com/questions/15624070/why-does-scipy-optimize-curve-fit-not-fit-to-the-data
-
-        Issue 3:
-        The event record needs to be adjusted to correspond to the bins. This could be a little complictaed
-        because the first bin is variable. The second bin starts at the time of the fourth injection. This time
-        point needs to be pulled from the data file and used to peg the second data point. The length of the
-        remaining data (110 min) needs to correspond to the X axis.
-
-        Issue 4:
-        It would be too easy for a user to make a mistake and not select the correct pumptimes. Note that
-        the pump times are stored in the datafile, so it should be straightforward to double check and select
-        it automatically.
 
         """
         from scipy.optimize import curve_fit
@@ -1088,210 +1229,7 @@ class myGUI(object):
         Qzero = 1.535
         k  =  4
         for x in range(30,40):
-            print(x, -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x))
-
-    def testMatPlotFit(self):
-        label = "testMatPlotFit"
-        # self.thresholdCanvas.create_text(300,200, text=label)
-
-        # *********** from testAreaTest2(self):  ***************
-        def demandFunction(x, k, alpha, Qzero):
-            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)) 
-            return y
-        
-        fig = plt.figure()
-        #fig.subplots_adjust(top=0.8)
-        fig.add_subplot(111)
-        plt.ylabel('Consumption')
-        plt.xlabel("Price")
-        plt.title('Demand Function\nSecond Line of Title')
-        plt.xscale('log')
-        plt.yscale('log')
-
-        x = np.arange(0.0, 1000, 1)
-        k = 9.0
-        alpha = 0.0035
-        Qzero = 0.8
-        
-        y = demandFunction(x,k,alpha,Qzero)
-        line = plt.plot(x, y, color='blue', lw=2, label='blue')
-
-        y = demandFunction(x,k,alpha,Qzero)+0.1
-        line = plt.plot(x, y, color='red', lw=2, label='red')
-
-        plt.legend()
-        
-        canvas = FigureCanvasTkAgg(fig, self.thresholdTab)
-        canvas.draw()    #canvas.show() deprecated
-        canvas.get_tk_widget().grid(row=0,column=0)
-
-        #*******************************************************
-
-        #from scipy.stats.stats import pearsonr
-        """
-        def demandFunction(x, k, alpha, Qzero):
-            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))       # Hursh - I think.  
-            return y
-       
-        aCanvas = self.thresholdCanvas
-        aCanvas.create_text(300,30, text="testCurveFit_1")
-        x_zero = 100
-        y_zero = 550
-        x_pixel_width = 600
-        y_pixel_height = 500
-        x_startValue = 1.0
-        y_startValue = 0.001
-        x_logRange = 4
-        y_logRange = 4
-        x_caption = "Price (responses/mg cocaine)"
-        y_caption = "Y"
-        #leftLabel = True
-        GraphLib.drawLog_X_Axis(aCanvas,x_zero,y_zero,x_pixel_width,x_startValue,x_logRange,x_caption)
-        GraphLib.drawLog_Y_Axis(aCanvas,x_zero,y_zero,y_pixel_height,y_startValue,y_logRange,y_caption)
-
-        max_x_scale = 1000  # used if not log
-        max_y_scale = 10    # used if not log
-
-        """
-
-        """
-        dose_ug = [383.5, 215.6, 121.3, 68.2, 38.3, 21.6, 12.1, 6.8, 3.8, 2.2, 1.2]  # Aston-Jones
-        doseList = []
-        priceList = []       
-        for i in range(len(dose_ug)):
-            dose = dose_ug[i] / 1000
-            price = round(1/dose,4)
-            doseList.append(round(dose,4))            
-            priceList.append(round(price,2))
-
-
-        """
-
-        """
-
-        # Generate priceList from 1 to 10,000
-        exponent = 0
-        priceList = []        
-        for i in range(17):      
-            price = np.power(10,exponent)
-            exponent = exponent + 0.25
-            priceList.append(price)
-
-        #print(priceList)
-
-        logX = self.logXVar.get()
-        logY = self.logYVar.get()            
-
-        alpha = self.scale_alpha.get()
-        Qzero = self.scale_Q_zero.get()
-        k = self.scale_k.get()       
-        alphaList = []
-        pmaxList = []
-       
-        for x in range(1):
-            fitLineY = []
-            for i in range(len(priceList)):
-                x = priceList[i]
-                y = demandFunction(priceList[i],k,alpha,Qzero)
-                fitLineY.append(y)
-            GraphLib.betaTestCurve(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, \
-                               x_startValue, y_startValue, x_logRange, y_logRange, max_x_scale, max_y_scale, \
-                               priceList, fitLineY, logX, logY, drawSymbol = False, color = "blue")
-                               # priceList, consumptionList, logX, logY, drawLine = False, color = "red")
-            alphaList.append(alpha)
-            PmaxFound = False
-            for x in range(10,1500):
-                if (PmaxFound != True):
-                    slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
-                    #if (slope < -0.9): print("slope at ",x," = ", slope)                
-                    if slope < -1.0:
-                        Pmax = x 
-                        PmaxFound = True
-                        pmaxList.append(Pmax)
-        """
-        
-
-    def testCurveFit(self):
-        """
- 
-        """ 
-        from scipy.stats.stats import pearsonr
-        
-        def demandFunction(x, k, alpha, Qzero):
-            #y = np.e**(np.log(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
-            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))       # Hursh - I think.  
-            return y
-       
-        aCanvas = self.thresholdCanvas
-        aCanvas.create_text(300,30, text="testCurveFit_1")
-        x_zero = 100
-        y_zero = 550
-        x_pixel_width = 600
-        y_pixel_height = 500
-        x_startValue = 1.0
-        y_startValue = 0.001
-        x_logRange = 4
-        y_logRange = 4
-        x_caption = "Price (responses/mg cocaine)"
-        y_caption = "Y"
-        #leftLabel = True
-        GraphLib.drawLog_X_Axis(aCanvas,x_zero,y_zero,x_pixel_width,x_startValue,x_logRange,x_caption)
-        GraphLib.drawLog_Y_Axis(aCanvas,x_zero,y_zero,y_pixel_height,y_startValue,y_logRange,y_caption)
-
-        max_x_scale = 1000  # used if not log
-        max_y_scale = 10    # used if not log
-
-        """
-        dose_ug = [383.5, 215.6, 121.3, 68.2, 38.3, 21.6, 12.1, 6.8, 3.8, 2.2, 1.2]  # Aston-Jones
-        doseList = []
-        priceList = []       
-        for i in range(len(dose_ug)):
-            dose = dose_ug[i] / 1000
-            price = round(1/dose,4)
-            doseList.append(round(dose,4))            
-            priceList.append(round(price,2))
-
-        """
-
-        # Generate priceList from 1 to 10,000
-        exponent = 0
-        priceList = []        
-        for i in range(17):      
-            price = np.power(10,exponent)
-            exponent = exponent + 0.25
-            priceList.append(price)
-
-        #print(priceList)
-
-        logX = self.logXVar.get()
-        logY = self.logYVar.get()            
-
-        alpha = self.scale_alpha.get()
-        Qzero = self.scale_Q_zero.get()
-        k = self.scale_k.get()       
-        alphaList = []
-        pmaxList = []
-       
-        for x in range(1):
-            fitLineY = []
-            for i in range(len(priceList)):
-                x = priceList[i]
-                y = demandFunction(priceList[i],k,alpha,Qzero)
-                fitLineY.append(y)
-            GraphLib.betaTestCurve(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, \
-                               x_startValue, y_startValue, x_logRange, y_logRange, max_x_scale, max_y_scale, \
-                               priceList, fitLineY, logX, logY, drawSymbol = False, color = "blue")
-                               # priceList, consumptionList, logX, logY, drawLine = False, color = "red")
-            alphaList.append(alpha)
-            PmaxFound = False
-            for x in range(10,1500):
-                if (PmaxFound != True):
-                    slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
-                    #if (slope < -0.9): print("slope at ",x," = ", slope)                
-                    if slope < -1.0:
-                        Pmax = x 
-                        PmaxFound = True
-                        pmaxList.append(Pmax)        
+            print(x, -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x))        
         
         
     def testText2(self):
@@ -1388,7 +1326,7 @@ class myGUI(object):
         for i in range(12):
             consumptionList[i] = pumpTimeList[i] * mgPerSec
             if consumptionList[i] == 0:
-                consumptionList[i] = 0.001  #so as not to have a zero value that would crash in a log function
+                consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
         totalResp = 0
         totalIntake = 0
         for i in range(12):
@@ -1413,6 +1351,7 @@ class myGUI(object):
 
     def clearCanvas(self):
         self.graphCanvas.delete('all')
+        self.fig = plt.figure(clear=True)   # clear contents
                                    
     def drawCumulativeRecord(self,aRecord):
         self.clearCanvas()
