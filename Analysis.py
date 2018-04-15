@@ -343,7 +343,7 @@ class myGUI(object):
 
         #************** Threshold Button Frame *****
         clearTHCanvasButton = Button(self.thresholdButtonFrame, text="Clear Canvas", \
-                                     command = lambda: self.thresholdCanvas.delete('all')).grid(row=0,column=0,sticky=N)
+                                     command = lambda: self.clearFigure()).grid(row=0,column=0,sticky=N)
 
         #Contains:..
 
@@ -539,8 +539,11 @@ class myGUI(object):
 
         # *************  The Controllers  **********
 
-    def placeHolder(self):
+    def clearFigure(self):
         print("placeholder()")
+        self.threshold_tk_Canvas.delete('all')
+        self.matPlotFigure.clf()
+        self.threshold_matPlot_Canvas.draw()
 
     def saveFigure(self):
         """
@@ -557,15 +560,7 @@ class myGUI(object):
 
     def testMatPlotFit(self):
         """
-        dose_ug = [383.5, 215.6, 121.3, 68.2, 38.3, 21.6, 12.1, 6.8, 3.8, 2.2, 1.2]  # Aston-Jones
-        doseList = []
-        priceList = []       
-        for i in range(len(dose_ug)):
-            dose = dose_ug[i] / 1000
-            price = round(1/dose,4)
-            doseList.append(round(dose,4))            
-            priceList.append(round(price,2))
-        
+         #consumptionList = [1.58, 0.69, 1.13, 1.75, 1.50, 0.98, 0.804, 0.891, 0.325, 0.064, 0.09, 0.01]
         """
         MIN_X_SCALE = 0.1
         MAX_X_SCALE = 3000
@@ -573,12 +568,19 @@ class myGUI(object):
         MAX_Y_SCALE = 3
         
         from scipy.optimize import curve_fit
-        
-        def demandFunction(x, k, alpha, Qzero):
+
+        self.Qzero = 1.0       #Set some default
+        self.k = self.scale_k.get()
+        print("k =",self.k)
+
+        def demandFunction(x,alpha):
+            Qzero = self.Qzero
+            k = self.k
             y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)) 
             return y
 
         selectedPumpTimesValues = self.pumpTimes.get()
+        
         if (selectedPumpTimesValues == 0):
             print("OMNI pumpTimes")
             TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.018,0.010,0.0056]
@@ -609,67 +611,61 @@ class myGUI(object):
             consumptionList = aDataRecord.consumptionList
             responseList = aDataRecord.responseList
         print(consumptionList)
-        
-        #***** Set up Figure with axes - possibly move this to myGUI.__init__  ******
-        self.matPlotFigure.clf()
-        """
-        self.matPlotFigure.add_subplot(111)         # The Figure contains 1 x 1 matrix of plots and this is number 1
 
-        self.graph1 = self.matPlotFigure.add_subplot(111)
-        self.graph1.set_xscale("log")
-        self.graph1.set_yscale("log")
-        self.graph1.set_xlim(1e0, 1e3)
-        self.graph1.set_ylim(1e-4, 1e1)
-        self.matPlotFigure.xlim(MIN_X_SCALE, MAX_X_SCALE)                                   # x = 1 to 1000
-        self.matPlotFigure.ylim(MIN_Y_SCALE, MAX_Y_SCALE);                               # y = 0.001 to 3.0       
-        self.matPlotFigure.ylabel('Consumption')
-        self.matPlotFigure.xlabel("Price (responses/mg cocaine)")
-        self.matPlotFigure.title('testMatPlotFit\nSecond Line of Title')
-        """
-        
+        self.Qzero = (consumptionList[0]+consumptionList[1]+consumptionList[2])/3
+        print("Calculated Qzero", self.Qzero)
 
-        #***** Calculate Qzero **************
-        print("Default Qzero", self.QzeroVar)
-        if len(consumptionList) == 12:
-            Qzero = (consumptionList[0]+consumptionList[1]+consumptionList[2])/3
-            print("Qzero =", Qzero)
-            self.scale_Q_zero.set(Qzero)           
+    
+        #***** Fit the curve - find alpha *******
+        print("Fitting Curve")
+
+        param_bounds=([0.001],[0.02])
+        
+        fitParams, fitCovariances = curve_fit(demandFunction, priceList, consumptionList, bounds=param_bounds)
+
+        # popt, pcov = curve_fit(sigmoidscaled, xdata, ydata, p0, bounds=((-np.inf, -np.inf, 0, 0), (np.inf, np.inf, 1, 1)))
+        self.alpha = fitParams[0]
+        alphaString = "alpha = {0:3f}".format(self.alpha)         
+        print (alphaString)
+        #print (fitCovariances)
+        
+        #***** Draw Qzero **************
+        """
+        self.scale_Q_zero.set(Qzero)           
             if self.showOmaxLine.get():            
                 x = [MIN_X_SCALE,MAX_X_SCALE]
                 y = [Qzero,Qzero]
                 #self.matPlotFigure.loglog(x, y, color ='red')
+        """
       
 
         #***** Generate a curvefit line ******
-        x = np.arange(MIN_X_SCALE,MAX_X_SCALE, 0.1)
-        alpha = self.scale_alpha.get()
-        Qzero = self.scale_Q_zero.get()
-        k = self.scale_k.get() 
-        y = demandFunction(x,k,alpha,Qzero)
+        print("Generating curvefit line with Qzero, alpha and k =", self.Qzero, self.alpha, self.k)
+        #x = np.arange(MIN_X_SCALE,MAX_X_SCALE, 0.1)
+        
+        #y = demandFunction(priceList,self.Qzero)
+        
+        y = []
+        for x in priceList:
+            result = np.e**(np.log10(self.Qzero)+self.k*(np.exp(-self.alpha*self.Qzero*x)-1))
+            y.append(result)
+        print("CurveFit y values",y)
+        #y = [1.58, 0.69, 1.13, 1.75, 1.50, 0.98, 0.804, 0.891, 0.325, 0.064, 0.09, 0.01]
         self.logGraph = self.matPlotFigure.add_subplot(111)
         self.logGraph.set_xscale("log")
         self.logGraph.set_yscale("log")
-        self.logGraph.set_xlim(1e0, 1e3)  # should be 1 to 100 
-        self.logGraph.set_ylim(1e-4, 1e0) # 
-         
-        #self.testLine = Line2D(x,y, color = 'red')
-        #self.logGraph.add_line(self.testLine)
-        self.logGraph.loglog(x, y, color ='red')
-
-        self.logGraph.scatter(priceList, consumptionList)
-
+        self.logGraph.set_xlim(1e0, 1e4)  # should be 1 to 100 
+        self.logGraph.set_ylim(1e-3, 1e1) # 
+        self.logGraph.loglog(priceList, y, color ='red')
+        self.logGraph.scatter(priceList, consumptionList, color = "blue")
         
-
         #***** If file loaded, plot scattergram
-        """
-        if len(consumptionList) == len(priceList):
-            self.matPlotFigure.scatter(priceList, consumptionList)
 
         if self.showPmaxLine.get():
             PmaxFound = False
             for x in range(10,1500):
                 if (PmaxFound != True):
-                    slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
+                    slope = -self.alpha*self.Qzero*x*self.k*np.exp(-self.alpha*self.Qzero*x)
                     #if (slope < -0.9): print("slope at ",x," = ", slope)                
                     if slope < -1.0:
                         Pmax = x 
@@ -678,8 +674,8 @@ class myGUI(object):
                 print(Pmax)
                 x = [Pmax,Pmax]
                 y = [0.001,3.0]
-                #plt.plot(x, y, color='red', lw=1)
-        """
+                pmaxLine = Line2D(x,y, color = 'green')
+                self.logGraph.add_line(pmaxLine)
 
         self.threshold_matPlot_Canvas.draw()               
 
