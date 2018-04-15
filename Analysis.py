@@ -17,7 +17,8 @@ import ListLib
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.figure import Figure
 
 """
 Models, Views and Controllers (MCV) design: keep the representation of the data separate
@@ -323,13 +324,30 @@ class myGUI(object):
                 
 
         #************** Threshold Tab **************
+        # Two subframes:        
+        #
+        # thresholdButtonFrame 
+        #      drawThresholdFrame
+        #      etc
+        # TH_FigureFrame    - tk container
+        #      self.tkCanvas     - drawing space for things loke event records
+        #      self.matPlotCanvas - container for the MatPlotLib Figure
+        #      self.figure       - the thing that axes and lines are drawn on
+
         self.thresholdButtonFrame = Frame(self.thresholdTab, borderwidth=2, relief="sunken")
         self.thresholdButtonFrame.grid(column = 0, row = 0, sticky=N)
+
+        self.thresholdFigureFrame = Frame(self.thresholdTab, borderwidth=2, relief="sunken")
+        self.thresholdFigureFrame.grid(column = 1, row = 0, sticky=N)
+
+
+        #************** Threshold Button Frame *****
         clearTHCanvasButton = Button(self.thresholdButtonFrame, text="Clear Canvas", \
                                      command = lambda: self.thresholdCanvas.delete('all')).grid(row=0,column=0,sticky=N)
 
+        #Contains:..
 
-        #************* Draw Threshold Frame ********
+        #************* "drawThresholdFrame within thresholdButtonFrame ********       
         self.drawThresholdFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.drawThresholdFrame.grid(row = 1, column = 0, sticky = EW)
 
@@ -425,15 +443,27 @@ class myGUI(object):
         test4Button = Button(self.thresholdButtonFrame, text="testMatPlotFit", \
                                  command = lambda: self.testMatPlotFit()).grid(row=23,column=0,sticky=N)
 
-        self.thresholdCanvasFrame = Frame(self.thresholdTab, borderwidth=2, relief="sunken")
-        self.thresholdCanvasFrame.grid(row = 0, column = 1, sticky = EW)
+        #****************
 
-        self.fig = plt.figure() 
+        # TH_FigureFrame    - tk container
+        #      self.matPlot_figure              - the thing that axes and lines are drawn on        
+        #      self.threshold_tk_Canvas         - drawing space for things like event records
+        #      self.threshold_matPlot_Canvas    - container for the MatPlotLib Figure
+        #                                       - This is the thing that gets redrawn after things are changed.
+
+        self.matPlotFigure = Figure(figsize=(5,5), dpi=80)
+        self.matPlotFigure.set_edgecolor("white")  #see help(colors)
+        self.matPlotFigure.set_facecolor("white")
+        #Set whether the figure frame (background) is displayed or invisible
+        self.matPlotFigure.set_frameon(True)
         
-        self.thresholdCanvas = Canvas(self.thresholdCanvasFrame, width = canvas_width, height = canvas_height)
-        self.thresholdCanvas.grid(row=0,column=0)
-        self.thresholdCanvas.create_text(100,10,text = "Threshold Canvas")
+        self.threshold_tk_Canvas = Canvas(self.thresholdFigureFrame, width = 500, height = 100)
+        self.threshold_tk_Canvas.grid(row=0,column=0)
+        self.threshold_tk_Canvas.create_text(100,10,text = "Threshold Canvas")
+        self.threshold_tk_Canvas.create_line(0, 0, 500, 100)
 
+        self.threshold_matPlot_Canvas = FigureCanvasTkAgg(self.matPlotFigure, master=self.thresholdFigureFrame)
+        self.threshold_matPlot_Canvas.get_tk_widget().grid(row=1,column=0)
 
         #*************** Text Tab *****************
         self.textButtonFrame = Frame(self.textTab, borderwidth=5, relief="sunken")
@@ -510,8 +540,7 @@ class myGUI(object):
         # *************  The Controllers  **********
 
     def placeHolder(self):
-        #plt.figure.clf()
-        plt.clf()
+        print("placeholder()")
 
     def saveFigure(self):
         """
@@ -582,17 +611,21 @@ class myGUI(object):
         print(consumptionList)
         
         #***** Set up Figure with axes - possibly move this to myGUI.__init__  ******
-        self.fig = plt.figure(clear=True, figsize=(6,6))   # clear contents
-        self.fig.add_subplot(111)                          # The Figure contains 1 x 1 matrix of plots and this is number 1
-        plt.ylabel('Consumption')
-        plt.xlabel("Price (responses/mg cocaine)")
-        plt.title('testMatPlotFit\nSecond Line of Title')
-        if self.logXVar.get() == True:  plt.xscale('log')
-        else: plt.xscale("linear")
-        if self.logYVar.get() == True: plt.yscale('log')
-        else: plt.yscale("linear")
-        plt.xlim(MIN_X_SCALE, MAX_X_SCALE)                                   # x = 1 to 1000
-        plt.ylim(MIN_Y_SCALE, MAX_Y_SCALE);                               # y = 0.001 to 3.0
+        self.matPlotFigure.clf()
+        """
+        self.matPlotFigure.add_subplot(111)         # The Figure contains 1 x 1 matrix of plots and this is number 1
+
+        self.graph1 = self.matPlotFigure.add_subplot(111)
+        self.graph1.set_xscale("log")
+        self.graph1.set_yscale("log")
+        self.graph1.set_xlim(1e0, 1e3)
+        self.graph1.set_ylim(1e-4, 1e1)
+        self.matPlotFigure.xlim(MIN_X_SCALE, MAX_X_SCALE)                                   # x = 1 to 1000
+        self.matPlotFigure.ylim(MIN_Y_SCALE, MAX_Y_SCALE);                               # y = 0.001 to 3.0       
+        self.matPlotFigure.ylabel('Consumption')
+        self.matPlotFigure.xlabel("Price (responses/mg cocaine)")
+        self.matPlotFigure.title('testMatPlotFit\nSecond Line of Title')
+        """
         
 
         #***** Calculate Qzero **************
@@ -604,7 +637,8 @@ class myGUI(object):
             if self.showOmaxLine.get():            
                 x = [MIN_X_SCALE,MAX_X_SCALE]
                 y = [Qzero,Qzero]
-                plt.plot(x, y, color='green', lw=1)       
+                #self.matPlotFigure.loglog(x, y, color ='red')
+      
 
         #***** Generate a curvefit line ******
         x = np.arange(MIN_X_SCALE,MAX_X_SCALE, 0.1)
@@ -612,13 +646,24 @@ class myGUI(object):
         Qzero = self.scale_Q_zero.get()
         k = self.scale_k.get() 
         y = demandFunction(x,k,alpha,Qzero)
-        plt.plot(x, y, color='blue', lw=1)
+        self.logGraph = self.matPlotFigure.add_subplot(111)
+        self.logGraph.set_xscale("log")
+        self.logGraph.set_yscale("log")
+        self.logGraph.set_xlim(1e0, 1e3)  # should be 1 to 100 
+        self.logGraph.set_ylim(1e-4, 1e0) # 
+         
+        #self.testLine = Line2D(x,y, color = 'red')
+        #self.logGraph.add_line(self.testLine)
+        self.logGraph.loglog(x, y, color ='red')
+
+        self.logGraph.scatter(priceList, consumptionList)
+
+        
 
         #***** If file loaded, plot scattergram
+        """
         if len(consumptionList) == len(priceList):
-            plt.scatter(priceList,consumptionList)
-
-        #plt.legend()
+            self.matPlotFigure.scatter(priceList, consumptionList)
 
         if self.showPmaxLine.get():
             PmaxFound = False
@@ -633,12 +678,10 @@ class myGUI(object):
                 print(Pmax)
                 x = [Pmax,Pmax]
                 y = [0.001,3.0]
-                plt.plot(x, y, color='red', lw=1)
+                #plt.plot(x, y, color='red', lw=1)
+        """
 
-
-        self.canvas = FigureCanvasTkAgg(self.fig, self.thresholdCanvasFrame)
-        self.canvas.draw()    #canvas.show() deprecated
-        self.canvas.get_tk_widget().grid(row=0,column=0)               
+        self.threshold_matPlot_Canvas.draw()               
 
 
     def testAreaTest1(self):
