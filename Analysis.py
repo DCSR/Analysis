@@ -13,6 +13,8 @@ import Examples
 import numpy as np
 import ListLib
 
+from scipy.optimize import curve_fit
+from scipy.stats.stats import pearsonr
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -218,8 +220,8 @@ class myGUI(object):
                               self.openWakeFile("TH_OMNI_test.str")).grid(row=0,column=4,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="TH_FEATHER_test.dat", command= lambda: \
                               self.openWakeFile("TH_FEATHER_test.dat")).grid(row=0,column=5,sticky=N, padx = 20)
-        loadTestButton2 = Button(headerFrame, text="IntA_Example_File.dat", command= lambda: \
-                              self.openWakeFile("IntA_Example_File.dat")).grid(row=0,column=6,sticky=N, padx = 20)
+        loadTestButton2 = Button(headerFrame, text="Bens_TH_example.str", command= lambda: \
+                              self.openWakeFile("Bens_TH_example.str")).grid(row=0,column=6,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
                               self.openWakeFile("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
 
@@ -230,7 +232,7 @@ class myGUI(object):
         self.graphButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
         self.graphButtonFrame.grid(column = 0, row = 0, sticky=N)
         clearCanvasButton = Button(self.graphButtonFrame, text="Clear", command= lambda: \
-                              self.clearCanvas()).grid(row=0,column=0,sticky=N)
+                              self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N)
         cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
                               self.drawCumulativeRecord(self.recordList[self.fileChoice.get()])).grid(row=2,column=0,sticky=N)
         self.showBPVar = BooleanVar(value = True)      
@@ -328,7 +330,11 @@ class myGUI(object):
         #
         # thresholdButtonFrame 
         #      drawThresholdFrame
-        #      etc
+        #
+        #
+        #
+        #
+        #      responseButtonFrame
         # TH_FigureFrame    - tk container
         #      self.tkCanvas     - drawing space for things loke event records
         #      self.matPlotCanvas - container for the MatPlotLib Figure
@@ -343,40 +349,50 @@ class myGUI(object):
 
         #************** Threshold Button Frame *****
         clearTHCanvasButton = Button(self.thresholdButtonFrame, text="Clear Canvas", \
-                                     command = lambda: self.clearFigure()).grid(row=0,column=0,sticky=N)
+                                     command = lambda: self.clearFigure()).grid(row=0,column=0, columnspan = 2, sticky = EW)
+        pumpTimesLabel = Label(self.thresholdButtonFrame, text="Pump Times").grid(row = 1, column = 0, sticky = EW)
+        pumpTimesOMNI = Radiobutton(self.thresholdButtonFrame, text = "OMNI", variable = self.pumpTimes, value = 0).grid(row = 2,column = 0, sticky = W)
+        cumRecButton2 = Radiobutton(self.thresholdButtonFrame, text = "M0 ", variable = self.pumpTimes, value = 1).grid(row = 2,column = 1, sticky = W)
+
+        self.logXVar = BooleanVar(value = True)      
+        logLogCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log X", variable = self.logXVar, \
+                                        onvalue = True, offvalue = False).grid(row = 3, column = 0, sticky = W)
+        self.logYVar = BooleanVar(value = True)      
+        logLogCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log Y", variable = self.logYVar, \
+                                        onvalue = True, offvalue = False).grid(row = 3, column = 1)
+
+        self.showPmaxLine = BooleanVar(value = True)      
+        showPmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Pmax line", variable = self.showPmaxLine, \
+                                        onvalue = True, offvalue = False).grid(row = 4, column = 0, stick = W)
+        self.showOmaxLine = BooleanVar(value = True)
+        showOmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Omax line", variable = self.showOmaxLine, \
+                                        onvalue = True, offvalue = False).grid(row = 4, column = 1, sticky = W)
+
+
+        #self.average_TH_FilesCheckButton = Checkbutton(self.ThresholdButtonFrame, text = "Average Files", \
+        #        variable = self.average_TH_FilesVar, onvalue = True, offvalue = False).grid(row = 1, column = 0, columnspan = 2, sticky=W)
+
 
         #Contains:..
 
         #************* "drawThresholdFrame within thresholdButtonFrame ********       
         self.drawThresholdFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
-        self.drawThresholdFrame.grid(row = 1, column = 0, sticky = EW)
+        self.drawThresholdFrame.grid(row = 5, column = 0, columnspan = 2, sticky = EW)
 
-        thresholdButton = Button(self.drawThresholdFrame, text="Draw Threshold", command= lambda: \
+        thresholdButton = Button(self.drawThresholdFrame, text="Draw Demand Curve", command= lambda: \
                                  self.drawThreshold()).grid(row = 0, column = 0, columnspan = 2)
 
-        self.average_TH_FilesCheckButton = Checkbutton(self.drawThresholdFrame, text = "Average Files", variable = self.average_TH_FilesVar, \
-                                        onvalue = True, offvalue = False).grid(row = 1, column = 0, columnspan = 2, sticky=W)
 
-        pumpTimesLabel = Label(self.drawThresholdFrame, text="Pump Times").grid(row = 2, column = 0)
-        pumpTimesOMNI = Radiobutton(self.drawThresholdFrame, text = "OMNI", variable = self.pumpTimes, value = 0).grid(row = 3,column = 0)
-        cumRecButton2 = Radiobutton(self.drawThresholdFrame, text = "M0 ", variable = self.pumpTimes, value = 1).grid(row = 3,column = 1)
 
-        self.curveFitVar = BooleanVar(value = True)
-        self.curveFitCheckButton = Checkbutton(self.drawThresholdFrame, text = "Auto Curve Fit", variable = self.curveFitVar, \
-                                        onvalue = True, offvalue = False).grid(row = 4, column = 0, columnspan = 2, stick=W)
+
+
+        self.manualCurveFitVar = BooleanVar(value = True)
+        curveFitCheckButton = Checkbutton(self.drawThresholdFrame, text = "Manual Curve Fit", \
+                    variable = self.manualCurveFitVar, onvalue = True, \
+                    offvalue = False).grid(row = 4, column = 0, columnspan = 2, stick=W)
         
-        self.logXVar = BooleanVar(value = True)      
-        logLogCheckButton = Checkbutton(self.drawThresholdFrame, text = "Log X", variable = self.logXVar, \
-                                        onvalue = True, offvalue = False).grid(row = 5, column = 0, sticky = W)
-        self.logYVar = BooleanVar(value = True)      
-        logLogCheckButton = Checkbutton(self.drawThresholdFrame, text = "Log Y", variable = self.logYVar, \
-                                        onvalue = True, offvalue = False).grid(row = 5, column = 1)
-        self.showPmaxLine = BooleanVar(value = True)      
-        showPmaxCheckButton = Checkbutton(self.drawThresholdFrame, text = "Pmax line", variable = self.showPmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 6, column = 0, stick = W)
-        self.showOmaxLine = BooleanVar(value = True)
-        showOmaxCheckButton = Checkbutton(self.drawThresholdFrame, text = "Omax line", variable = self.showOmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 7, column = 0, sticky = W)
+
+
         
         self.QzeroVar = DoubleVar()
         self.QzeroLabel = Label(self.drawThresholdFrame, text = "Qzero").grid(row=8,column=0,columnspan = 2,sticky=EW)
@@ -396,7 +412,7 @@ class myGUI(object):
         self.k_Label = Label(self.drawThresholdFrame, text = "k").grid(row=12,column=0,columnspan = 2,sticky=EW)
         self.scale_k = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.1, \
                                  from_= 0.0, to = 9.9, variable = self.k_Var)
-        self.scale_k.set(9.0)
+        self.scale_k.set(5.0)
         self.scale_k.grid(row=13,column=0, columnspan = 2)
     
         self.startStopFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
@@ -434,33 +450,34 @@ class myGUI(object):
         respMaxButton4 = Radiobutton(self.responseButtonFrame, text = "200   ", variable=self.respMax, value = 200).grid(row=3,column=1)
 
 
-        test1Button = Button(self.thresholdButtonFrame, text="Place Holder", command= lambda: \
-                              self.placeHolder()).grid(row=19,column=0,sticky=S)
-        test2Button = Button(self.thresholdButtonFrame, text="Test Pmax calc", command= lambda: \
-                              self.testTHGraphicsDisplay_2()).grid(row=20,column=0,sticky=S)
-        test3Button = Button(self.thresholdButtonFrame, text="Clear Figure", \
-                                 command= lambda: self.placeHolder()).grid(row=21,column=0,sticky=S)
-        test4Button = Button(self.thresholdButtonFrame, text="testMatPlotFit", \
-                                 command = lambda: self.testMatPlotFit()).grid(row=23,column=0,sticky=N)
+        test1Button = Button(self.thresholdButtonFrame, text="Test Pmax calc", command= lambda: \
+                              self.testPmaxCalc()).grid(row=19,column=0,sticky=S)
+        test2Button = Button(self.thresholdButtonFrame, text="Save Figure.png", command= lambda: \
+                             self.save_TH_Figure()).grid(row=20,column=0,sticky=S)
+        test3Button = Button(self.thresholdButtonFrame, text="testStuff2()", command= lambda: \
+                             self.testStuff2()).grid(row=21,column=0,sticky=S)
+        test4Button = Button(self.thresholdButtonFrame, text="testStuff3()", command = lambda: \
+                             self.testStuff3()).grid(row=23,column=0,sticky=N)
 
         #****************
 
         # TH_FigureFrame    - tk container
-        #      self.matPlot_figure              - the thing that axes and lines are drawn on        
+        #      self.matPlotFigure              - the thing that axes and lines are drawn on        
         #      self.threshold_tk_Canvas         - drawing space for things like event records
         #      self.threshold_matPlot_Canvas    - container for the MatPlotLib Figure
         #                                       - This is the thing that gets redrawn after things are changed.
 
-        self.matPlotFigure = Figure(figsize=(5,5), dpi=80)
+        self.matPlotFigure = Figure(figsize=(7,7), dpi=80)
         self.matPlotFigure.set_edgecolor("white")  #see help(colors)
         self.matPlotFigure.set_facecolor("white")
         #Set whether the figure frame (background) is displayed or invisible
         self.matPlotFigure.set_frameon(True)
         
-        self.threshold_tk_Canvas = Canvas(self.thresholdFigureFrame, width = 500, height = 100)
+        self.threshold_tk_Canvas = Canvas(self.thresholdFigureFrame, width = 600, height = 100)
         self.threshold_tk_Canvas.grid(row=0,column=0)
-        self.threshold_tk_Canvas.create_text(100,10,text = "Threshold Canvas")
-        self.threshold_tk_Canvas.create_line(0, 0, 500, 100)
+        self.threshold_tk_Canvas.create_text(300,10,text = "Threshold Canvas")
+        self.threshold_tk_Canvas.create_line(0,0,600,100)
+        self.threshold_tk_Canvas.create_line(0,100,600,0)
 
         self.threshold_matPlot_Canvas = FigureCanvasTkAgg(self.matPlotFigure, master=self.thresholdFigureFrame)
         self.threshold_matPlot_Canvas.get_tk_widget().grid(row=1,column=0)
@@ -499,8 +516,8 @@ class myGUI(object):
                               self.testAreaTest1()).grid(row=0,column=0,sticky=N)
         Button2 = Button(self.testAreaButtonFrame, text="Demand Curve", command= lambda: \
                               self.demandCurveTest()).grid(row=1,column=0,sticky=N)
-        Button4 = Button(self.testAreaButtonFrame, text="Save Figure.png", command= lambda: \
-                              self.saveFigure()).grid(row=2,column=0,sticky=N)        
+        Button4 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
+                              self.saveTestFigure()).grid(row=2,column=0,sticky=N)        
         Button3 = Button(self.testAreaButtonFrame, text="Curve Fit Exp", command= lambda: \
                               self.curveFitExp()).grid(row=3,column=0,sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="Curve Fit Linear", command= lambda: \
@@ -532,11 +549,6 @@ class myGUI(object):
         radiobutton10 = Radiobutton(fileSelectorFrame, textvariable = self.fileName9, variable = self.fileChoice, \
                                    value = 9, command =lambda: self.selectList()).grid(column=4, row=3,padx=padding)
 
-        #testRadiobutton1 = Radiobutton(self.rootFrame, text = "test1").grid(column=0, row=3)
-        #testRadiobutton2 = Radiobutton(self.rootFrame, text = "test2").grid(column=1, row=4)
-        
-
-
         # *************  The Controllers  **********
 
     def clearFigure(self):
@@ -545,7 +557,17 @@ class myGUI(object):
         self.matPlotFigure.clf()
         self.threshold_matPlot_Canvas.draw()
 
-    def saveFigure(self):
+    def save_TH_Figure(self):
+        print("Saving Figure.png")
+        self.matPlotFigure.savefig('Figure.png')
+
+    def testStuff2(self):
+        print("testStuff2")
+
+    def testStuff3(self):
+        print("testStuff3")       
+
+    def saveTestFigure(self):
         """
         None > save a "Figure.png" in current directory.
         The will overwrite current file. Rename if you want to keep it. 
@@ -558,16 +580,18 @@ class myGUI(object):
         # Spawn an Info dialog box
         self.fig.savefig('Figure.png')
 
-    def testMatPlotFit(self):
+    def drawThreshold(self):
         """
+        started life as testMatPlotFit()
+
          #consumptionList = [1.58, 0.69, 1.13, 1.75, 1.50, 0.98, 0.804, 0.891, 0.325, 0.064, 0.09, 0.01]
         """
+        verbose = True
+        
         MIN_X_SCALE = 0.1
         MAX_X_SCALE = 3000
         MIN_Y_SCALE = 0.001
         MAX_Y_SCALE = 3
-        
-        from scipy.optimize import curve_fit
 
         self.Qzero = 1.0       #Set some default
         self.k = self.scale_k.get()
@@ -582,12 +606,11 @@ class myGUI(object):
         selectedPumpTimesValues = self.pumpTimes.get()
         
         if (selectedPumpTimesValues == 0):
-            print("OMNI pumpTimes")
+            if verbose: print("Using OMNI pumpTimes")
             TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.018,0.010,0.0056]
         else:
-            print("Feather M0 pumpTimes")
+            if verbose: print("Using Feather M0 pumpTimes")
             TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, 0.200,0.130,0.080,0.050,0.030,0.020]
-        #print("TH_PumpTimes:", TH_PumpTimes)
 
         priceList = []
         for i in range(12):
@@ -605,28 +628,35 @@ class myGUI(object):
             # consumptionList = self.getConsumptionList()
             # responseList = self.getResponseList()
         else:
-            print("Using an individual file")
+            if verbose: print("Using an individual file")
             aDataRecord = self.recordList[self.fileChoice.get()]
             datalist = aDataRecord.datalist    # Event record needs this.
             consumptionList = aDataRecord.consumptionList
             responseList = aDataRecord.responseList
         print(consumptionList)
 
+        """
+        Need to configure threshold_tk_canvas
+        width = 600
+        height =100
+        eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, dataList, charList, aLabel):
+        """
+        x_zero = 150
+        y_zero = 50
+        x_pixel_width = 600
+        max_x_scale = 1000
+
+        GraphLib.eventRecord(self.threshold_tk_Canvas, 50, 50, 500, 120, datalist, ["P"], "")
+
         self.Qzero = (consumptionList[0]+consumptionList[1]+consumptionList[2])/3
-        print("Calculated Qzero", self.Qzero)
+        if verbose: print("Use first three bins to calculate Qzero =", self.Qzero)
 
-    
         #***** Fit the curve - find alpha *******
-        print("Fitting Curve")
-
         param_bounds=([0.001],[0.02])
-        
         fitParams, fitCovariances = curve_fit(demandFunction, priceList, consumptionList, bounds=param_bounds)
-
-        # popt, pcov = curve_fit(sigmoidscaled, xdata, ydata, p0, bounds=((-np.inf, -np.inf, 0, 0), (np.inf, np.inf, 1, 1)))
         self.alpha = fitParams[0]
-        alphaString = "alpha = {0:3f}".format(self.alpha)         
-        print (alphaString)
+        aString = "scipy curve_fit returns alpha = {0:3f}".format(self.alpha)         
+        if verbose: print (aString)
         #print (fitCovariances)
         
         #***** Draw Qzero **************
@@ -638,35 +668,48 @@ class myGUI(object):
                 #self.matPlotFigure.loglog(x, y, color ='red')
         """
       
-
         #***** Generate a curvefit line ******
-        print("Generating curvefit line with Qzero, alpha and k =", self.Qzero, self.alpha, self.k)
-        #x = np.arange(MIN_X_SCALE,MAX_X_SCALE, 0.1)
-        
+        if verbose: print("Generating curvefit line with Qzero, alpha and k =", self.Qzero, self.alpha, self.k)
+
+        # may want a smoother curve
+        #x = np.arange(priceList[0],priceList[11], 0.1)
         #y = demandFunction(priceList,self.Qzero)
         
-        y = []
+        fitLine = []
         for x in priceList:
-            result = np.e**(np.log10(self.Qzero)+self.k*(np.exp(-self.alpha*self.Qzero*x)-1))
-            y.append(result)
-        print("CurveFit y values",y)
-        #y = [1.58, 0.69, 1.13, 1.75, 1.50, 0.98, 0.804, 0.891, 0.325, 0.064, 0.09, 0.01]
+            y = np.e**(np.log10(self.Qzero)+self.k*(np.exp(-self.alpha*self.Qzero*x)-1))
+            fitLine.append(y)
+        if verbose: print("CurveFit y values for fitLine", fitLine)
         self.logGraph = self.matPlotFigure.add_subplot(111)
         self.logGraph.set_xscale("log")
         self.logGraph.set_yscale("log")
+        self.logGraph.set_ylabel('Consumption')
+        self.logGraph.set_xlabel('Price')
+        self.logGraph.set_title('Demand Curve\nFrom MatPlotLib')
+        
         self.logGraph.set_xlim(1e0, 1e4)  # should be 1 to 100 
         self.logGraph.set_ylim(1e-3, 1e1) # 
-        self.logGraph.loglog(priceList, y, color ='red')
+        self.logGraph.loglog(priceList, fitLine, color ='red')
         self.logGraph.scatter(priceList, consumptionList, color = "blue")
-        
-        #***** If file loaded, plot scattergram
 
+        r = pearsonr(consumptionList,fitLine)
+        label = "r = {:.3f}, N = {}".format(r[0],len(fitLine))
+        self.threshold_tk_Canvas.create_text(300, 10, text=label)
+
+        """
+        Bentxley et al. (2013) offers the following formula for 1st derivative so presumably:
+        slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
+        equivalent to:
+        slope = -alpha*Qzero*x*k*np.e**(-alpha*Qzero*x)
+        """            
         if self.showPmaxLine.get():
             PmaxFound = False
             for x in range(10,1500):
                 if (PmaxFound != True):
                     slope = -self.alpha*self.Qzero*x*self.k*np.exp(-self.alpha*self.Qzero*x)
-                    #if (slope < -0.9): print("slope at ",x," = ", slope)                
+                    if verbose:
+                        if (slope < -0.98) and (slope > -1.02):
+                            print(x, slope)
                     if slope < -1.0:
                         Pmax = x 
                         PmaxFound = True
@@ -676,8 +719,7 @@ class myGUI(object):
                 y = [0.001,3.0]
                 pmaxLine = Line2D(x,y, color = 'green')
                 self.logGraph.add_line(pmaxLine)
-
-        self.threshold_matPlot_Canvas.draw()               
+        self.threshold_matPlot_Canvas.draw()
 
 
     def testAreaTest1(self):
@@ -1014,10 +1056,10 @@ class myGUI(object):
             return y       
         
   
-    def drawThreshold(self):
+    def drawThreshold_old(self):
 
         """
-
+        Deprecated
 
         """
         from scipy.optimize import curve_fit
@@ -1252,23 +1294,8 @@ class myGUI(object):
         GraphLib.drawLog_Y_Axis(aCanvas,x_zero+x_pixel_width,y_zero,y_pixel_height,y_startValue,y_logRange,y_caption, test = True, leftLabel=False)
        
 
-    def testTHGraphicsDisplay_2(self):
-        """
-        Bentxley et al. (2013) offers the following formula for 1st derivative so presumably:
-
-        slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
-
-        same as:
-
-        slope = -alpha*Qzero*x*k*np.e**(-alpha*Qzero*x)
-
-        """
-        # these values from autofit of TH_BAZ15-033.txt
-        alpha = 0.006474
-        Qzero = 1.535
-        k  =  4
-        for x in range(30,40):
-            print(x, -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x))        
+    def testPmaxCalc(self):
+        print("testPmaxCalc deprecated")
         
         
     def testText2(self):
@@ -1388,12 +1415,15 @@ class myGUI(object):
         print(self.recordList[selected])
     
 
-    def clearCanvas(self):
+    def clearTHCanvas(self):
         self.graphCanvas.delete('all')
         self.fig = plt.figure(clear=True)   # clear contents
+
+    def clearGraphTabCanvas(self):
+        self.graphCanvas.delete('all')
                                    
     def drawCumulativeRecord(self,aRecord):
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         # print(aRecord)
         # canvas is 800 x 600
         x_zero = 50
@@ -1414,7 +1444,7 @@ class myGUI(object):
 
     def drawEventRecords(self):
         # canvas is 800 x 600
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         x_zero = 50
         x_pixel_width = 700
         x_divisions = 12
@@ -1433,7 +1463,7 @@ class myGUI(object):
         # print("event Records")
 
     def timeStamps(self,aRecord):
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         aCanvas = self.graphCanvas
         x_zero = 100
         y_zero = 500
@@ -1535,7 +1565,7 @@ class myGUI(object):
 
     def IntA_event_records(self):
         # canvas is 800 x 600
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         aRecord = self.recordList[self.fileChoice.get()]
         x_zero = 75
         x_pixel_width = 600
@@ -1555,7 +1585,7 @@ class myGUI(object):
 
         '''
         aCanvas = self.graphCanvas
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         aRecord = self.recordList[self.fileChoice.get()]
         pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist, -1)
         duration_list = []
@@ -1590,7 +1620,7 @@ class myGUI(object):
         '''
 
         '''
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         aRecord = self.recordList[self.fileChoice.get()]
         pump_total = 0
         for b in range (12):
@@ -1609,7 +1639,7 @@ class myGUI(object):
         self.graphCanvas.create_text(750, y + 45, fill="blue", text = "Total "+str(pump_total))
 
     def IntAHistogram_all(self):
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         aRecord = self.recordList[self.fileChoice.get()]
         pump_total = 0
         x_zero = 75
@@ -1649,7 +1679,7 @@ class myGUI(object):
             aCanvas.create_line(x+width, y-pixelHeight, x+width, y, fill=color)
         
         if clear:
-            self.clearCanvas()          
+            self.clearGraphTabCanvas()          
         # Draw Event Record
         x_zero = 75
         y_zero = 100
@@ -1711,7 +1741,7 @@ class myGUI(object):
 
     def showModel(self,aRecord, resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
         if clear:
-            self.clearCanvas()
+            self.clearGraphTabCanvas()
         x_zero = 75
         y_zero = 350
         x_pixel_width = 700
@@ -1824,7 +1854,7 @@ class myGUI(object):
         self.showModel(testRecord3, resolution = 5, aColor = "blue", clear = False, max_y_scale = 10)
 
     def test(self):
-        self.clearCanvas()
+        self.clearGraphTabCanvas()
         x_zero = 50
         y_zero = 550
         x_pixel_width = 700                               
