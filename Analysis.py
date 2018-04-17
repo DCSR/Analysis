@@ -348,25 +348,33 @@ class myGUI(object):
 
 
         #************** Threshold Button Frame *****
+
+        thresholdButton = Button(self.thresholdButtonFrame, text="Draw Demand Curve", command= lambda: \
+                                 self.drawThreshold()).grid(row = 0, column = 0, columnspan = 2)
+        
         clearTHCanvasButton = Button(self.thresholdButtonFrame, text="Clear Canvas", \
-                                     command = lambda: self.clearFigure()).grid(row=0,column=0, columnspan = 2, sticky = EW)
-        pumpTimesLabel = Label(self.thresholdButtonFrame, text="Pump Times").grid(row = 1, column = 0, sticky = EW)
+                                     command = lambda: self.clearFigure()).grid(row=1,column=0, columnspan = 2, sticky = EW)
+
         pumpTimesOMNI = Radiobutton(self.thresholdButtonFrame, text = "OMNI", variable = self.pumpTimes, value = 0).grid(row = 2,column = 0, sticky = W)
         cumRecButton2 = Radiobutton(self.thresholdButtonFrame, text = "M0 ", variable = self.pumpTimes, value = 1).grid(row = 2,column = 1, sticky = W)
 
+        responseLabel = Label(self.thresholdButtonFrame, text="Draw Response Curve").grid(row = 3, column = 0, sticky = EW)
+
         self.logXVar = BooleanVar(value = True)      
         logLogCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log X", variable = self.logXVar, \
-                                        onvalue = True, offvalue = False).grid(row = 3, column = 0, sticky = W)
+                                        onvalue = True, offvalue = False).grid(row = 4, column = 0, sticky = W)
         self.logYVar = BooleanVar(value = True)      
         logLogCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log Y", variable = self.logYVar, \
-                                        onvalue = True, offvalue = False).grid(row = 3, column = 1)
+                                        onvalue = True, offvalue = False).grid(row = 4, column = 1)
 
         self.showPmaxLine = BooleanVar(value = True)      
         showPmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Pmax line", variable = self.showPmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 4, column = 0, stick = W)
+                                        onvalue = True, offvalue = False).grid(row = 5, column = 0, stick = W)
         self.showOmaxLine = BooleanVar(value = True)
         showOmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Omax line", variable = self.showOmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 4, column = 1, sticky = W)
+                                        onvalue = True, offvalue = False).grid(row = 5, column = 1, sticky = W)
+
+
 
 
         #self.average_TH_FilesCheckButton = Checkbutton(self.ThresholdButtonFrame, text = "Average Files", \
@@ -377,23 +385,13 @@ class myGUI(object):
 
         #************* "drawThresholdFrame within thresholdButtonFrame ********       
         self.drawThresholdFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
-        self.drawThresholdFrame.grid(row = 5, column = 0, columnspan = 2, sticky = EW)
-
-        thresholdButton = Button(self.drawThresholdFrame, text="Draw Demand Curve", command= lambda: \
-                                 self.drawThreshold()).grid(row = 0, column = 0, columnspan = 2)
-
-
-
-
+        self.drawThresholdFrame.grid(row = 6, column = 0, columnspan = 2, sticky = EW)
 
         self.manualCurveFitVar = BooleanVar(value = True)
         curveFitCheckButton = Checkbutton(self.drawThresholdFrame, text = "Manual Curve Fit", \
                     variable = self.manualCurveFitVar, onvalue = True, \
                     offvalue = False).grid(row = 4, column = 0, columnspan = 2, stick=W)
-        
-
-
-        
+                
         self.QzeroVar = DoubleVar()
         self.QzeroLabel = Label(self.drawThresholdFrame, text = "Qzero").grid(row=8,column=0,columnspan = 2,sticky=EW)
         self.scale_Q_zero = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.05, \
@@ -476,8 +474,6 @@ class myGUI(object):
         self.threshold_tk_Canvas = Canvas(self.thresholdFigureFrame, width = 600, height = 100)
         self.threshold_tk_Canvas.grid(row=0,column=0)
         self.threshold_tk_Canvas.create_text(300,10,text = "Threshold Canvas")
-        self.threshold_tk_Canvas.create_line(0,0,600,100)
-        self.threshold_tk_Canvas.create_line(0,100,600,0)
 
         self.threshold_matPlot_Canvas = FigureCanvasTkAgg(self.matPlotFigure, master=self.thresholdFigureFrame)
         self.threshold_matPlot_Canvas.get_tk_widget().grid(row=1,column=0)
@@ -557,28 +553,38 @@ class myGUI(object):
         self.matPlotFigure.clf()
         self.threshold_matPlot_Canvas.draw()
 
-    def save_TH_Figure(self):
-        print("Saving Figure.png")
-        self.matPlotFigure.savefig('Figure.png')
-
     def testStuff2(self):
         print("testStuff2")
 
     def testStuff3(self):
-        print("testStuff3")       
+        print("testStuff3")
 
-    def saveTestFigure(self):
+    def save_TH_Figure(self):
         """
         None > save a "Figure.png" in current directory.
         The will overwrite current file. Rename if you want to keep it. 
-        See matplotlib.pyplot.savefig(*args, **kwargs)
+
         self.fig is defined in myGUI and used as a container in all pyplot plots.
         This procedure saves the current self.fig to Figure.png
         Changing the extension will change the format:  eg. ".pdf" 
 
         """
-        # Spawn an Info dialog box
-        self.fig.savefig('Figure.png')
+        print("Saving Figure.png")
+        # Spawn an Info dialog box?
+        self.matPlotFigure.savefig('Figure.png')
+
+    def saveTestFigure(self):
+        """
+        Define a TestFigure coresponding to Test Tab
+        """
+        print("saveTestFigure()")
+
+
+    def draw_TH_Curve(params):
+        print("draw_TH_Curve")
+        
+        
+        
 
     def drawThreshold(self):
         """
@@ -676,21 +682,31 @@ class myGUI(object):
         #y = demandFunction(priceList,self.Qzero)
         
         fitLine = []
+
+        """
+        params = [self.Qzero,self.k,self.alpha]
+
+        Qzero = params[0]
+        k = params[1]
+        alpha = params[2]
+        """
+        
         for x in priceList:
             y = np.e**(np.log10(self.Qzero)+self.k*(np.exp(-self.alpha*self.Qzero*x)-1))
             fitLine.append(y)
         if verbose: print("CurveFit y values for fitLine", fitLine)
-        self.logGraph = self.matPlotFigure.add_subplot(111)
-        self.logGraph.set_xscale("log")
-        self.logGraph.set_yscale("log")
-        self.logGraph.set_ylabel('Consumption')
-        self.logGraph.set_xlabel('Price')
-        self.logGraph.set_title('Demand Curve\nFrom MatPlotLib')
+        self.demandCurve = self.matPlotFigure.add_subplot(111)  # initialize a fig and a pair of axes
+        self.demandCurve.set_xscale("log")
+        self.demandCurve.set_yscale("log")
+        self.demandCurve.set_ylabel('Consumption')
+        self.demandCurve.set_xlabel('Price')
+        self.demandCurve.set_title('Demand Curve\nFrom MatPlotLib')
         
-        self.logGraph.set_xlim(1e0, 1e4)  # should be 1 to 100 
-        self.logGraph.set_ylim(1e-3, 1e1) # 
-        self.logGraph.loglog(priceList, fitLine, color ='red')
-        self.logGraph.scatter(priceList, consumptionList, color = "blue")
+        #self.demandCurve.set_xlim(1e0, 1e4)  # 1 to 100
+        self.demandCurve.set_xlim(1, 3000)  # 1 to 100
+        self.demandCurve.set_ylim(0.01, 3) # 
+        self.demandCurve.loglog(priceList, fitLine, color ='red')
+        self.demandCurve.scatter(priceList, consumptionList, color = "blue")
 
         r = pearsonr(consumptionList,fitLine)
         label = "r = {:.3f}, N = {}".format(r[0],len(fitLine))
@@ -718,7 +734,16 @@ class myGUI(object):
                 x = [Pmax,Pmax]
                 y = [0.001,3.0]
                 pmaxLine = Line2D(x,y, color = 'green')
-                self.logGraph.add_line(pmaxLine)
+                self.demandCurve.add_line(pmaxLine)
+
+        # instantiate a second axes that shares the same x-axis as self.demandCurve
+        self.responsePlot = self.demandCurve.twinx()
+        self.responsePlot.set_ylabel('Responses')
+        self.responsePlot.set_ylim(0,250)
+        responseLine = Line2D(priceList,responseList, color = 'black')
+        self.responsePlot.add_line(responseLine)
+        
+        
         self.threshold_matPlot_Canvas.draw()
 
 
