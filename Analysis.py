@@ -21,6 +21,7 @@ matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
+from matplotlib import gridspec
 
 """
 Models, Views and Controllers (MCV) design: keep the representation of the data separate
@@ -459,7 +460,7 @@ class myGUI(object):
 
         #****************
 
-        # TH_FigureFrame    - tk container
+        # TH_FigureFrame    - tk container (a Frame)
         #      self.matPlotFigure              - the thing that axes and lines are drawn on        
         #      self.threshold_tk_Canvas         - drawing space for things like event records
         #      self.threshold_matPlot_Canvas    - container for the MatPlotLib Figure
@@ -506,21 +507,35 @@ class myGUI(object):
                               self.TwoLeverTest2()).grid(row=3,column=0,sticky="W")
 
         #**************** Test Area Tab **************
+        # Contains testAreaButtonFrame and testAreaFigureFrame
+        #
+        # testAreaFigureFrame    - tk container (a Frame)
+        #      self.matPlotTestFigure              - the thing that axes and lines are drawn on        
+        #      self.threshold_tk_Canvas         - drawing space for things like event records
+        #      self.testArea_matPlot_Canvas    - container for the MatPlotLib Figure
+        #                                       - This is the thing that gets redrawn after things are changed.
+
         self.testAreaButtonFrame = Frame(self.testAreaTab, borderwidth=5, relief="sunken")
         self.testAreaButtonFrame.grid(column = 0, row = 0, sticky=N)
-        Button1 = Button(self.testAreaButtonFrame, text="Sine Wave", command= lambda: \
-                              self.testAreaTest1()).grid(row=0,column=0,sticky=N)
-        Button2 = Button(self.testAreaButtonFrame, text="Demand Curve", command= lambda: \
-                              self.demandCurveTest()).grid(row=1,column=0,sticky=N)
+
+        self.testAreaFigureFrame = Frame(self.testAreaTab, borderwidth=5, relief="sunken")
+        self.testAreaFigureFrame.grid(column = 1, row = 0, sticky=N)
+        
+        self.matPlotTestFigure = Figure(figsize=(7,7), dpi=80)
+        self.matPlotTestFigure.set_edgecolor("white")  #see help(colors)
+        self.matPlotTestFigure.set_facecolor("white")  #Set whether the figure frame (background) is displayed or invisible
+        self.matPlotTestFigure.set_frameon(True)
+        
+        self.testArea_MatPlot_Canvas = FigureCanvasTkAgg(self.matPlotTestFigure, master=self.testAreaFigureFrame)
+        self.testArea_MatPlot_Canvas.get_tk_widget().grid(row=0,column=0)
+        
+        Button1 = Button(self.testAreaButtonFrame, text="2L cum rec test", command= lambda: \
+                              self.doublePlotTest()).grid(row=0,column=0,sticky=N)
+        Button2 = Button(self.testAreaButtonFrame, text="testAreaButton2()", command= lambda: \
+                              self.testAreaButton2()).grid(row=1,column=0,sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
                               self.saveTestFigure()).grid(row=2,column=0,sticky=N)        
-        Button3 = Button(self.testAreaButtonFrame, text="Curve Fit Exp", command= lambda: \
-                              self.curveFitExp()).grid(row=3,column=0,sticky=N)
-        Button4 = Button(self.testAreaButtonFrame, text="Curve Fit Linear", command= lambda: \
-                              self.curveFitLinear()).grid(row=4,column=0,sticky=N)
 
-        self.testAreaCanvasFrame = Frame(self.testAreaTab, borderwidth=5, relief="sunken")
-        self.testAreaCanvasFrame.grid(column = 1, row = 0, sticky=N)
 
         #*************** FileSelectorFrame stuff ****************
         padding = 20
@@ -546,6 +561,61 @@ class myGUI(object):
                                    value = 9, command =lambda: self.selectList()).grid(column=4, row=3,padx=padding)
 
         # *************  The Controllers  **********
+
+    def doublePlotTest(self):
+        """
+        For positioning graphs see:
+        https://matplotlib.org/tutorials/intermediate/gridspec.html?highlight=gridspec
+
+        Use GridSpec to define how the figures fit into the space.
+        Here we define a 3x3 space. The top figure uses a 2x3 space
+        and the bottom uses a 1x3 space. 
+
+        uses numpy two dimensional indexing for a 3x3 array
+        >>> x = np.arange(10)
+        >>> x
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> x[0:2]
+        array([0, 1])
+        >>> x[0:3]
+        array([0, 1, 2])
+        """
+ 
+        print("doublePlotTest")
+
+        self.matPlotTestFigure.clf()
+
+
+        gs = gridspec.GridSpec(nrows = 3, ncols= 3) 
+        aCumRecGraph = self.matPlotTestFigure.add_subplot(gs[0:2,0:3])  # row [0,1] and col [0,1,2]  
+        aBarGraph = self.matPlotTestFigure.add_subplot(gs[2,0:3])       # row [2]   and col [0,1,2]
+
+
+        # Cummulative Record
+
+        aCumRecGraph.set_title('Another Graph \n Second line')
+        aCumRecGraph.set_xlabel('X axis label: fontsize = 12', fontsize = 12)      
+        aCumRecGraph.set_ylabel('Y axis label: fontsize = 10', fontsize = 10)       
+        aCumRecGraph.set_xscale("linear")
+        aCumRecGraph.set_yscale("linear")
+        aCumRecGraph.set_xlim(0, 22)  
+        aCumRecGraph.set_ylim(0, 22)
+        x = [0,2,3,4,20]
+        y = [4,4.1,4.7,2.0,2.5]
+        aCumRec = Line2D(x,y, color = 'black', ls = 'solid', drawstyle = 'steps')
+        aCumRecGraph.add_line(aCumRec)
+
+        # Bar Graph of pumptimes
+        bins = 20
+        index = np.arange(bins)
+        pumpTimes = [1,0,0,0,1, 0,0,0,0,2, 0,0,0,0,0, 3,0,0,0,0]
+        bar_width = 0.35
+        aBarGraph.bar(index,pumpTimes,bar_width)
+
+        self.matPlotTestFigure.tight_layout()
+
+        self.testArea_MatPlot_Canvas.draw()
+
 
     def clearFigure(self):
         print("placeholder()")
@@ -580,8 +650,71 @@ class myGUI(object):
         print("saveTestFigure()")
 
 
-    def draw_TH_Curve(params):
-        print("draw_TH_Curve")
+    def draw_TH_Curve(self, params, priceList):
+        verbose = True
+        if verbose: print("draw_TH_Curve()")
+        
+        Qzero = params[0]
+        k = params[1]
+        alpha = params[2]
+
+        fitLine = []
+        for x in priceList:
+            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            fitLine.append(y)
+        if verbose: print("CurveFit y values for fitLine", fitLine)
+        self.demandCurve = self.matPlotFigure.add_subplot(111)  # initialize a fig and a pair of axes
+        self.demandCurve.set_xscale("log")
+        self.demandCurve.set_yscale("log")
+        self.demandCurve.set_ylabel('Consumption')
+        self.demandCurve.set_xlabel('Price')
+        self.demandCurve.set_title('Demand Curve\nFrom MatPlotLib')
+        self.demandCurve.set_xlim(1, 3000)  # or (1e0, 1e4)
+        self.demandCurve.set_ylim(0.01, 3) # 
+        self.demandCurve.loglog(priceList, fitLine, color ='red')
+
+        
+        # self.demandCurve.scatter(priceList, consumptionList, color = "blue")
+        """
+        r = pearsonr(consumptionList,fitLine)
+        label = "r = {:.3f}, N = {}".format(r[0],len(fitLine))
+        self.threshold_tk_Canvas.create_text(300, 10, text=label)
+        """
+
+
+        """
+        Bentxley et al. (2013) offers the following formula for 1st derivative so presumably:
+        slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
+        equivalent to:
+        slope = -alpha*Qzero*x*k*np.e**(-alpha*Qzero*x)
+        """            
+        if self.showPmaxLine.get():
+            PmaxFound = False
+            for x in range(10,1500):
+                if (PmaxFound != True):
+                    slope = -self.alpha*self.Qzero*x*self.k*np.exp(-self.alpha*self.Qzero*x)
+                    if verbose:
+                        if (slope < -0.98) and (slope > -1.02):
+                            print(x, slope)
+                    if slope < -1.0:
+                        Pmax = x 
+                        PmaxFound = True
+            if PmaxFound:
+                print(Pmax)
+                x = [Pmax,Pmax]
+                y = [0.001,3.0]
+                pmaxLine = Line2D(x,y, color = 'green')
+                self.demandCurve.add_line(pmaxLine)
+
+        """
+        # instantiate a second axes that shares the same x-axis as self.demandCurve
+        self.responsePlot = self.demandCurve.twinx()
+        self.responsePlot.set_ylabel('Responses')
+        self.responsePlot.set_ylim(0,250)
+        responseLine = Line2D(priceList,responseList, color = 'black')
+        self.responsePlot.add_line(responseLine)
+        """
+        self.threshold_matPlot_Canvas.draw()
         
         
         
@@ -681,247 +814,17 @@ class myGUI(object):
         #x = np.arange(priceList[0],priceList[11], 0.1)
         #y = demandFunction(priceList,self.Qzero)
         
-        fitLine = []
-
-        """
-        params = [self.Qzero,self.k,self.alpha]
-
-        Qzero = params[0]
-        k = params[1]
-        alpha = params[2]
-        """
+        TH_params = [self.Qzero,self.k,self.alpha]
+        print(TH_params)
         
-        for x in priceList:
-            y = np.e**(np.log10(self.Qzero)+self.k*(np.exp(-self.alpha*self.Qzero*x)-1))
-            fitLine.append(y)
-        if verbose: print("CurveFit y values for fitLine", fitLine)
-        self.demandCurve = self.matPlotFigure.add_subplot(111)  # initialize a fig and a pair of axes
-        self.demandCurve.set_xscale("log")
-        self.demandCurve.set_yscale("log")
-        self.demandCurve.set_ylabel('Consumption')
-        self.demandCurve.set_xlabel('Price')
-        self.demandCurve.set_title('Demand Curve\nFrom MatPlotLib')
-        
-        #self.demandCurve.set_xlim(1e0, 1e4)  # 1 to 100
-        self.demandCurve.set_xlim(1, 3000)  # 1 to 100
-        self.demandCurve.set_ylim(0.01, 3) # 
-        self.demandCurve.loglog(priceList, fitLine, color ='red')
-        self.demandCurve.scatter(priceList, consumptionList, color = "blue")
-
-        r = pearsonr(consumptionList,fitLine)
-        label = "r = {:.3f}, N = {}".format(r[0],len(fitLine))
-        self.threshold_tk_Canvas.create_text(300, 10, text=label)
-
-        """
-        Bentxley et al. (2013) offers the following formula for 1st derivative so presumably:
-        slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
-        equivalent to:
-        slope = -alpha*Qzero*x*k*np.e**(-alpha*Qzero*x)
-        """            
-        if self.showPmaxLine.get():
-            PmaxFound = False
-            for x in range(10,1500):
-                if (PmaxFound != True):
-                    slope = -self.alpha*self.Qzero*x*self.k*np.exp(-self.alpha*self.Qzero*x)
-                    if verbose:
-                        if (slope < -0.98) and (slope > -1.02):
-                            print(x, slope)
-                    if slope < -1.0:
-                        Pmax = x 
-                        PmaxFound = True
-            if PmaxFound:
-                print(Pmax)
-                x = [Pmax,Pmax]
-                y = [0.001,3.0]
-                pmaxLine = Line2D(x,y, color = 'green')
-                self.demandCurve.add_line(pmaxLine)
-
-        # instantiate a second axes that shares the same x-axis as self.demandCurve
-        self.responsePlot = self.demandCurve.twinx()
-        self.responsePlot.set_ylabel('Responses')
-        self.responsePlot.set_ylim(0,250)
-        responseLine = Line2D(priceList,responseList, color = 'black')
-        self.responsePlot.add_line(responseLine)
-        
-        
-        self.threshold_matPlot_Canvas.draw()
+        self.draw_TH_Curve(TH_params, priceList)
 
 
-    def testAreaTest1(self):
-        """
-        Called from testAreaTab Button1
-        """
-        #self.fig = plt.figure()  # defined in __init__
-        self.fig.subplots_adjust(top=0.8)
-        ax1 = self.fig.add_subplot(111)
-        ax1.set_ylabel('volts')
-        ax1.set_title('a sine wave')
-
-        t = np.arange(0.0, 1.0, 0.01)
-        s = np.sin(2*np.pi*t)
-        line, = ax1.plot(t, s, color='blue', lw=2)
-        
-        canvas = FigureCanvasTkAgg(self.fig, self.testAreaCanvasFrame)
-        canvas.draw()    #canvas.show() deprecated
-        canvas.get_tk_widget().grid(row=0,column=0)
-
-
-    def demandCurveTest(self):
+    def testAreaButton2(self):
         """
         Called from testAreaTab Button2
         """
-
-        def demandFunction(x,alpha):
-            Qzero = 1.81
-            k = 9
-            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)) 
-            return y
-
-        priceList = [2.53, 4.00, 6.35, 10.13, 16.00, 25.00, 40.00, 61.54, 100.00, 160.00, 266.67, 400.00]
-        consumptionList = [2.370, 2.212, 0.875, 2.310, 2.680, 1.328, 0.975, 0.590, 0.110, 0.075, 0.145, 0.010]
-
-        #priceList = [2.53, 4.00, 6.35, 10.13, 16.00, 25.00, 40.00, 61.54, 100.00]
-        #consumptionList = [2.370, 2.212, 0.875, 2.310, 2.680, 1.328, 0.475, 1.290, 0.010]
-
-        #Qzero = (consumptionList[0]+consumptionList[1]+consumptionList[2])/3
-
-        xList = np.array(priceList, dtype=np.float64)
-        yList = np.array(consumptionList, dtype=np.float64)
-
-        test = []
-
-        for x in xList:
-            y = demandFunction(x, 0.01)
-            print(x,y)
-            test.append(y)
-            
-        #noisy = test + 0.25*np.random.normal(size=len(test))
-        npTest = np.array(test)
-        print(npTest)
-        
-        from scipy.optimize import curve_fit
-
-        param_bounds=([0.001],[0.02])
-        
-        fitParams, fitCovariances = curve_fit(demandFunction, xList, npTest,bounds=param_bounds)
-
-        # popt, pcov = curve_fit(sigmoidscaled, xdata, ydata, p0, bounds=((-np.inf, -np.inf, 0, 0), (np.inf, np.inf, 1, 1)))
-        alpha = fitParams[0]
-        alphaString = "alpha = {0:3f}".format(alpha)         
-        print (alphaString)
-        #print (fitCovariances)
-                
-        fig = plt.figure()
-        #fig.subplots_adjust(top=0.8)
-        fig.add_subplot(111)
-        plt.ylabel('Consumption')
-        plt.xlabel("Price")
-        plt.title('Demand Function\nSecond Line of Title')
-        plt.xscale('log')
-        plt.yscale('log')
-
-        print("length x:", len(priceList))
-        print("length test:", len(test))
-
-        plt.scatter(xList,npTest)
-
-        x = np.arange(1.0, 1000, 1)
-        
-        y = demandFunction(x,alpha)
-        line = plt.plot(x, y, color='blue', lw=2, label='blue')
-        
-        canvas = FigureCanvasTkAgg(fig, self.testAreaCanvasFrame)
-        canvas.draw()    #canvas.show() deprecated
-        canvas.get_tk_widget().grid(row=0,column=0)
-        
-
-    def curveFitExp(self):
-        """
-        Called from testAreaTab Button
-
-        I don't really understand this, but it might be a good template
-        
-        """
-
-        def fitFunc(t, a, b, c):
-            return a*np.exp(-b*t) + c
-
-        from scipy.optimize import curve_fit
-
-        self.fig = plt.figure(clear=True, figsize=(6,6))   # clear contents
-        self.fig.add_subplot(111)  
-        t = np.linspace(0,4,50)
-        temp = fitFunc(t, 2.5, 1.3, 0.5)
-        noisy = temp + 0.25*np.random.normal(size=len(temp))
-
-        fitParams, fitCovariances = curve_fit(fitFunc, t, noisy)
-        print (fitParams)
-        print (fitCovariances)
-
-        
-        plt.ylabel('Temperature (C)', fontsize = 16)
-        plt.xlabel('time (s)', fontsize = 16)
-        plt.xlim(0,4.1)
-        # plot the data as red circles with vertical errorbars
-        plt.errorbar(t, noisy, fmt = 'ro', yerr = 0.2)
-        # now plot the best fit curve and also +- 1 sigma curves
-        # (the square root of the diagonal covariance matrix  
-        # element is the uncertianty on the fit parameter.)
-        sigma = [fitCovariances[0,0], \
-                 fitCovariances[1,1], \
-                 fitCovariances[2,2] \
-                 ]
-        plt.plot(t, fitFunc(t, fitParams[0], fitParams[1], fitParams[2]),\
-                 t, fitFunc(t, fitParams[0] + sigma[0], fitParams[1] - sigma[1], fitParams[2] + sigma[2]),\
-                 t, fitFunc(t, fitParams[0] - sigma[0], fitParams[1] + sigma[1], fitParams[2] - sigma[2]))
-        
-        canvas = FigureCanvasTkAgg(self.fig, self.testAreaCanvasFrame)
-        canvas.draw()    #canvas.show() deprecated
-        canvas.get_tk_widget().grid(row=0,column=0)
-
-
-    def curveFitLinear(self):
-        """
-        Called from testAreaTab Button       
-        """
-        def fitFunc(x,a,b):
-            # y = ax + b
-            return (a * x) + b
-
-        from scipy.optimize import curve_fit
-
-        self.fig = plt.figure(clear=True, figsize=(6,6))   # clear contents
-        self.fig.add_subplot(111)  
-        x = np.arange(0,10,0.1)
-        y = fitFunc(x, 2.5, 10)
-        noisy = y + 5*np.random.normal(size=len(y))
-
-        """
-        popt, pcov = curve_fit(func, xdata, ydata)
-        plt.plot(xdata, func(xdata, *popt), 'r-', label='fit')
-        """
-
-        fitParams, fitCovariances = curve_fit(fitFunc, x, noisy)
-        print (fitParams)
-        print (fitCovariances)
-        
-        plt.ylabel('Temperature (C)', fontsize = 16)
-        plt.xlabel('time (s)', fontsize = 16)
-        plt.xlim(0,10)
-        # plot the data as red circles with vertical errorbars
-        plt.errorbar(x, noisy, fmt = 'ro', yerr = 0.2)
-        # now plot the best fit curve and also +- 1 sigma curves
-        # (the square root of the diagonal covariance matrix  
-        # element is the uncertianty on the fit parameter.)
-        sigma = [fitCovariances[0,0], \
-                 fitCovariances[1,1]]
-        plt.plot(x, fitFunc(x, fitParams[0], fitParams[1]),\
-                 x, fitFunc(x, fitParams[0] + sigma[0], fitParams[1] - sigma[1]),\
-                 x, fitFunc(x, fitParams[0] - sigma[0], fitParams[1] + sigma[1]))
-                
-        canvas = FigureCanvasTkAgg(self.fig, self.testAreaCanvasFrame)
-        canvas.draw()    #canvas.show() deprecated
-        canvas.get_tk_widget().grid(row=0,column=0)       
+        print("testAreaButton2()")
 
         
     # *************** Two Lever ********************
