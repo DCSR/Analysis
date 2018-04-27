@@ -531,8 +531,10 @@ class myGUI(object):
         
         Button1 = Button(self.testAreaButtonFrame, text="2L cum rec test", command= lambda: \
                               self.doublePlotTest()).grid(row=0,column=0,sticky=N)
-        Button2 = Button(self.testAreaButtonFrame, text="testAreaButton2()", command= lambda: \
-                              self.testAreaButton2()).grid(row=1,column=0,sticky=N)
+        Button2 = Button(self.testAreaButtonFrame, text="1_H406_Apr_27.str", command= lambda: \
+                              self.openWakeFile("1_H406_Apr_27.str")).grid(row=1,column=0,sticky=N)
+        #Button3 = Button(self.testAreaButtonFrame, text="load_2L_testFile()", command= lambda: \
+        #                              self.load_2L_testFile()).grid(row=1,column=0,sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
                               self.saveTestFigure()).grid(row=2,column=0,sticky=N)        
 
@@ -580,7 +582,8 @@ class myGUI(object):
         >>> x[0:3]
         array([0, 1, 2])
         """
- 
+        MAX_Y_SCALE = 500
+         
         print("doublePlotTest")
 
         self.matPlotTestFigure.clf()
@@ -590,19 +593,37 @@ class myGUI(object):
         aCumRecGraph = self.matPlotTestFigure.add_subplot(gs[0:2,0:3])  # row [0,1] and col [0,1,2]  
         aBarGraph = self.matPlotTestFigure.add_subplot(gs[2,0:3])       # row [2]   and col [0,1,2]
 
-
         # Cummulative Record
-
-        aCumRecGraph.set_title('Another Graph \n Second line')
-        aCumRecGraph.set_xlabel('X axis label: fontsize = 12', fontsize = 12)      
-        aCumRecGraph.set_ylabel('Y axis label: fontsize = 10', fontsize = 10)       
+        aRecord = self.recordList[self.fileChoice.get()]        
+        aCumRecGraph.set_title(aRecord.fileName)
+        aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)      
+        aCumRecGraph.set_ylabel('Access Lever Responses', fontsize = 10)       
         aCumRecGraph.set_xscale("linear")
         aCumRecGraph.set_yscale("linear")
-        aCumRecGraph.set_xlim(0, 22)  
-        aCumRecGraph.set_ylim(0, 22)
-        x = [0,2,3,4,20]
-        y = [4,4.1,4.7,2.0,2.5]
-        aCumRec = Line2D(x,y, color = 'black', ls = 'solid', drawstyle = 'steps')
+        aCumRecGraph.set_xlim(0, 180)  
+        aCumRecGraph.set_ylim(0, MAX_Y_SCALE)
+        # leverChar = 'J'
+
+        # make an array of x in seconds (or perhaps fractions of a min).
+        # make an array of y - total responses.
+        x_array = []
+        y_array = []
+        resets = 0
+        respTotal = 0
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'J':
+                respTotal = respTotal + 1
+                adjustedRespTotal = respTotal - (resets * MAX_Y_SCALE)
+                if adjustedRespTotal == MAX_Y_SCALE:
+                    resets = resets + 1
+                    adjustedRespTotal = 0
+                x = pairs[0]/60000     # fraction of a min
+                x_array.append(x)
+                y_array.append(adjustedRespTotal)
+
+        #x = [10,11,12,13,14,15,16,20.2,20.4,20.6,25]
+        #y = [10,20,30,40,50,60,70,80,90,100,105]
+        aCumRec = Line2D(x_array,y_array, color = 'black', ls = 'solid', drawstyle = 'steps')
         aCumRecGraph.add_line(aCumRec)
 
         # Bar Graph of pumptimes
@@ -820,11 +841,11 @@ class myGUI(object):
         self.draw_TH_Curve(TH_params, priceList)
 
 
-    def testAreaButton2(self):
+    def load_2L_testFile(self):
         """
         Called from testAreaTab Button2
         """
-        print("testAreaButton2()")
+        print("load_2L-testFile()")
 
         
     # *************** Two Lever ********************
