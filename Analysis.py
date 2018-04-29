@@ -521,7 +521,7 @@ class myGUI(object):
         self.testAreaFigureFrame = Frame(self.testAreaTab, borderwidth=5, relief="sunken")
         self.testAreaFigureFrame.grid(column = 1, row = 0, sticky=N)
         
-        self.matPlotTestFigure = Figure(figsize=(7,7), dpi=80)
+        self.matPlotTestFigure = Figure(figsize=(9,8), dpi=80)
         self.matPlotTestFigure.set_edgecolor("white")  #see help(colors)
         self.matPlotTestFigure.set_facecolor("white")  #Set whether the figure frame (background) is displayed or invisible
         self.matPlotTestFigure.set_frameon(True)
@@ -588,7 +588,6 @@ class myGUI(object):
 
         self.matPlotTestFigure.clf()
 
-
         gs = gridspec.GridSpec(nrows = 3, ncols= 3) 
         aCumRecGraph = self.matPlotTestFigure.add_subplot(gs[0:2,0:3])  # row [0,1] and col [0,1,2]  
         aBarGraph = self.matPlotTestFigure.add_subplot(gs[2,0:3])       # row [2]   and col [0,1,2]
@@ -600,18 +599,38 @@ class myGUI(object):
         aCumRecGraph.set_ylabel('Access Lever Responses', fontsize = 10)       
         aCumRecGraph.set_xscale("linear")
         aCumRecGraph.set_yscale("linear")
-        aCumRecGraph.set_xlim(0, 180)  
+        aCumRecGraph.set_xlim(0, 360)  
         aCumRecGraph.set_ylim(0, MAX_Y_SCALE)
-        # leverChar = 'J'
 
-        # make an array of x in seconds (or perhaps fractions of a min).
+        aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)      
+        aBarGraph.set_ylabel('Dose mg/bin', fontsize = 10)       
+        aBarGraph.set_xscale("linear")
+        aBarGraph.set_yscale("linear")
+        aBarGraph.set_xlim(0, 360)  
+        aBarGraph.set_ylim(0, 1)
+
+
+        # make an array of x in fractions of a min.
         # make an array of y - total responses.
         x_array = []
         y_array = []
+        totalDrugBins = 0
         resets = 0
         respTotal = 0
+        binPumpTime = 0
+        totalDose = 0
+        binStartTime_mSec = 0
+        binEndTime_mSec = 0
+        totalBinTime_mSec = 0
+        binStartTimes = []
+        doseList = []
+        finalRatio = 0
+        trialResponses = 0
+        binStartTime = 0
+
         for pairs in aRecord.datalist:
-            if pairs[1] == 'J':
+            if pairs[1] == 'J':                     # Access leverChar = 'J'
+                trialResponses = trialResponses + 1
                 respTotal = respTotal + 1
                 adjustedRespTotal = respTotal - (resets * MAX_Y_SCALE)
                 if adjustedRespTotal == MAX_Y_SCALE:
@@ -620,21 +639,54 @@ class myGUI(object):
                 x = pairs[0]/60000     # fraction of a min
                 x_array.append(x)
                 y_array.append(adjustedRespTotal)
+        
+            elif pairs[1] == 'B':                   # Start of Drug Access
+                binStartTime_mSec = pairs[0]                   
+                finalRatio = trialResponses
+                totalDrugBins = totalDrugBins + 1
+                binStartTime = pairs[0]/60000   # fraction of a minute
+                binStartTimes.append(binStartTime)
+            elif pairs[1] == 'P':
+                pumpStartTime = pairs[0]
+                pumpOn = True
+            elif pairs[1] == 'p':
+                if pumpOn:
+                    pumpDuration = pairs[0]-pumpStartTime
+                    binPumpTime = binPumpTime + pumpDuration
+                    pumpOn = False
+            elif pairs[1] == 'b':   # End of Drug Access Period
+                binEndTime_mSec = pairs[0]
+                totalBinTime_mSec = totalBinTime_mSec + (binEndTime_mSec - binStartTime_mSec) 
+                trialResponses = 0
+                binDose = (binPumpTime/1000) * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+                totalDose = totalDose + binDose
+                doseList.append(binDose)
+                #print(binStartTime,binDose)
+                binPumpTime = 0
 
-        #x = [10,11,12,13,14,15,16,20.2,20.4,20.6,25]
-        #y = [10,20,30,40,50,60,70,80,90,100,105]
+        averageBinLength = (totalBinTime_mSec/totalDrugBins)/1000
+        # Create formated text strings to either print or display on screen
+        drugAccessLengthStr = "Drug Access Period = {:.0f} sec".format(averageBinLength)
+        totalDrugBinsStr = "Total Drug Lever bins = {}".format(totalDrugBins)
+        finalRatioStr = "Final Ratio = {}".format(finalRatio)
+        totalDoseStr = "Total Dose = {:.3f} mg".format(totalDose)        
+        print(drugAccessLengthStr)
+        print(totalDrugBinsStr)
+        print(finalRatioStr)
+        print(totalDoseStr)
+
+
+        
+        #print("binStartTimes =", binStartTimes)
+        #print("doseList =", doseList)
+
         aCumRec = Line2D(x_array,y_array, color = 'black', ls = 'solid', drawstyle = 'steps')
+        aCumRec.set_lw(1.0)                     # Example of setting and getting linewidth
+        print("lw =", aCumRec.get_linewidth())
         aCumRecGraph.add_line(aCumRec)
-
-        # Bar Graph of pumptimes
-        bins = 20
-        index = np.arange(bins)
-        pumpTimes = [1,0,0,0,1, 0,0,0,0,2, 0,0,0,0,0, 3,0,0,0,0]
-        bar_width = 0.35
-        aBarGraph.bar(index,pumpTimes,bar_width)
-
+        bar_width = 2.0         # Don't know what these units are. Going smaller will make some bars disappear
+        aBarGraph.bar(binStartTimes,doseList,bar_width)
         self.matPlotTestFigure.tight_layout()
-
         self.testArea_MatPlot_Canvas.draw()
 
 
