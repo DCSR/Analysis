@@ -566,12 +566,26 @@ class myGUI(object):
 
     def doublePlotTest(self):
         """
+        Resolutions:
+        aRecord.datalist  - mSec 10800000 mSec in 180 minute session
+        cumRecTimes - transforms all times into fractions of a minute so that it can be plotted in minutes
+        binStartTimes     - fractions of a minute
+        binStartTimesSec  - second
+        """
+        
+        max_x_scale = self.max_x_scale.get()
+        max_y_scale = self.max_y_scale.get()
+
+        self.matPlotTestFigure.clf()
+
+        gs = gridspec.GridSpec(nrows = 4, ncols= 3)
+        """
         For positioning graphs see:
         https://matplotlib.org/tutorials/intermediate/gridspec.html?highlight=gridspec
 
-        Use GridSpec to define how the figures fit into the space.
-        Here we define a 3x3 space. The top figure uses a 2x3 space
-        and the bottom uses a 1x3 space. 
+        GridSpec defines how the figures fits into the space.
+        Here we define a 4 row x 3 col space. The top figure uses a 2row and 3 cols 
+        and the bottom two graphs use 1 row and 3 columns. 
 
         uses numpy two dimensional indexing for a 3x3 array
         >>> x = np.arange(10)
@@ -583,37 +597,39 @@ class myGUI(object):
         array([0, 1, 2])
         """
 
-        max_x_scale = self.max_x_scale.get()
-        max_y_scale = self.max_y_scale.get()
+        aCumRecGraph = self.matPlotTestFigure.add_subplot(gs[0:2,0:3],label="1")  # row [0,1] and col [0,1,2]  
+        aBarGraph = self.matPlotTestFigure.add_subplot(gs[2,0:3],label="2")       # row [2]   and col [0,1,2]
+        aCocConcGraph = self.matPlotTestFigure.add_subplot(gs[3,0:3],label='3')   # row [3]   and col [0,1,2]
 
-        self.matPlotTestFigure.clf()
-
-        gs = gridspec.GridSpec(nrows = 3, ncols= 3) 
-        aCumRecGraph = self.matPlotTestFigure.add_subplot(gs[0:2,0:3])  # row [0,1] and col [0,1,2]  
-        aBarGraph = self.matPlotTestFigure.add_subplot(gs[2,0:3])       # row [2]   and col [0,1,2]
-
-        # Cummulative Record
         aRecord = self.recordList[self.fileChoice.get()]        
         aCumRecGraph.set_title(aRecord.fileName)
-        #aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)      
+        aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)      
         aCumRecGraph.set_ylabel('Access Lever Responses', fontsize = 12)       
         aCumRecGraph.set_xscale("linear")
         aCumRecGraph.set_yscale("linear")
         aCumRecGraph.set_xlim(0, max_x_scale)  
         aCumRecGraph.set_ylim(0, max_y_scale)
 
-        aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)      
-        aBarGraph.set_ylabel('Dose mg/bin', fontsize = 12)       
+        #aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)      
+        aBarGraph.set_ylabel('Dose mg', fontsize = 12)       
         aBarGraph.set_xscale("linear")
         aBarGraph.set_yscale("linear")
-        aBarGraph.set_xlim(0, max_x_scale)  
+        aBarGraph.set_xlim(0, max_x_scale)
+        aBarGraph.set_xticklabels("")                 # Suppress tick labels
         aBarGraph.set_ylim(0, 1)
 
+        #aCocConcGraph.set_xlabel('Session Time (min)', fontsize = 12)      
+        aCocConcGraph.set_ylabel('Cocaine', fontsize = 12)       
+        aCocConcGraph.set_xscale("linear")
+        aCocConcGraph.set_yscale("linear")
+        aCocConcGraph.set_xlim(0, max_x_scale*60000)
+        aCocConcGraph.set_xticklabels("")              # Suppress tick labels (because it is in mSec)
+        aCocConcGraph.set_ylim(0, 25)
 
         # make an array of x in fractions of a min.
         # make an array of y - total responses.
-        x_array = []
-        y_array = []
+        cumRecTimes = []
+        cumRecResp = []
         totalDrugBins = 0
         resets = 0
         respTotal = 0
@@ -623,11 +639,14 @@ class myGUI(object):
         binEndTime_mSec = 0
         totalBinTime_mSec = 0
         binStartTimes = []
+        binStartTimesSec = []
         tickPositionY = [] 
         doseList = []
         finalRatio = 0
         trialResponses = 0
         binStartTime = 0
+
+        # ************   Cummulative Record  *************************
 
         for pairs in aRecord.datalist:
             if pairs[1] == 'J':                     # Access leverChar = 'J'
@@ -638,15 +657,16 @@ class myGUI(object):
                     resets = resets + 1
                     adjustedRespTotal = 0
                 x = pairs[0]/60000     # fraction of a min
-                x_array.append(x)
-                y_array.append(adjustedRespTotal)
-        
+                cumRecTimes.append(x)
+                cumRecResp.append(adjustedRespTotal)       
             elif pairs[1] == 'B':                   # Start of Drug Access
                 binStartTime_mSec = pairs[0]                   
                 finalRatio = trialResponses
                 totalDrugBins = totalDrugBins + 1
-                binStartTime = pairs[0]/60000   # fraction of a minute
-                binStartTimes.append(binStartTime)
+                t = pairs[0]/1000    # in seconds
+                binStartTimesSec.append(t)
+                t = pairs[0]/60000   # fraction of a minute
+                binStartTimes.append(t)
                 tickPositionY.append(adjustedRespTotal)
             elif pairs[1] == 'P':
                 pumpStartTime = pairs[0]
@@ -666,8 +686,9 @@ class myGUI(object):
                 #print(binStartTime,binDose)
                 binPumpTime = 0
 
-        averageBinLength = (totalBinTime_mSec/totalDrugBins)/1000
+
         # Create formated text strings to either print or display on screen
+        averageBinLength = (totalBinTime_mSec/totalDrugBins)/1000
         drugAccessLengthStr = "Drug Access Period = {:.0f} sec".format(averageBinLength)
         totalDrugBinsStr = "Total Drug Lever bins = {}".format(totalDrugBins)
         finalRatioStr = "Final Ratio = {}".format(finalRatio)
@@ -676,18 +697,26 @@ class myGUI(object):
         print(totalDrugBinsStr)
         print(finalRatioStr)
         print(totalDoseStr)
+
+        """
+        print("binStartTimes =", binStartTimes)
+        for i in range(len(binStartTimes)):
+            t = int(binStartTimes[i])
+            print(t)
+        """
        
-        #print("binStartTimes =", binStartTimes)
         #print("doseList =", doseList)
 
-        aCumRec = Line2D(x_array,y_array, color = 'black', ls = 'solid', drawstyle = 'steps')
+        aCumRec = Line2D(cumRecTimes,cumRecResp, color = 'black', ls = 'solid', drawstyle = 'steps')
         aCumRec.set_lw(1.0)                     # Example of setting and getting linewidth
         # print("line width =", aCumRec.get_linewidth())
         aCumRecGraph.add_line(aCumRec)
 
+        # ********* Draw Ticks *********************
+
         for i in range(len(binStartTimes)):
-            tickX = max_x_scale * 0.01
-            tickY = max_y_scale * 0.02
+            tickX = max_x_scale * 0.01  # make the tick mark proportional (1%) to the X axis length 
+            tickY = max_y_scale * 0.02  # make the tick mark proportional (2%) to the Y axis length 
             tickMarkX = [binStartTimes[i], binStartTimes[i] + tickX]
             tickMarkY = [tickPositionY[i], tickPositionY[i] - tickY]
             aTickMark = Line2D(tickMarkX, tickMarkY, color = "red")
@@ -698,19 +727,50 @@ class myGUI(object):
         self.matPlotTestFigure.text(0.72, 0.26, totalDrugBinsStr)
         self.matPlotTestFigure.text(0.72, 0.24, finalRatioStr)        
         self.matPlotTestFigure.text(0.72, 0.22, totalDoseStr)
+
+        # *********** Draw Bar chart of doses **************************
         
         bar_width = 2.0     # The units correspond to Y values, so will get skinny with high max_y_scale.    
         
         aBarGraph.bar(binStartTimes,doseList,bar_width)
+
+
+        # ***********  Cocaine Concentration curve **********************
+        resolution = 5  # seconds  
+        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc, aRecord.pumpSpeed, resolution)
         
+        # cocConcXYList returns a list of [time,conc].
+        # The following separates these into two equal length lists to be plotted
+        cocConcList = []
+        timeList = []
+        for i in range(len(cocConcXYList)):
+            timeList.append(cocConcXYList[i][0])       # essentially a list in 5 sec intervals           
+            cocConcList.append(cocConcXYList[i][1])
+
+        #for i in range(10):
+        #   print(timeList[i],cocConcList[i])
+            
+        cocConcLine = Line2D(timeList,cocConcList, color = 'blue', ls = 'solid')
+        aCocConcGraph.add_line(cocConcLine)
+
+        # ***********  Prediction of dose selected by cocaine levels
+        # i.e. correlate binDose with the cocaine cencentration at time of the dose
+
+        print("bin start times (sec):")
+        print(binStartTimesSec)
+        cocLevels = []
+        for i in range(len(binStartTimes)):
+            t = int(binStartTimesSec[i]/5)
+            cocLevel = cocConcList[t]
+            print(t,cocLevel,doseList[i])
+            cocLevels.append(cocLevel)
+
+        r = pearsonr(doseList,cocLevels)
+
+        print("r =",r)
+
         self.matPlotTestFigure.tight_layout()
         self.testArea_MatPlot_Canvas.draw()
-
-        resolution = 60
-        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc, aRecord.pumpSpeed, resolution)
-
-        for i in range(10):
-            print(cocConcXYList[i])
 
 
     def clearFigure(self):
