@@ -160,7 +160,7 @@ class myGUI(object):
         # *************   The Model - vaiables, lists and files *********
         self.clockTimeStringVar = StringVar(value="0:00:00")
         self.max_x_scale = IntVar(value=360)
-        self.max_y_scale = IntVar(value=250)
+        self.max_y_scale = IntVar(value=500)
         self.neumaierDose = IntVar(value=2)
         # self.max_x_scale.set(120)
         
@@ -582,9 +582,9 @@ class myGUI(object):
         >>> x[0:3]
         array([0, 1, 2])
         """
-        MAX_Y_SCALE = 500
-         
-        print("doublePlotTest")
+
+        max_x_scale = self.max_x_scale.get()
+        max_y_scale = self.max_y_scale.get()
 
         self.matPlotTestFigure.clf()
 
@@ -595,18 +595,18 @@ class myGUI(object):
         # Cummulative Record
         aRecord = self.recordList[self.fileChoice.get()]        
         aCumRecGraph.set_title(aRecord.fileName)
-        aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)      
-        aCumRecGraph.set_ylabel('Access Lever Responses', fontsize = 10)       
+        #aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)      
+        aCumRecGraph.set_ylabel('Access Lever Responses', fontsize = 12)       
         aCumRecGraph.set_xscale("linear")
         aCumRecGraph.set_yscale("linear")
-        aCumRecGraph.set_xlim(0, 360)  
-        aCumRecGraph.set_ylim(0, MAX_Y_SCALE)
+        aCumRecGraph.set_xlim(0, max_x_scale)  
+        aCumRecGraph.set_ylim(0, max_y_scale)
 
         aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)      
-        aBarGraph.set_ylabel('Dose mg/bin', fontsize = 10)       
+        aBarGraph.set_ylabel('Dose mg/bin', fontsize = 12)       
         aBarGraph.set_xscale("linear")
         aBarGraph.set_yscale("linear")
-        aBarGraph.set_xlim(0, 360)  
+        aBarGraph.set_xlim(0, max_x_scale)  
         aBarGraph.set_ylim(0, 1)
 
 
@@ -623,6 +623,7 @@ class myGUI(object):
         binEndTime_mSec = 0
         totalBinTime_mSec = 0
         binStartTimes = []
+        tickPositionY = [] 
         doseList = []
         finalRatio = 0
         trialResponses = 0
@@ -632,8 +633,8 @@ class myGUI(object):
             if pairs[1] == 'J':                     # Access leverChar = 'J'
                 trialResponses = trialResponses + 1
                 respTotal = respTotal + 1
-                adjustedRespTotal = respTotal - (resets * MAX_Y_SCALE)
-                if adjustedRespTotal == MAX_Y_SCALE:
+                adjustedRespTotal = respTotal - (resets * max_y_scale)
+                if adjustedRespTotal == max_y_scale:
                     resets = resets + 1
                     adjustedRespTotal = 0
                 x = pairs[0]/60000     # fraction of a min
@@ -646,6 +647,7 @@ class myGUI(object):
                 totalDrugBins = totalDrugBins + 1
                 binStartTime = pairs[0]/60000   # fraction of a minute
                 binStartTimes.append(binStartTime)
+                tickPositionY.append(adjustedRespTotal)
             elif pairs[1] == 'P':
                 pumpStartTime = pairs[0]
                 pumpOn = True
@@ -674,20 +676,41 @@ class myGUI(object):
         print(totalDrugBinsStr)
         print(finalRatioStr)
         print(totalDoseStr)
-
-
-        
+       
         #print("binStartTimes =", binStartTimes)
-        #print("doseList =", doseList)
+        #print("doseList =", doseList)
 
         aCumRec = Line2D(x_array,y_array, color = 'black', ls = 'solid', drawstyle = 'steps')
         aCumRec.set_lw(1.0)                     # Example of setting and getting linewidth
-        print("lw =", aCumRec.get_linewidth())
+        # print("line width =", aCumRec.get_linewidth())
         aCumRecGraph.add_line(aCumRec)
-        bar_width = 2.0         # Don't know what these units are. Going smaller will make some bars disappear
+
+        for i in range(len(binStartTimes)):
+            tickX = max_x_scale * 0.01
+            tickY = max_y_scale * 0.02
+            tickMarkX = [binStartTimes[i], binStartTimes[i] + tickX]
+            tickMarkY = [tickPositionY[i], tickPositionY[i] - tickY]
+            aTickMark = Line2D(tickMarkX, tickMarkY, color = "red")
+            aTickMark.set_lw(1.0) 
+            aCumRecGraph.add_line(aTickMark)                          
+
+        self.matPlotTestFigure.text(0.72, 0.28, drugAccessLengthStr)
+        self.matPlotTestFigure.text(0.72, 0.26, totalDrugBinsStr)
+        self.matPlotTestFigure.text(0.72, 0.24, finalRatioStr)        
+        self.matPlotTestFigure.text(0.72, 0.22, totalDoseStr)
+        
+        bar_width = 2.0     # The units correspond to Y values, so will get skinny with high max_y_scale.    
+        
         aBarGraph.bar(binStartTimes,doseList,bar_width)
+        
         self.matPlotTestFigure.tight_layout()
         self.testArea_MatPlot_Canvas.draw()
+
+        resolution = 60
+        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc, aRecord.pumpSpeed, resolution)
+
+        for i in range(10):
+            print(cocConcXYList[i])
 
 
     def clearFigure(self):
@@ -966,7 +989,7 @@ class myGUI(object):
                 # self.graphCanvas.create_line(newX, y, newX, y-10)                        
                 # x = newX
             GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
-            self.graphCanvas.create_text(400, y_zero+50, fill="blue", text = 'Session Time (min)') 
+            self.graphCanvas.create_text(400, y_zero+50, fill="blue", text = 'Session Time (min)')
             
             
     def TwoLeverGraphTest1(self):
