@@ -153,7 +153,7 @@ class myGUI(object):
         self.record8 = DataRecord([],"empty")
         self.record9 = DataRecord([],"empty")
         
-        # Create a list of dataRecords so that it can be "selected" with self.fileChoice.get()
+        # Create a list of these dataRecords so that one can be "selected" with self.fileChoice.get()
         self.recordList = [self.record0,self.record1,self.record2,self.record3,self.record4, \
                            self.record5,self.record6,self.record7,self.record8,self.record9]
 
@@ -533,10 +533,10 @@ class myGUI(object):
                               self.doublePlotTest()).grid(row=0,column=0,sticky=N)
         Button2 = Button(self.testAreaButtonFrame, text="1_H406_Apr_27.str", command= lambda: \
                               self.openWakeFile("1_H406_Apr_27.str")).grid(row=1,column=0,sticky=N)
-        #Button3 = Button(self.testAreaButtonFrame, text="load_2L_testFile()", command= lambda: \
-        #                              self.load_2L_testFile()).grid(row=1,column=0,sticky=N)
+        Button3 = Button(self.testAreaButtonFrame, text="drawFigureTwo()", command= lambda: \
+                                      self.drawFigureTwo()).grid(row=2,column=0,sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
-                              self.saveTestFigure()).grid(row=2,column=0,sticky=N)        
+                              self.saveTestFigure()).grid(row=3,column=0,sticky=N)        
 
 
         #*************** FileSelectorFrame stuff ****************
@@ -564,6 +564,56 @@ class myGUI(object):
 
         # *************  The Controllers  **********
 
+    def drawFigureTwo(self):
+        """
+        Draws Figure 2 for 2L-PR paper.
+        Data are from "Figure 2.xlsx".
+        y is a list of pumptimes from 26 rats. Data are averages across the four days with the highest breakpoints.
+        """
+        y = [5879.4, 2591.1, 2593.0, 2414.1, 2688.2, 2994.0, 3084.2, 3140.4, 3267.9, 3485.5, 3650.1, \
+                       3647.6, 3888.2, 3929.7, 4209.8, 4378.4, 4552.4, 4854.1, 5375.1, 5828.3, 6027.6]
+        x = np.arange(1,22,1)
+        ySEM = [100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100]
+
+        self.matPlotTestFigure.clf()
+
+        figure2 = self.matPlotTestFigure.add_subplot(111) # initialize a fig and a pair of axes
+        figure2.set_ylabel('PumpTime', fontsize = 14)
+        figure2.set_xlabel('Trial number', fontsize = 14)
+        figure2.set_title('Figure 2')
+        figure2.set_xlim(0,25)  # or (1e0, 1e4)
+        figure2.set_ylim(0,7500)
+        figure2.set_xticklabels(["0","5","10","15"])                 # Suppress tick labels
+
+        axes = self.matPlotTestFigure.gca()
+        """
+        valid keywords are ['size', 'width', 'color', 'tickdir', 'pad', 'labelsize', 'labelcolor', 'zorder',
+        'gridOn', 'tick1On', 'tick2On', 'label1On', 'label2On', 'length', 'direction', 'left', 'bottom',
+        'right', 'top', 'labelleft', 'labelbottom', 'labelright', 'labeltop', 'labelrotation', 'grid_agg_filter',
+        'grid_alpha', 'grid_animated', 'grid_antialiased', 'grid_clip_box', 'grid_clip_on', 'grid_clip_path',
+        'grid_color', 'grid_contains', 'grid_dash_capstyle', 'grid_dash_joinstyle', 'grid_dashes',
+        'grid_drawstyle', 'grid_figure', 'grid_fillstyle', 'grid_gid', 'grid_label', 'grid_linestyle',
+        'grid_linewidth', 'grid_marker', 'grid_markeredgecolor', 'grid_markeredgewidth', 'grid_markerfacecolor',
+        'grid_markerfacecoloralt', 'grid_markersize', 'grid_markevery', 'grid_path_effects', 'grid_picker',
+        'grid_pickradius', 'grid_rasterized', 'grid_sketch_params', 'grid_snap', 'grid_solid_capstyle',
+        'grid_solid_joinstyle', 'grid_transform', 'grid_url', 'grid_visible', 'grid_xdata', 'grid_ydata',
+        'grid_zorder', 'grid_aa', 'grid_c', 'grid_ls', 'grid_lw', 'grid_mec', 'grid_mew', 'grid_mfc',
+        'grid_mfcalt', 'grid_ms']
+        """
+        axes.tick_params(axis="x", direction='in', width=4)       
+        #figure2.xticks(np.arange(min(x), max(x)+1, 1.0))
+
+        #line1 = Line2D(x,y, color = 'blue', ls = 'solid', yerr = ySEM)
+        line1 = errorbar(x,y, color = 'blue', ls = 'solid', yerr = ySEM)
+        figure2.add_line(line1)
+
+        self.matPlotTestFigure.tight_layout()
+        self.testArea_MatPlot_Canvas.draw()
+
+
+        
+        
+
     def doublePlotTest(self):
         """
         Resolutions:
@@ -572,6 +622,7 @@ class myGUI(object):
         binStartTimes     - fractions of a minute
         binStartTimesSec  - second
         """
+        verbose = True    # local - couple to a global variable and checkbox?
         
         max_x_scale = self.max_x_scale.get()
         max_y_scale = self.max_y_scale.get()
@@ -616,7 +667,7 @@ class myGUI(object):
         aBarGraph.set_yscale("linear")
         aBarGraph.set_xlim(0, max_x_scale)
         aBarGraph.set_xticklabels("")                 # Suppress tick labels
-        aBarGraph.set_ylim(0, 1)
+        aBarGraph.set_ylim(0, 1.5)
 
         #aCocConcGraph.set_xlabel('Session Time (min)', fontsize = 12)      
         aCocConcGraph.set_ylabel('Cocaine', fontsize = 12)       
@@ -628,6 +679,7 @@ class myGUI(object):
 
         # make an array of x in fractions of a min.
         # make an array of y - total responses.
+        pumpOn = False
         cumRecTimes = []
         cumRecResp = []
         totalDrugBins = 0
@@ -635,6 +687,7 @@ class myGUI(object):
         respTotal = 0
         binPumpTime = 0
         totalDose = 0
+        binStartTime = 0        
         binStartTime_mSec = 0
         binEndTime_mSec = 0
         totalBinTime_mSec = 0
@@ -642,9 +695,11 @@ class myGUI(object):
         binStartTimesSec = []
         tickPositionY = [] 
         doseList = []
+        pumpTimeList = []
         finalRatio = 0
         trialResponses = 0
-        binStartTime = 0
+        adjustedRespTotal = 0
+
 
         # ************   Cummulative Record  *************************
 
@@ -680,32 +735,12 @@ class myGUI(object):
                 binEndTime_mSec = pairs[0]
                 totalBinTime_mSec = totalBinTime_mSec + (binEndTime_mSec - binStartTime_mSec) 
                 trialResponses = 0
+                pumpTimeList.append(binPumpTime)                
                 binDose = (binPumpTime/1000) * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
                 totalDose = totalDose + binDose
                 doseList.append(binDose)
                 #print(binStartTime,binDose)
                 binPumpTime = 0
-
-
-        # Create formated text strings to either print or display on screen
-        averageBinLength = (totalBinTime_mSec/totalDrugBins)/1000
-        drugAccessLengthStr = "Drug Access Period = {:.0f} sec".format(averageBinLength)
-        totalDrugBinsStr = "Total Drug Lever bins = {}".format(totalDrugBins)
-        finalRatioStr = "Final Ratio = {}".format(finalRatio)
-        totalDoseStr = "Total Dose = {:.3f} mg".format(totalDose)        
-        print(drugAccessLengthStr)
-        print(totalDrugBinsStr)
-        print(finalRatioStr)
-        print(totalDoseStr)
-
-        """
-        print("binStartTimes =", binStartTimes)
-        for i in range(len(binStartTimes)):
-            t = int(binStartTimes[i])
-            print(t)
-        """
-       
-        #print("doseList =", doseList)
 
         aCumRec = Line2D(cumRecTimes,cumRecResp, color = 'black', ls = 'solid', drawstyle = 'steps')
         aCumRec.set_lw(1.0)                     # Example of setting and getting linewidth
@@ -723,17 +758,13 @@ class myGUI(object):
             aTickMark.set_lw(1.0) 
             aCumRecGraph.add_line(aTickMark)                          
 
-        self.matPlotTestFigure.text(0.72, 0.28, drugAccessLengthStr)
-        self.matPlotTestFigure.text(0.72, 0.26, totalDrugBinsStr)
-        self.matPlotTestFigure.text(0.72, 0.24, finalRatioStr)        
-        self.matPlotTestFigure.text(0.72, 0.22, totalDoseStr)
-
         # *********** Draw Bar chart of doses **************************
-        
-        bar_width = 2.0     # The units correspond to Y values, so will get skinny with high max_y_scale.    
-        
-        aBarGraph.bar(binStartTimes,doseList,bar_width)
 
+        print("binStartTimes = ", binStartTimes)
+        print("doseList =", doseList)
+        print("pumpTimeList = ", pumpTimeList)        
+        bar_width = 2.0     # The units correspond to Y values, so will get skinny with high max_y_scale.    
+        aBarGraph.bar(binStartTimes,doseList,bar_width)
 
         # ***********  Cocaine Concentration curve **********************
         resolution = 5  # seconds  
@@ -746,9 +777,6 @@ class myGUI(object):
         for i in range(len(cocConcXYList)):
             timeList.append(cocConcXYList[i][0])       # essentially a list in 5 sec intervals           
             cocConcList.append(cocConcXYList[i][1])
-
-        #for i in range(10):
-        #   print(timeList[i],cocConcList[i])
             
         cocConcLine = Line2D(timeList,cocConcList, color = 'blue', ls = 'solid')
         aCocConcGraph.add_line(cocConcLine)
@@ -756,18 +784,39 @@ class myGUI(object):
         # ***********  Prediction of dose selected by cocaine levels
         # i.e. correlate binDose with the cocaine cencentration at time of the dose
 
-        print("bin start times (sec):")
-        print(binStartTimesSec)
         cocLevels = []
         for i in range(len(binStartTimes)):
-            t = int(binStartTimesSec[i]/5)
+            t = int(binStartTimesSec[i]/5)          # Get time corresponding to 5 sec bin in cocConcList
             cocLevel = cocConcList[t]
-            print(t,cocLevel,doseList[i])
-            cocLevels.append(cocLevel)
+            #if verbose: print(t,cocLevel,doseList[i])
+            cocLevels.append(cocLevel)              # Create a list of cocaine concentrations corresponding to binDose
 
         r = pearsonr(doseList,cocLevels)
-
         print("r =",r)
+
+        # **********   Create formated text strings ************************
+        averageBinLength = (totalBinTime_mSec/totalDrugBins)/1000
+        drugAccessLengthStr = "Access Period = {:.0f} sec".format(averageBinLength)
+        totalDrugBinsStr = "Break Point = {}".format(totalDrugBins)
+        finalRatioStr = "Final Ratio = {}".format(finalRatio)
+        totalDoseStr = "Total Dose = {:.3f} mg".format(totalDose)
+        rStr = "r = {:.3f}".format(r[0])
+        if verbose:
+            print(drugAccessLengthStr)
+            print(totalDrugBinsStr)
+            print(finalRatioStr)
+            print(totalDoseStr)
+            print(rStr)
+
+        self.matPlotTestFigure.text(0.1, 0.92, drugAccessLengthStr)
+        self.matPlotTestFigure.text(0.1, 0.90, totalDrugBinsStr)
+        self.matPlotTestFigure.text(0.1, 0.88, finalRatioStr)        
+        self.matPlotTestFigure.text(0.1, 0.86, totalDoseStr)
+        self.matPlotTestFigure.text(0.8, 0.18, rStr)
+
+        
+        
+        # ********************************************************************
 
         self.matPlotTestFigure.tight_layout()
         self.testArea_MatPlot_Canvas.draw()
