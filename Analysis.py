@@ -74,8 +74,7 @@ class DataRecord:
         responseStr = ""
         for i in range(0,len(self.responseList)):
             responseStr = responseStr + "{}, ".format(self.responseList[i])
-        
-        
+                
         s = "Filename: "+self.fileName+ \
         "\nNotes: "+self.notes+ \
         "\nLever 1 Responses: "+str(self.numberOfL1Responses)+ \
@@ -84,12 +83,15 @@ class DataRecord:
         "\nTotal Pump Time (mSec): "+str(self.totalPumpDuration)+ \
         "\nAverage Pump Time (mSec): "+str(round(self.averagePumpTime,4))+ \
         "\nDrug Concentration (mg/ml): "+str(self.cocConc)+ \
-        "\nPump Speed (ml/sec): "+str(self.pumpSpeed)+" ml/Sec"+ \
+        "\nPump Speed (ml/sec): "+str(self.pumpSpeed)+" ml/Sec\n"
+        
+        """
         "\nPumpTimes = "+str(self.TH_PumpTimes) + \
         "\nPriceList = " + priceStr + \
         "\nConsumptionList = " + consumptionStr + \
         "\nResponseList = " + responseStr +"\n"
-        #"\nDelta List: "+str(self.deltaList)+ 
+        "\nDelta List: "+str(self.deltaList)+
+        """
         #"\n============================\n"
         
         return s
@@ -217,14 +219,16 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
+        """
         loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
                               self.openWakeFile("TH_OMNI_test.str")).grid(row=0,column=4,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="TH_FEATHER_test.dat", command= lambda: \
                               self.openWakeFile("TH_FEATHER_test.dat")).grid(row=0,column=5,sticky=N, padx = 20)
-        loadTestButton2 = Button(headerFrame, text="Bens_TH_example.str", command= lambda: \
-                              self.openWakeFile("Bens_TH_example.str")).grid(row=0,column=6,sticky=N, padx = 20)
-        loadTestButton2 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
+        loadTestButton3 = Button(headerFrame, text="3_H886_Jul_4.str", command= lambda: \
+                              self.openWakeFile("3_H886_Jul_4.str")).grid(row=0,column=6,sticky=N, padx = 20)
+        loadTestButton4 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
                               self.openWakeFile("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
+        """
 
         #************** Graph Tab ******************
         self.columnFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
@@ -488,14 +492,14 @@ class myGUI(object):
         self.textBox.grid(column = 1, row = 0, rowspan = 2)
         summarytextButton = Button(self.textButtonFrame, text="Summary", command= lambda: \
                               self.summaryText()).grid(row=1,column=0,sticky=N)
-        testText1Button = Button(self.textButtonFrame, text="Text Formatting Examples", command= lambda: \
-                              self.testText1()).grid(row=2,column=0,sticky=N)
-        testText2Button = Button(self.textButtonFrame, text="Test Button", command= lambda: \
-                              self.testText2()).grid(row=3,column=0,sticky=N)
+        injectionTimesButton = Button(self.textButtonFrame, text="Pump Times", command= lambda: \
+                              self.injectionTimesText()).grid(row=2,column=0,sticky=N)        
         intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
-                              self.intA_text()).grid(row=4,column=0,sticky=N)
+                              self.intA_text()).grid(row=3,column=0,sticky=N)
         TH_text_button = Button(self.textButtonFrame, text="Threshold (TH)", command= lambda: \
                               self.threshold_text()).grid(row=4,column=0,sticky=N)
+        testText1Button = Button(self.textButtonFrame, text="Text Formatting Examples", command= lambda: \
+                              self.testText1()).grid(row=5,column=0,sticky=N)
 
         self.text_2LPR_Frame = Frame(self.textTab, borderwidth=5, relief="sunken")
         self.text_2LPR_Frame.grid(column = 0, row = 1, sticky="NEW")
@@ -608,11 +612,7 @@ class myGUI(object):
         figure2.add_line(line1)
 
         self.matPlotTestFigure.tight_layout()
-        self.testArea_MatPlot_Canvas.draw()
-
-
-        
-        
+        self.testArea_MatPlot_Canvas.draw()       
 
     def doublePlotTest(self):
         """
@@ -1082,7 +1082,7 @@ class myGUI(object):
                     dataPoint = [binStartTime,binPumpTime]
                     pumpTimeList.append(dataPoint)
                     binPumpTime = 0
-            print(pumpTimeList)
+            # print(pumpTimeList)
             # adapted from GraphLib.eventRecord()
             y_zero = 525
             x = x_zero
@@ -1094,12 +1094,14 @@ class myGUI(object):
                 x = (x_zero + pairs[0] * x_scaler // 1)
                 y = (pairs[1]/scale_max * scale_height) // 1
                 draw_bar(x,y_zero,y,5)
+                if pairs[1] == 0:
+                    self.graphCanvas.create_text(x, y_zero-100, fill="blue", text = '*')                   
                 # self.graphCanvas.create_line(x, y, newX, y)
                 # self.graphCanvas.create_line(newX, y, newX, y-10)                        
                 # x = newX
             GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
             self.graphCanvas.create_text(400, y_zero+50, fill="blue", text = 'Session Time (min)')
-            
+            self.graphCanvas.create_text(200, y_zero+65, fill="blue", text = 'asterisk (*) indicates zero pump time during access period ')
             
     def TwoLeverGraphTest1(self):
             label = "TwoLeverGraphTest1"
@@ -1112,59 +1114,166 @@ class myGUI(object):
 
     def TwoLeverTextReport(self):
             """
+            As of July 2018, all two lever PR files were collected through OMNI. Therefore
+            the data analyzed here would have been read from an ".str" file through streamIO.read_str _file()
+            Codes are as follows:               
+                A, a = Start and stop of a PR lever block
+                B, b = Start and stop of a drug lever block
+                L, l = First lever down and up
+                J, j = Second lever down and up
+                =, . = First lever extend (=) and retract (.)
+                -, , = Second lever extend (-) and retract (,)
+                T, t = Start and stop of a trial
+                S, s = Stimulus light on and off
+                P, p = Pump on and off
+                E    = End of session
+                R    = Restart session
+
+            It appears that the "j" (lever 
+            
             Access to drug is defined by 'B' and 'b'
             Don't know what 'T' and 't' represent
         
 
             """
-            self.textBox.insert("1.0","Two Lever Summary\n")
-            binResponses = 0            
-            totalResponses = 0
+            self.textBox.insert(END,'\n****************************\n')
+            self.textBox.insert(END,"Two Lever PR Summary for "+ self.recordList[self.fileChoice.get()].fileName+ '\n')
+
+            printPumpTimes = True
+            # PR Lever
+            PR_accessStarts = 0
+            PR_accessStops = 0
+            PR_BinResponses = 0         # Responses in an access period           
+            PR_LeverDownResponses = 0       
+            PR_LeverUpResponses = 0
+            PR_LeverDownTime = 0        # Time of each press
+            PR_LeverDuration = 0        # Duration of each press
+            PR_LeverTotalTime = 0       # Total of all presses
+            PR_LeverDown = False           
+           
+            drugAccessStarts = 0        # Number of Drug access periods started          
+            drugAccessStops = 0
+            drugAccessStartTime = 0
+            totalDrugAccessTime = 0
+            drugLeverDownResponses = 0
+            drugLeverUpResponses = 0
+            drugLeverDownTime = 0
+            drugLeverDown = False
+            totalDrugLeverTime = 0
+            minAccessTime = 10000000
+            maxAccessTime = 0
+
+            # Pump
+            pumpStarts = 0
+            pumpStops = 0
+            pumpStartTime = 0
+            pumpOn = False
             binPumpTime = 0
             totalPumpTime = 0
-            accessStartTime = 0
-            totalAccessTime = 0
-            pumpStarttime = 0
-            drugAccessIntervals = 0 
-            pumpOn = False
+
+            finalRatio = 0
+           
             # Total = 0       
             pumpTimeList = []
             responseList = []
             aRecord = self.recordList[self.fileChoice.get()]
             for pairs in aRecord.datalist:
-                if pairs[1] == 'B':  # Start of Drug Access - (also end of PR lever access)
-                    drugAccessIntervals = drugAccessIntervals + 1
-                    responseList.append(binResponses)
-                    binResponses = 0
-                    accessStartTime = pairs[0]
+
+                # PR lever block
+                if pairs[1] == 'A': PR_accessStarts= PR_accessStarts + 1
+                elif pairs[1] == 'a': PR_accessStops= PR_accessStops + 1
                 elif pairs[1] == 'J':
-                    binResponses = binResponses + 1
-                    totalResponses = totalResponses + 1
+                    PR_BinResponses = PR_BinResponses + 1
+                    PR_LeverDownResponses = PR_LeverDownResponses + 1
+                    PR_LeverDownTime = pairs[0]
+                    PR_LeverDown = True
+                elif pairs[1] == 'j':
+                    PR_LeverUpResponses = PR_LeverUpResponses + 1
+                    if PR_LeverDown:
+                        PR_LeverDuration = pairs[0]-PR_LeverDownTime
+                        PR_LeverTotalTime = PR_LeverTotalTime + PR_LeverDuration
+                        PR_LeverDown = False
+                                       
+                # Drug access Block
+                elif pairs[1] == 'B':  # Start of Drug Access - (also end of PR lever access)
+                    drugAccessStarts = drugAccessStarts + 1
+                    responseList.append(PR_BinResponses)   
+                    PR_BinResponses = 0                       # Clear PR_BinResponses
+                    drugAccessStartTime = pairs[0]
+                elif pairs[1] == 'b':   # End of Drug Access Period
+                    drugAccessStops = drugAccessStops + 1
+                    pumpTimeList.append(binPumpTime)
+                    binPumpTime = 0                           # Clear binPumpTime
+                    binAccessTime = pairs[0]-drugAccessStartTime
+                    #print(binAccessTime)
+                    if binAccessTime < minAccessTime: minAccessTime = binAccessTime
+                    if binAccessTime > maxAccessTime: maxAccessTime = binAccessTime
+                    
+                    totalDrugAccessTime = totalDrugAccessTime + binAccessTime
+                    
+                # Drug Lever Up/Down
+                elif pairs[1] == 'L':
+                    drugLeverDownResponses = drugLeverDownResponses + 1
+                    drugLeverDownTime = pairs[0]
+                    leverDown = True
+                elif pairs[1] == 'l':
+                    drugLeverUpResponses = drugLeverUpResponses + 1
+                    if leverDown:
+                        drugLeverDuration = pairs[0]-drugLeverDownTime
+                        totalDrugLeverTime = totalDrugLeverTime + drugLeverDuration
+                        leverDown = False
+
+                # Pump On/Off    
                 elif pairs[1] == 'P':
+                    pumpStarts = pumpStarts + 1
                     pumpStartTime = pairs[0]
                     pumpOn = True
                 elif pairs[1] == 'p':
+                    # The program will try to stop the pump at the end of the session. This will ignore
+                    # that command if pump is already off.
                     if pumpOn:
+                        pumpStops = pumpStops +1                        
                         pumpDuration = pairs[0]-pumpStartTime
                         binPumpTime = binPumpTime + pumpDuration
                         totalPumpTime = totalPumpTime + pumpDuration
                         pumpOn = False
-                elif pairs[1] == 'b':   # End of Drug Access Period
-                    pumpTimeList.append(binPumpTime)
-                    binPumpTime = 0
-                    binAccessTime = pairs[0]-accessStartTime
-                    print(binAccessTime)
-                    totalAccessTime = totalAccessTime + binAccessTime
                                        
-            responseList.append(binResponses)    # Non reinforced responses at the end of the session
-            self.textBox.insert(END,"Number of Drug Access Intervals = "+str(drugAccessIntervals)+'\n')
-            self.textBox.insert(END,"Total Responses = "+str(totalResponses)+'\n')
+            responseList.append(PR_BinResponses)    # Non reinforced responses at the end of the session
+            self.textBox.insert(END,'PR Access Intervals (Starts, Stops): '+str(PR_accessStarts)+', '+str(PR_accessStops)+'\n')
+            self.textBox.insert(END,"Total PR Lever Down Responses = "+str(PR_LeverDownResponses)+'\n')
+            self.textBox.insert(END,"Total PR Lever Up   Responses = "+str(PR_LeverUpResponses)+'\n')
+            self.textBox.insert(END,"Total PR Lever Down Time = "+str(PR_LeverTotalTime)+'\n')
+            if PR_LeverDownResponses > 0:
+                PR_LeverAverage = int(PR_LeverTotalTime/PR_LeverDownResponses)
+                self.textBox.insert(END,"Average PR Lever Down Time = "+str(PR_LeverAverage)+'\n\n')
+
+            self.textBox.insert(END,"Drug Access Intervals (Starts, Stops): "+str(drugAccessStarts)+', '+str(drugAccessStops)+'\n')
+            accessIntervalLength = int((totalDrugAccessTime/drugAccessStarts)/1000)
+            self.textBox.insert(END,"Average Drug Access Interval = "+str(accessIntervalLength)+' seconds \n')
+            self.textBox.insert(END,"Minimum Access Duration = "+str(minAccessTime)+'\n')
+            self.textBox.insert(END,"Maximum Access Duration = "+str(maxAccessTime)+'\n')
+            self.textBox.insert(END,"Total Drug Lever Down Responses = "+str(drugLeverDownResponses)+'\n')
+            self.textBox.insert(END,"Total Drug Lever Up Responses = "+str(drugLeverUpResponses)+'\n')
+            self.textBox.insert(END,"Total Drug Lever Down Time = "+str(totalDrugLeverTime)+'\n\n')
+
+
+            self.textBox.insert(END,"Total Pump Starts = "+str(pumpStarts)+'\n')
+            self.textBox.insert(END,"Total Pump Stops = "+str(pumpStops)+'\n')
             self.textBox.insert(END,"Total Pump Time = "+str(totalPumpTime)+'\n')
-            print(totalAccessTime)
-            accessIntervalLength = int((totalAccessTime/drugAccessIntervals)/1000)
-            self.textBox.insert(END,"Access Interval = "+str(accessIntervalLength)+' seconds \n')
-            print(responseList)
-            print(pumpTimeList)       
+            if pumpStarts > 0:
+                averagePumpDuration = int(totalPumpTime/pumpStarts)
+                self.textBox.insert(END,"Average Pump Duration = "+str(averagePumpDuration)+'\n\n')
+
+
+            if drugAccessStarts > 0:
+                self.textBox.insert(END,"Final Ratio = "+str(responseList[drugAccessStarts-1])+'\n')
+
+            if len(pumpTimeList) > 0:
+                self.textBox.insert(END,"Pumptimes in each bin: \n")
+                if printPumpTimes:
+                    for i in range (len(pumpTimeList)):
+                        self.textBox.insert(END,str(pumpTimeList[i])+'\n')
+                    print(pumpTimeList)       
         
     def TwoLeverTest1(self):
             self.textBox.insert("1.0","TwoLeverTest1\n")
@@ -1431,15 +1540,23 @@ class myGUI(object):
         print("testPmaxCalc deprecated")
         
         
-    def testText2(self):
-        num = 0
-        for pairs in self.recordList[self.fileChoice.get()].datalist:
-            num = num + 1
-            if num < 50:
-                tempString = str(pairs[0])+" : "+pairs[1]
+    def injectionTimesText(self):
+        aRecord = self.recordList[self.fileChoice.get()]
+        injection = 0
+        previousInjTime = 0
+        self.textBox.insert(END,"Inj  Time (sec) interval\n")
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':
+                injection = injection + 1
+                time = pairs[0]/1000
+                interval = time - previousInjTime
+                if injection == 1:
+                    tempString = "{0} {1:10.2f}".format(injection,time,interval)
+                else:
+                    tempString = "{0} {1:10.2f} {2:10.2f}".format(injection,time,interval)
                 self.textBox.insert(END,tempString+"\n")
-        self.textBox.insert(END,"Number of data pairs = "+str(num)+"\n")
-
+                previousInjTime = time
+        self.textBox.insert(END,"Number of injections: "+str(injection)+"\n")
 
     def selectList(self):
         """
@@ -1447,7 +1564,6 @@ class myGUI(object):
         """
         # print("fileChoice: ", self.fileChoice.get())
         pass
-
 
 
     def openWakeFile(self, fileName):      
