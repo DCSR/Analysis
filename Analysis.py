@@ -1572,7 +1572,7 @@ class myGUI(object):
                 minTime = secTime/60
                 interval = secTime - previousInjTime
                 if injection == 1:
-                    tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,secTime,minTime,interval)
+                    tempString = "{0} {1:10.2f} {2:10.2f}".format(injection,secTime,minTime,interval)
                 else:
                     tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,secTime,minTime,interval)
                 self.textBox.insert(END,tempString+"\n")
