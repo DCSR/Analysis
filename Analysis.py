@@ -486,29 +486,48 @@ class myGUI(object):
         #*************** Text Tab *****************
         self.textButtonFrame = Frame(self.textTab, borderwidth=5, relief="sunken")
         self.textButtonFrame.grid(column = 0, row = 0, sticky=N)
-        cleartextButton = Button(self.textButtonFrame, text="Clear", command= lambda: \
-                              self.clearText()).grid(row=0,column=0,sticky=N)
+
         self.textBox = Text(self.textTab, width=100, height=43)
         self.textBox.grid(column = 1, row = 0, rowspan = 2)
+        
+        cleartextButton = Button(self.textButtonFrame, text="Clear", command= lambda: \
+                              self.clearText()).grid(row=0,column=0,columnspan = 2,sticky=N)
         summarytextButton = Button(self.textButtonFrame, text="Summary", command= lambda: \
-                              self.summaryText()).grid(row=1,column=0,sticky=N)
-        injectionTimesButton = Button(self.textButtonFrame, text="Pump Times", command= lambda: \
-                              self.injectionTimesText()).grid(row=2,column=0,sticky=N)        
-        intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
-                              self.intA_text()).grid(row=3,column=0,sticky=N)
-        TH_text_button = Button(self.textButtonFrame, text="Threshold (TH)", command= lambda: \
-                              self.threshold_text()).grid(row=4,column=0,sticky=N)
-        testText1Button = Button(self.textButtonFrame, text="Text Formatting Examples", command= lambda: \
-                              self.testText1()).grid(row=5,column=0,sticky=N)
+                              self.summaryText()).grid(row=1,column=0,columnspan = 2,sticky=N)
+        injectionTimesButton = Button(self.textButtonFrame, text="Injection Times", command= lambda: \
+                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=N)        
 
+        countInjButton = Button(self.textButtonFrame, text="Count Injections", command= lambda: \
+                              self.countInj()).grid(row=3,column=0,columnspan = 2,sticky=N)
+        time1Label = Label(self.textButtonFrame, text="Time 1 (min)")
+        time1Label.grid(row = 4, column = 0)
+        self.time1String = StringVar(value="0")
+        time1Entry = Entry(self.textButtonFrame, width=6,textvariable=self.time1String)
+        time1Entry.grid(row = 4, column = 1)
+
+        time2Label = Label(self.textButtonFrame, text="Time 2 (min)")
+        time2Label.grid(row = 5, column = 0)
+        self.time2String = StringVar(value="10")
+        time2Entry = Entry(self.textButtonFrame, width=6,textvariable=self.time2String)
+        time2Entry.grid(row = 5, column = 1)
+
+        intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
+                              self.intA_text()).grid(row = 6,column = 0, columnspan = 2,sticky=N)
+        TH_text_button = Button(self.textButtonFrame, text="Threshold (TH)", command= lambda: \
+                              self.threshold_text()).grid(row = 7,column = 0, columnspan = 2,sticky=N)
+
+        #***************** 2L-PR stuff **************
         self.text_2LPR_Frame = Frame(self.textTab, borderwidth=5, relief="sunken")
-        self.text_2LPR_Frame.grid(column = 0, row = 1, sticky="NEW")
+        self.text_2LPR_Frame.grid(row = 8, column = 0, sticky=(N))
+        
         TwoLeverTextButton = Button(self.text_2LPR_Frame, text="2L-PR Summary", command= lambda: \
                               self.TwoLeverTextReport()).grid(row=0,column=0,sticky=W)
         TwoLeverTest1Button = Button(self.text_2LPR_Frame, text="2L-PR Test1", command= lambda: \
                               self.TwoLeverTest1()).grid(row=1,column=0,sticky=W)
         TwoLeverTest2Button = Button(self.text_2LPR_Frame, text="2L-PR Test2", command= lambda: \
                               self.TwoLeverTest2()).grid(row=3,column=0,sticky="W")
+        testText1Button = Button(self.text_2LPR_Frame, text="Text Formatting Examples", command= lambda: \
+                              self.testText1()).grid(row=4,column=0,columnspan = 2,sticky=N)
 
         #**************** Test Area Tab **************
         # Contains testAreaButtonFrame and testAreaFigureFrame
@@ -540,7 +559,8 @@ class myGUI(object):
         Button3 = Button(self.testAreaButtonFrame, text="drawFigureTwo()", command= lambda: \
                                       self.drawFigureTwo()).grid(row=2,column=0,sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
-                              self.saveTestFigure()).grid(row=3,column=0,sticky=N)        
+                              self.saveTestFigure()).grid(row=3,column=0,sticky=N)
+
 
 
         #*************** FileSelectorFrame stuff ****************
@@ -1544,19 +1564,36 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         injection = 0
         previousInjTime = 0
-        self.textBox.insert(END,"Inj  Time (sec) interval\n")
+        self.textBox.insert(END,"Inj  Time (sec) Time (min) interval (sec)\n")
         for pairs in aRecord.datalist:
             if pairs[1] == 'P':
                 injection = injection + 1
-                time = pairs[0]/1000
-                interval = time - previousInjTime
+                secTime = pairs[0]/1000
+                minTime = secTime/60
+                interval = secTime - previousInjTime
                 if injection == 1:
-                    tempString = "{0} {1:10.2f}".format(injection,time,interval)
+                    tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,secTime,minTime,interval)
                 else:
-                    tempString = "{0} {1:10.2f} {2:10.2f}".format(injection,time,interval)
+                    tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,secTime,minTime,interval)
                 self.textBox.insert(END,tempString+"\n")
-                previousInjTime = time
+                previousInjTime = secTime
         self.textBox.insert(END,"Number of injections: "+str(injection)+"\n")
+
+    def countInj(self):
+        aRecord = self.recordList[self.fileChoice.get()]
+        injections = 0
+        try:
+            time1 = int(self.time1String.get())
+            time2 = int(self.time2String.get())
+            for pairs in aRecord.datalist:
+                if pairs[1] == 'P':
+                    minTime = pairs[0]/60000
+                    if (minTime >= time1) and (minTime < time2):
+                        injections = injections + 1           
+            aString = "Injections between "+str(time1)+" and "+str(time2)+" minutes = "+str(injections)+"\n"
+        except ValueError:
+            aString = "Error getting time1 and/or time2\n"
+        self.textBox.insert("1.0",aString)
 
     def selectList(self):
         """
