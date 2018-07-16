@@ -22,6 +22,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
 from matplotlib import gridspec
+import matplotlib.pyplot as plt
 
 """
 Models, Views and Controllers (MCV) design: keep the representation of the data separate
@@ -552,15 +553,30 @@ class myGUI(object):
         self.testArea_MatPlot_Canvas = FigureCanvasTkAgg(self.matPlotTestFigure, master=self.testAreaFigureFrame)
         self.testArea_MatPlot_Canvas.get_tk_widget().grid(row=0,column=0)
         
-        Button1 = Button(self.testAreaButtonFrame, text="2L cum rec test", command= lambda: \
-                              self.doublePlotTest()).grid(row=0,column=0,sticky=N)
+        Button1 = Button(self.testAreaButtonFrame, text="doublePlotTest()", command= lambda: \
+                              self.doublePlotTest()).grid(row=0,column=0,columnspan=2,sticky=N)
         Button2 = Button(self.testAreaButtonFrame, text="1_H406_Apr_27.str", command= lambda: \
-                              self.openWakeFile("1_H406_Apr_27.str")).grid(row=1,column=0,sticky=N)
-        Button3 = Button(self.testAreaButtonFrame, text="drawFigureTwo()", command= lambda: \
-                                      self.drawFigureTwo()).grid(row=2,column=0,sticky=N)
-        Button4 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
-                              self.saveTestFigure()).grid(row=3,column=0,sticky=N)
+                              self.openWakeFile("1_H406_Apr_27.str")).grid(row=1,column=0,columnspan=2,sticky=N)
+        Button3 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
+                              self.saveTestFigure()).grid(row=2,column=0,columnspan=2,sticky=N)
+        Button4 = Button(self.testAreaButtonFrame, text="PyPlot Event Record", command= lambda: \
+                              self.pyPlotEventRecord()).grid(row=3,column=0,columnspan=2,sticky=N)
+        Button5 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
+                              self.matPlotEventRecord()).grid(row=4,column=0,columnspan=2, sticky=N)
 
+        self.startTimeLabel = Label(self.testAreaButtonFrame, text = "T1").grid(row=5,column=0,sticky=W)        
+        self.startTimeVar = IntVar()
+        self.startTimeScale = Scale(self.testAreaButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
+                                  from_=0, to=180, variable = self.startTimeVar)
+        self.startTimeScale.grid(row=5,column=1)
+        self.startTimeScale.set(0)
+
+        self.endTimeLabel = Label(self.testAreaButtonFrame, text = "T2").grid(row=6,column=0,sticky=W) 
+        self.endTimeVar = IntVar()
+        self.endTimeScale = Scale(self.testAreaButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
+                                  from_=0, to=180, variable = self.endTimeVar)
+        self.endTimeScale.grid(row=6,column=1)
+        self.endTimeScale.set(180)
 
 
         #*************** FileSelectorFrame stuff ****************
@@ -588,51 +604,51 @@ class myGUI(object):
 
         # *************  The Controllers  **********
 
-    def drawFigureTwo(self):
-        """
-        Draws Figure 2 for 2L-PR paper.
-        Data are from "Figure 2.xlsx".
-        y is a list of pumptimes from 26 rats. Data are averages across the four days with the highest breakpoints.
-        """
-        y = [5879.4, 2591.1, 2593.0, 2414.1, 2688.2, 2994.0, 3084.2, 3140.4, 3267.9, 3485.5, 3650.1, \
-                       3647.6, 3888.2, 3929.7, 4209.8, 4378.4, 4552.4, 4854.1, 5375.1, 5828.3, 6027.6]
-        x = np.arange(1,22,1)
-        ySEM = [100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100]
+    def pyPlotEventRecord(self):
+        injNum = 0
+        injTimeList = []
+        
+        aRecord = self.recordList[self.fileChoice.get()]
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
 
+        plt.figure(figsize=(9,3))
+        plt.subplot(111)
+        plt.axis([-0.1,185,0.0,1.0])
+        plt.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
+        plt.show()
+
+    def matPlotEventRecord(self):
         self.matPlotTestFigure.clf()
+        gs = gridspec.GridSpec(nrows = 10, ncols= 1)
 
-        figure2 = self.matPlotTestFigure.add_subplot(111) # initialize a fig and a pair of axes
-        figure2.set_ylabel('PumpTime', fontsize = 14)
-        figure2.set_xlabel('Trial number', fontsize = 14)
-        figure2.set_title('Figure 2')
-        figure2.set_xlim(0,25)  # or (1e0, 1e4)
-        figure2.set_ylim(0,7500)
-        figure2.set_xticklabels(["0","5","10","15"])                 # Suppress tick labels
+        injNum = 0
+        injTimeList = []
+        
+        aRecord = self.recordList[self.fileChoice.get()]
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
 
-        axes = self.matPlotTestFigure.gca()
-        """
-        valid keywords are ['size', 'width', 'color', 'tickdir', 'pad', 'labelsize', 'labelcolor', 'zorder',
-        'gridOn', 'tick1On', 'tick2On', 'label1On', 'label2On', 'length', 'direction', 'left', 'bottom',
-        'right', 'top', 'labelleft', 'labelbottom', 'labelright', 'labeltop', 'labelrotation', 'grid_agg_filter',
-        'grid_alpha', 'grid_animated', 'grid_antialiased', 'grid_clip_box', 'grid_clip_on', 'grid_clip_path',
-        'grid_color', 'grid_contains', 'grid_dash_capstyle', 'grid_dash_joinstyle', 'grid_dashes',
-        'grid_drawstyle', 'grid_figure', 'grid_fillstyle', 'grid_gid', 'grid_label', 'grid_linestyle',
-        'grid_linewidth', 'grid_marker', 'grid_markeredgecolor', 'grid_markeredgewidth', 'grid_markerfacecolor',
-        'grid_markerfacecoloralt', 'grid_markersize', 'grid_markevery', 'grid_path_effects', 'grid_picker',
-        'grid_pickradius', 'grid_rasterized', 'grid_sketch_params', 'grid_snap', 'grid_solid_capstyle',
-        'grid_solid_joinstyle', 'grid_transform', 'grid_url', 'grid_visible', 'grid_xdata', 'grid_ydata',
-        'grid_zorder', 'grid_aa', 'grid_c', 'grid_ls', 'grid_lw', 'grid_mec', 'grid_mew', 'grid_mfc',
-        'grid_mfcalt', 'grid_ms']
-        """
-        axes.tick_params(axis="x", direction='in', width=4)       
-        #figure2.xticks(np.arange(min(x), max(x)+1, 1.0))
+        self.testArea_MatPlot_Canvas.draw()
+        self.eventRecord = self.matPlotTestFigure.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
 
-        #line1 = Line2D(x,y, color = 'blue', ls = 'solid', yerr = ySEM)
-        line1 = errorbar(x,y, color = 'blue', ls = 'solid', yerr = ySEM)
-        figure2.add_line(line1)
+        self.eventRecord.axes.get_yaxis().set_visible(False)
+        
+        self.eventRecord.set_ylabel('')
+        self.eventRecord.set_yticklabels("")                 # Suppress tick labels
+        self.eventRecord.set_xlabel('Time (minutes)')
+        self.eventRecord.set_title('Event Records using MatPlotLib.eventplot')
+        startTime = self.startTimeScale.get()
+        endTime = self.endTimeScale.get()
+        self.eventRecord.set_xlim(startTime, endTime) 
+        self.eventRecord.set_ylim(0.01, 1)
+        self.eventRecord.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
 
-        self.matPlotTestFigure.tight_layout()
-        self.testArea_MatPlot_Canvas.draw()       
+        self.testArea_MatPlot_Canvas.draw()
 
     def doublePlotTest(self):
         """
