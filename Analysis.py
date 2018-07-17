@@ -567,16 +567,16 @@ class myGUI(object):
         self.startTimeLabel = Label(self.testAreaButtonFrame, text = "T1").grid(row=5,column=0,sticky=W)        
         self.startTimeVar = IntVar()
         self.startTimeScale = Scale(self.testAreaButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
-                                  from_=0, to=180, variable = self.startTimeVar)
+                                  from_=0, to=360, variable = self.startTimeVar)
         self.startTimeScale.grid(row=5,column=1)
         self.startTimeScale.set(0)
 
         self.endTimeLabel = Label(self.testAreaButtonFrame, text = "T2").grid(row=6,column=0,sticky=W) 
         self.endTimeVar = IntVar()
         self.endTimeScale = Scale(self.testAreaButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
-                                  from_=0, to=180, variable = self.endTimeVar)
+                                  from_=0, to=360, variable = self.endTimeVar)
         self.endTimeScale.grid(row=6,column=1)
-        self.endTimeScale.set(180)
+        self.endTimeScale.set(360)
 
 
         #*************** FileSelectorFrame stuff ****************
