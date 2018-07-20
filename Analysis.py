@@ -83,7 +83,6 @@ class DataRecord:
         "\nInfusions: "+str(self.numberOfInfusions)+ \
         "\nTotal Pump Time (mSec): "+str(self.totalPumpDuration)+ \
         "\nAverage Pump Time (mSec): "+str(round(self.averagePumpTime,4))+ \
-        "\nDrug Concentration (mg/ml): "+str(self.cocConc)+ \
         "\nPump Speed (ml/sec): "+str(self.pumpSpeed)+" ml/Sec\n"
         
         """
@@ -498,24 +497,42 @@ class myGUI(object):
         injectionTimesButton = Button(self.textButtonFrame, text="Injection Times", command= lambda: \
                               self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=N)        
 
-        countInjButton = Button(self.textButtonFrame, text="Count Injections", command= lambda: \
-                              self.countInj()).grid(row=3,column=0,columnspan = 2,sticky=N)
-        time1Label = Label(self.textButtonFrame, text="Time 1 (min)")
-        time1Label.grid(row = 4, column = 0)
-        self.time1String = StringVar(value="0")
-        time1Entry = Entry(self.textButtonFrame, width=6,textvariable=self.time1String)
-        time1Entry.grid(row = 4, column = 1)
+        pyPlotEventButton = Button(self.textButtonFrame, text="PyPlot Event Record", command= lambda: \
+                              self.pyPlotEventRecord()).grid(row=3,column=0,columnspan=2,sticky=N)
 
-        time2Label = Label(self.textButtonFrame, text="Time 2 (min)")
-        time2Label.grid(row = 5, column = 0)
-        self.time2String = StringVar(value="10")
-        time2Entry = Entry(self.textButtonFrame, width=6,textvariable=self.time2String)
-        time2Entry.grid(row = 5, column = 1)
+        doseReportButton = Button(self.textButtonFrame, text="Dose Report", command= lambda: \
+                              self.doseReport()).grid(row=4,column=0,columnspan = 2,sticky=N)
+
+        self.startTimeLabel = Label(self.textButtonFrame, text = "T1").grid(row=5,column=0,sticky=W)        
+        self.startTimeVar = IntVar()
+        self.startTimeScale = Scale(self.textButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
+                                  from_=0, to=360, variable = self.startTimeVar)
+        self.startTimeScale.grid(row=5,column=1)
+        self.startTimeScale.set(0)
+
+        self.endTimeLabel = Label(self.textButtonFrame, text = "T2").grid(row=6,column=0,sticky=W) 
+        self.endTimeVar = IntVar()
+        self.endTimeScale = Scale(self.textButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
+                                  from_=0, to=360, variable = self.endTimeVar)
+        self.endTimeScale.grid(row=6,column=1)
+        self.endTimeScale.set(360)
+        
+        concentrationLabel = Label(self.textButtonFrame, text="Conc (mg/ml)")
+        concentrationLabel.grid(row = 7, column = 0)
+        self.drugConcStr = StringVar(value="5.0")
+        self.concentrationEntry = Entry(self.textButtonFrame, width=6,textvariable=self.drugConcStr)
+        self.concentrationEntry.grid(row = 7, column = 1)
+
+        weightLabel = Label(self.textButtonFrame, text="Body weight (gms)")
+        weightLabel.grid(row = 8, column = 0)
+        self.weightStr = StringVar(value="350")
+        self.weightEntry = Entry(self.textButtonFrame, width=6,textvariable=self.weightStr)
+        self.weightEntry.grid(row = 8, column = 1)
 
         intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
-                              self.intA_text()).grid(row = 6,column = 0, columnspan = 2,sticky=N)
+                              self.intA_text()).grid(row = 9,column = 0, columnspan = 2,sticky=N)
         TH_text_button = Button(self.textButtonFrame, text="Threshold (TH)", command= lambda: \
-                              self.threshold_text()).grid(row = 7,column = 0, columnspan = 2,sticky=N)
+                              self.threshold_text()).grid(row = 10,column = 0, columnspan = 2,sticky=N)
 
         #***************** 2L-PR stuff **************
         self.text_2LPR_Frame = Frame(self.textTab, borderwidth=5, relief="sunken")
@@ -559,24 +576,10 @@ class myGUI(object):
                               self.openWakeFile("1_H406_Apr_27.str")).grid(row=1,column=0,columnspan=2,sticky=N)
         Button3 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
                               self.saveTestFigure()).grid(row=2,column=0,columnspan=2,sticky=N)
-        Button4 = Button(self.testAreaButtonFrame, text="PyPlot Event Record", command= lambda: \
-                              self.pyPlotEventRecord()).grid(row=3,column=0,columnspan=2,sticky=N)
-        Button5 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
+        Button4 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
                               self.matPlotEventRecord()).grid(row=4,column=0,columnspan=2, sticky=N)
 
-        self.startTimeLabel = Label(self.testAreaButtonFrame, text = "T1").grid(row=5,column=0,sticky=W)        
-        self.startTimeVar = IntVar()
-        self.startTimeScale = Scale(self.testAreaButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
-                                  from_=0, to=360, variable = self.startTimeVar)
-        self.startTimeScale.grid(row=5,column=1)
-        self.startTimeScale.set(0)
 
-        self.endTimeLabel = Label(self.testAreaButtonFrame, text = "T2").grid(row=6,column=0,sticky=W) 
-        self.endTimeVar = IntVar()
-        self.endTimeScale = Scale(self.testAreaButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
-                                  from_=0, to=360, variable = self.endTimeVar)
-        self.endTimeScale.grid(row=6,column=1)
-        self.endTimeScale.set(360)
 
 
         #*************** FileSelectorFrame stuff ****************
@@ -1595,21 +1598,61 @@ class myGUI(object):
                 previousInjTime = secTime
         self.textBox.insert(END,"Number of injections: "+str(injection)+"\n")
 
-    def countInj(self):
+    def doseReport(self):
         aRecord = self.recordList[self.fileChoice.get()]
+        pumpOn = False
         injections = 0
+        totalPumpDuration = 0
+        lastTime = 0
+        time1 = self.startTimeScale.get()
+        time2 = self.endTimeScale.get()
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':
+                minTime = pairs[0]/60000
+                if (minTime >= time1) and (minTime < time2):
+                    injections = injections + 1
+                    pumpStartTime = pairs[0]
+                    lastTime = pumpStartTime
+                    pumpOn = True
+            if pairs[1] == 'p':
+                if pumpOn:
+                    duration = pairs[0]-pumpStartTime
+                    pumpOn = False
+                    totalPumpDuration = totalPumpDuration + duration
+                    
+                    
+        aString = "Injections between "+str(time1)+" and "+str(time2)+" minutes = "+str(injections)+"\n"
+        self.textBox.insert(END,aString)
+
         try:
-            time1 = int(self.time1String.get())
-            time2 = int(self.time2String.get())
-            for pairs in aRecord.datalist:
-                if pairs[1] == 'P':
-                    minTime = pairs[0]/60000
-                    if (minTime >= time1) and (minTime < time2):
-                        injections = injections + 1           
-            aString = "Injections between "+str(time1)+" and "+str(time2)+" minutes = "+str(injections)+"\n"
+            conc = float(self.concentrationEntry.get())
+            weight = int(self.weightEntry.get())         # in grams
+            aString = "Drug Concentration = {0:5.3f} mg/ml\nWeight = {1:3d} grams \n".format(conc,weight)            
         except ValueError:
-            aString = "Error getting time1 and/or time2\n"
-        self.textBox.insert("1.0",aString)
+            aString = "Error getting Conc and/or Body weight \n"
+        self.textBox.insert(END,aString)
+
+        if injections > 0:
+                aString = "Total Pump Duration = {0:6d} mSec \n".format(totalPumpDuration)
+                self.textBox.insert(END,aString)
+                averagePumpTime = round(totalPumpDuration / injections,2)
+                aString = "Average Pump Time = {0:5.3f} mSec \n".format(averagePumpTime)
+                self.textBox.insert(END,aString)
+                totalDose = (totalPumpDuration/1000) * conc * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+                totalDosePerKg = totalDose/(weight/1000)
+                aString = "Total Dose = {0:5.3f} mg;  {1:5.3f} mg/kg \n".format(totalDose, totalDosePerKg)
+                self.textBox.insert(END,aString)
+                averageDose = (totalDose / injections)
+                averageDosePerKg = averageDose / (weight/1000)
+                aString = "Average Dose = {0:5.3f} mg;  {1:5.3f} mg/kg \n".format(averageDose, averageDosePerKg)
+                self.textBox.insert(END,aString)
+
+        
+        self.textBox.insert(END,"********************************\n")
+
+        
+        
+
 
     def selectList(self):
         """
@@ -2177,9 +2220,9 @@ class myGUI(object):
         self.textBox.delete("1.0",END)
 
     def summaryText(self):
-        # print(dataRecordList[self.fileChoice.get()])    # This will print to the Python Shell 
+        # print(dataRecordList[self.fileChoice.get()])    # This will print to the Python Shell
         self.textBox.insert("1.0",self.recordList[self.fileChoice.get()])
-        #self.textBox.insert("1.0","summary text")
+        self.textBox.insert("1.0","***************************\n")
 
     def periodic_check(self):
         thisTime = datetime.now()
