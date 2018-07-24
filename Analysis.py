@@ -142,6 +142,12 @@ class myGUI(object):
         self.root.title(self.version)
         canvas_width = 800
         canvas_height = 600
+        self.initialDir = ""
+        if (os.name == "posix"):
+            self.initialDir = "/Users/daveroberts/Documents"
+        else:
+            self.initialDir = "C:/"
+        print("Initial Directory:", self.initialDir)
 
         #Construct ten empty dataRecords
         self.record0 = DataRecord([],"empty")         
@@ -1661,13 +1667,19 @@ class myGUI(object):
     def openManyFiles(self,filename):
         fileList = []
         global path
+        fPath = ""
         if filename == '':
-            fileList = filedialog.askopenfilenames()
-        print(fileList)
+            fileList = filedialog.askopenfilenames(initialdir=self.initialDir)
+        # print(fileList)
         filenum = 0
         for file in fileList:
             filenum = filenum + 1
+            fName = file[file.rfind('/')+1:]
+            fPath = file[0:file.rfind('/')+1]
             print('File ',str(filenum), file)
+        self.initialDir = fPath
+        print("Path =", self.initialDir)
+        
 
     def openWakeFile(self, fileName):      
         global path
