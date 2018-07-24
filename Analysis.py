@@ -219,6 +219,7 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
+        openFilesButton = Button(headerFrame, text="Open Multiple Files", command= lambda: self.openManyFiles("")).grid(row=0,column=4, sticky=W)
         """
         loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
                               self.openWakeFile("TH_OMNI_test.str")).grid(row=0,column=4,sticky=N, padx = 20)
@@ -1650,10 +1651,6 @@ class myGUI(object):
         
         self.textBox.insert(END,"********************************\n")
 
-        
-        
-
-
     def selectList(self):
         """
         Dummy function associated with radiobuttons that selects the filename textvariable.
@@ -1661,6 +1658,16 @@ class myGUI(object):
         # print("fileChoice: ", self.fileChoice.get())
         pass
 
+    def openManyFiles(self,filename):
+        fileList = []
+        global path
+        if filename == '':
+            fileList = filedialog.askopenfilenames()
+        print(fileList)
+        filenum = 0
+        for file in fileList:
+            filenum = filenum + 1
+            print('File ',str(filenum), file)
 
     def openWakeFile(self, fileName):      
         global path
