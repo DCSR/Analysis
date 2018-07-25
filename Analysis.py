@@ -225,10 +225,11 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
-        openFilesButton = Button(headerFrame, text="Open Multiple Files", command= lambda: self.openManyFiles("")).grid(row=0,column=4, sticky=W)
-        """
+        openFilesButton = Button(headerFrame, text="Open Multiple Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=4, sticky=W)
+        
         loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
-                              self.openWakeFile("TH_OMNI_test.str")).grid(row=0,column=4,sticky=N, padx = 20)
+                              self.openWakeFiles("TH_OMNI_test.str")).grid(row=0,column=5,sticky=N, padx = 20)
+        """
         loadTestButton2 = Button(headerFrame, text="TH_FEATHER_test.dat", command= lambda: \
                               self.openWakeFile("TH_FEATHER_test.dat")).grid(row=0,column=5,sticky=N, padx = 20)
         loadTestButton3 = Button(headerFrame, text="3_H886_Jul_4.str", command= lambda: \
@@ -1664,13 +1665,21 @@ class myGUI(object):
         # print("fileChoice: ", self.fileChoice.get())
         pass
 
-    def openManyFiles(self,filename):
+    def openWakeFiles(self,filename):
+        """
+        The procedure will read Wake datafiles that originate either from OMNI (.str) or from the
+        Feather system (.dat).  If a filename is passed to this procedure then it will be opened. This
+        is how filename Speed Buttons are handled.
+        If no filename ("") is passed, then a File Open Dialog is spawned. One or several files can
+        be selected and loaded.
+        """       
         fileList = []
-        global path
         fPath = ""
-        if filename == '':
+        if filename == "":
             fileList = filedialog.askopenfilenames(initialdir=self.initialDir)
-        # print(fileList)
+        else:
+            fileList.append(filename)
+        """
         filenum = 0
         for file in fileList:
             filenum = filenum + 1
@@ -1679,7 +1688,104 @@ class myGUI(object):
             print('File ',str(filenum), file)
         self.initialDir = fPath
         print("Path =", self.initialDir)
-        
+        """
+        selected = self.fileChoice.get()
+        for fName in fileList:
+            if (selected < 10):
+                print("Selection number:",selected)                
+                self.recordList[selected].datalist = []
+                name = fName[fName.rfind('/')+1:]
+                path = fName[0:fName.rfind('/')+1]
+                # print('path =',path)
+                self.recordList[selected].fileName = name
+                self.fileNameList[selected].set(name)
+                # OMNI pump times
+                # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
+                #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
+                self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
+                                                          0.200,0.130,0.080,0.050,0.030,0.020]
+                self.recordList[selected].cocConc = 5.0
+                self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
+                # textBox.insert('1.0', name+" opened \n\n")
+                if fName.find(".str") > 0:
+                    self.recordList[selected].datalist = stream01.read_str_file(fName)               
+                elif fName.find(".dat") > 0:
+                    aFile = open(fName,'r')
+                    for line in  aFile:
+                        pair = line.split()
+                        pair[0] = int(pair[0])
+                        self.recordList[selected].datalist.append(pair)
+                    aFile.close()
+                self.recordList[selected].extractStatsFromList()
+
+                # ------------  fillLists ---------
+                verbose = True
+                pumpStarttime = 0
+                blockNum = -1 
+                pumpOn = False
+                leverTotal = 0       
+                pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
+                responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
+                """
+                This procedure assumes the datafile if a Threshold file and fills the
+                response and consumption lists accordingly - i.e. 12 bins.
+                But a PR daatfile could have many more bins which could throw an error.
+                So for now, if the bin number does not count higher than 11.
+
+                Eventually, 
+
+                """
+                for pairs in self.recordList[selected].datalist:
+                    if pairs[1] == 'B':
+                        if blockNum < 11:
+                            blockNum= blockNum + 1
+                    elif pairs[1] == 'P':
+                        pumpStartTime = pairs[0]
+                        pumpOn = True
+                        responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
+                        leverTotal = leverTotal + 1                        # using pump for responses
+                    elif pairs[1] == 'p':
+                        if pumpOn:
+                            duration = pairs[0]-pumpStartTime
+                            if blockNum <= 12:
+                                pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
+                            pumpOn = False
+                    # else no nothing
+                # print("responseList = ", responseList)
+                consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
+                mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
+                if verbose:
+                    print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
+                    print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
+                    print("cocaine mg/sec:", mgPerSec)
+                for i in range(12):
+                    consumptionList[i] = pumpTimeList[i] * mgPerSec
+                    if consumptionList[i] == 0:
+                        consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
+                totalResp = 0
+                totalIntake = 0
+                for i in range(12):
+                    totalResp = totalResp + responseList[i]
+                    totalIntake = totalIntake + consumptionList[i]
+                print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
+                priceList = []      
+                for i in range(12):
+                    # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
+                    dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
+                                      self.recordList[selected].cocConc * \
+                                      (self.recordList[selected].pumpSpeed)
+                    price = round(1/dosePerResponse,2)
+                    priceList.append(price)
+                self.recordList[selected].priceList = priceList
+                self.recordList[selected].consumptionList = consumptionList
+                self.recordList[selected].responseList = responseList
+
+                # ------------- end fillLists -----------------
+                print(self.recordList[selected])
+                selected = selected + 1
+            else:
+                print("More files selected than spots available")
+            
 
     def openWakeFile(self, fileName):      
         global path
