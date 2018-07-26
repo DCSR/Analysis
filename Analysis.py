@@ -225,7 +225,7 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
-        openFilesButton = Button(headerFrame, text="Open Multiple Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=4, sticky=W)
+        openFilesButton = Button(headerFrame, text="Open Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=4, sticky=W)
         
         loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
                               self.openWakeFiles("TH_OMNI_test.str")).grid(row=0,column=5,sticky=N, padx = 20)
@@ -1696,6 +1696,7 @@ class myGUI(object):
                 self.recordList[selected].datalist = []
                 name = fName[fName.rfind('/')+1:]
                 path = fName[0:fName.rfind('/')+1]
+                self.initialDir = path
                 # print('path =',path)
                 self.recordList[selected].fileName = name
                 self.fileNameList[selected].set(name)
@@ -1785,18 +1786,19 @@ class myGUI(object):
                 selected = selected + 1
             else:
                 print("More files selected than spots available")
+        print("Path =", self.initialDir)
             
 
     def openWakeFile(self, fileName):      
-        global path
         if fileName == '':
-            fileName = filedialog.askopenfilename()
+            fileName = filedialog.askopenfilename(initialdir=self.initialDir)
         # print(fileName)
         if len(fileName) > 0:
             selected = self.fileChoice.get()
             self.recordList[selected].datalist = []
             name = fileName[fileName.rfind('/')+1:]
             path = fileName[0:fileName.rfind('/')+1]
+            self.initialDir = path
             # print('path =',path)
             self.recordList[selected].fileName = name
             self.fileNameList[selected].set(name)
@@ -1883,6 +1885,7 @@ class myGUI(object):
 
         # ------------- end fillLists -----------------
         print(self.recordList[selected])
+        print("Path =", self.initialDir)
     
 
     def clearTHCanvas(self):
