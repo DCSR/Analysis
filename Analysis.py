@@ -229,9 +229,9 @@ class myGUI(object):
         
         loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
                               self.openWakeFiles("TH_OMNI_test.str")).grid(row=0,column=5,sticky=N, padx = 20)
+        loadTestButton2 = Button(headerFrame, text="2L-PR-example.str", command= lambda: \
+                              self.openWakeFile("2L-PR-example.str")).grid(row=0,column=6,sticky=N, padx = 20)
         """
-        loadTestButton2 = Button(headerFrame, text="TH_FEATHER_test.dat", command= lambda: \
-                              self.openWakeFile("TH_FEATHER_test.dat")).grid(row=0,column=5,sticky=N, padx = 20)
         loadTestButton3 = Button(headerFrame, text="3_H886_Jul_4.str", command= lambda: \
                               self.openWakeFile("3_H886_Jul_4.str")).grid(row=0,column=6,sticky=N, padx = 20)
         loadTestButton4 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
@@ -578,15 +578,16 @@ class myGUI(object):
         self.testArea_MatPlot_Canvas = FigureCanvasTkAgg(self.matPlotTestFigure, master=self.testAreaFigureFrame)
         self.testArea_MatPlot_Canvas.get_tk_widget().grid(row=0,column=0)
         
-        Button1 = Button(self.testAreaButtonFrame, text="doublePlotTest()", command= lambda: \
-                              self.doublePlotTest()).grid(row=0,column=0,columnspan=2,sticky=N)
+        Button1 = Button(self.testAreaButtonFrame, text="twoLever_PR_Figure()", command= lambda: \
+                              self.twoLever_PR_Figure()).grid(row=0,column=0,columnspan=2,sticky=N)
         Button2 = Button(self.testAreaButtonFrame, text="1_H406_Apr_27.str", command= lambda: \
                               self.openWakeFile("1_H406_Apr_27.str")).grid(row=1,column=0,columnspan=2,sticky=N)
         Button3 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
                               self.saveTestFigure()).grid(row=2,column=0,columnspan=2,sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
                               self.matPlotEventRecord()).grid(row=4,column=0,columnspan=2, sticky=N)
-
+        Button5 = Button(self.testAreaButtonFrame, text="eventRecordHD()", command= lambda: \
+                              self.eventRecordHD()).grid(row=5,column=0,columnspan=2, sticky=N)
 
 
 
@@ -661,7 +662,105 @@ class myGUI(object):
 
         self.testArea_MatPlot_Canvas.draw()
 
-    def doublePlotTest(self):
+    def eventRecordHD(self):
+        """
+        Creates an event record using Object Oriented style.
+
+        B, b = Start and stop of a drug lever block
+        L, l = Drug lever down and up
+        
+        """
+        import matplotlib.ticker as ticker
+        
+        x = [0]
+        y = [0]
+        blockBeginList = []
+        blockEndList = []
+        # Generate a list starting at 0, ending at 60000 with an interval of 1000
+        t = np.arange(0,7200000,1000)
+        presses = 0
+        aRecord = self.recordList[self.fileChoice.get()]
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'L':
+                presses = presses + 1
+                x.append(pairs[0])
+                y.append(0)
+                x.append(pairs[0])
+                y.append(1)
+            elif pairs[1] == 'l':
+                x.append(pairs[0])
+                y.append(1)
+                x.append(pairs[0])
+                y.append(0)
+            elif pairs[1] == 'B':
+                blockBeginList.append(pairs[0])
+            elif pairs[1] == 'b':
+                blockEndList.append(pairs[0])
+
+        fig = plt.figure()
+
+        timeInterval = 30000
+        
+        ax0 = fig.add_subplot(30,1,1)
+        ax1 = fig.add_subplot(30,1,2)
+        ax2 = fig.add_subplot(30,1,3)
+        ax3 = fig.add_subplot(30,1,4)
+        ax4 = fig.add_subplot(30,1,5)
+        ax5 = fig.add_subplot(30,1,6)
+        ax6 = fig.add_subplot(30,1,7)
+        ax7 = fig.add_subplot(30,1,8)
+        ax8 = fig.add_subplot(30,1,9)
+        ax9 = fig.add_subplot(30,1,10)
+        ax10 = fig.add_subplot(30,1,11)
+        ax11 = fig.add_subplot(30,1,12)
+        ax12 = fig.add_subplot(30,1,13)
+        ax13 = fig.add_subplot(30,1,14)
+        ax14 = fig.add_subplot(30,1,15)
+        ax15 = fig.add_subplot(30,1,16)
+        ax16 = fig.add_subplot(30,1,17)
+        ax17 = fig.add_subplot(30,1,18)
+        ax18 = fig.add_subplot(30,1,19)
+        ax19 = fig.add_subplot(30,1,20)
+        ax20 = fig.add_subplot(30,1,21)
+        ax21 = fig.add_subplot(30,1,22)
+        ax22 = fig.add_subplot(30,1,23)
+        ax23 = fig.add_subplot(30,1,24)
+        ax24 = fig.add_subplot(30,1,25)
+        ax25 = fig.add_subplot(30,1,26)
+        ax26 = fig.add_subplot(30,1,27)
+        ax27 = fig.add_subplot(30,1,28)
+        ax28 = fig.add_subplot(30,1,29)
+        ax29 = fig.add_subplot(30,1,30)
+        
+        axisArray = [ax0,ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8,ax9, \
+                     ax10,ax11,ax12,ax13,ax14,ax15,ax16,ax17,ax18,ax19, \
+                     ax20,ax21,ax22,ax23,ax24,ax25,ax26,ax27,ax28,ax29]
+        
+        i = 0
+        for ax in axisArray:
+            ax = axisArray[i]
+            ax.spines['left'].set_color('blue')
+            ax.spines['top'].set_color(None)
+            ax.spines['right'].set_color(None)
+            ax.spines['bottom'].set_color('green')
+            ax.tick_params(axis='x',colors='white')
+            ax.tick_params(axis='y',colors='white')
+            ax.plot(x,y)
+            ax.eventplot(t, lineoffsets = 0, linelengths=1.0, color ='red')  # 1 sec ticks
+            
+            if len(blockBeginList) > i:
+                start = blockBeginList[i]
+                stop = blockBeginList[i] + timeInterval
+                ax.set_xlim(start,stop)
+            else:
+                ax.set_xlim(0, 30000)
+            i = i + 1
+            ax.set_ylim(0, 2)
+
+        print("Presses", presses)
+        plt.show()
+
+    def twoLever_PR_Figure(self):
         """
         Resolutions:
         aRecord.datalist  - mSec 10800000 mSec in 180 minute session
