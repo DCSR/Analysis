@@ -237,6 +237,11 @@ class myGUI(object):
         loadTestButton4 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
                               self.openWakeFile("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
         """
+        self.showOn_tkCanvas = BooleanVar(value = True)
+        spacer2Label = Label(headerFrame, text="                    ").grid(row = 0,column = 8)
+        canvasButton = Radiobutton(headerFrame, text = "tk Canvas", variable = self.showOn_tkCanvas, value = 1).grid(row = 0, column = 9, sticky = E)
+        pyplotButton = Radiobutton(headerFrame, text = "pyplot ", variable = self.showOn_tkCanvas, value = 0).grid(row = 0, column = 10, sticky = E)
+        
 
         #************** Graph Tab ******************
         self.columnFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
