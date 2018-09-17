@@ -468,15 +468,13 @@ class myGUI(object):
         respMaxButton3 = Radiobutton(self.responseButtonFrame, text = "100   ", variable=self.respMax, value = 100).grid(row=2,column=1)
         respMaxButton4 = Radiobutton(self.responseButtonFrame, text = "200   ", variable=self.respMax, value = 200).grid(row=3,column=1)
 
-
-        test1Button = Button(self.thresholdButtonFrame, text="Test Pmax calc", command= lambda: \
-                              self.testPmaxCalc()).grid(row=19,column=0,sticky=S)
         test2Button = Button(self.thresholdButtonFrame, text="Save Figure.png", command= lambda: \
                              self.save_TH_Figure()).grid(row=20,column=0,sticky=S)
         test3Button = Button(self.thresholdButtonFrame, text="testStuff2()", command= lambda: \
                              self.testStuff2()).grid(row=21,column=0,sticky=S)
         test4Button = Button(self.thresholdButtonFrame, text="testStuff3()", command = lambda: \
                              self.testStuff3()).grid(row=23,column=0,sticky=N)
+        
 
         #****************
 
@@ -1919,12 +1917,7 @@ class myGUI(object):
         y_logRange = 2
         GraphLib.drawLog_X_Axis(aCanvas,x_zero,y_zero,x_pixel_width,x_startValue,x_logRange,x_caption)
         GraphLib.drawLog_Y_Axis(aCanvas,x_zero+x_pixel_width,y_zero,y_pixel_height,y_startValue,y_logRange,y_caption, test = True, leftLabel=False)
-       
-
-    def testPmaxCalc(self):
-        print("testPmaxCalc deprecated")
-        
-        
+               
     def injectionTimesText(self):
         aRecord = self.recordList[self.fileChoice.get()]
         injection = 0
