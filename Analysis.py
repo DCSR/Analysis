@@ -27,9 +27,12 @@ import matplotlib.pyplot as plt
 """
 Models, Views and Controllers (MCV) design: keep the representation of the data separate
 from the parts of the program that the user interacts with.
-Models: store and retrieve data from import osdatabases and files. 
-View: displays information to the user (eg. a graph)
+
+View: displays information to the user (Graphical User Interface (tkinter and graphs)
+Models: store and retrieve data from databases and files.
 Controllers: convert user input into calls on functions that manipulate data
+ 
+
 """
 
 def main(argv=None):
@@ -619,7 +622,261 @@ class myGUI(object):
         radiobutton10 = Radiobutton(fileSelectorFrame, textvariable = self.fileName9, variable = self.fileChoice, \
                                    value = 9, command =lambda: self.selectList()).grid(column=4, row=3,padx=padding)
 
-        # *************  The Controllers  **********
+
+       # *******************************  The Model ********************************************
+       #   The Model refers to components that store and retrieve data from databases and files.
+       # ***************************************************************************************
+       
+    def save_TH_Figure(self):
+        """
+        None > save a "Figure.png" in current directory.
+        The will overwrite current file. Rename if you want to keep it. 
+
+        self.fig is defined in myGUI and used as a container in all pyplot plots.
+        This procedure saves the current self.fig to Figure.png
+        Changing the extension will change the format:  eg. ".pdf" 
+
+        """
+        print("Saving Figure.png")
+        self.matPlotFigure.savefig('Figure.png')
+
+    def saveTestFigure(self):
+        """
+        Define a TestFigure coresponding to Test Tab
+        """
+        print("saveTestFigure()")
+
+    def load_2L_testFile(self):
+        """
+        Called from testAreaTab Button2
+        """
+        print("load_2L-testFile()")
+
+    def openWakeFiles(self,filename):
+        """
+        The procedure will read Wake datafiles that originate either from OMNI (.str) or from the
+        Feather system (.dat).  If a filename is passed to this procedure then it will be opened. This
+        is how filename Speed Buttons are handled.
+        If no filename ("") is passed, then a File Open Dialog is spawned. One or several files can
+        be selected and loaded.
+        """       
+        fileList = []
+        fPath = ""
+        if filename == "":
+            fileList = filedialog.askopenfilenames(initialdir=self.initialDir)
+        else:
+            fileList.append(filename)
+        """
+        filenum = 0
+        for file in fileList:
+            filenum = filenum + 1
+            fName = file[file.rfind('/')+1:]
+            fPath = file[0:file.rfind('/')+1]
+            print('File ',str(filenum), file)
+        self.initialDir = fPath
+        print("Path =", self.initialDir)
+        """
+        selected = self.fileChoice.get()
+        for fName in fileList:
+            if (selected < 10):
+                print("Selection number:",selected)                
+                self.recordList[selected].datalist = []
+                name = fName[fName.rfind('/')+1:]
+                path = fName[0:fName.rfind('/')+1]
+                self.initialDir = path
+                # print('path =',path)
+                self.recordList[selected].fileName = name
+                self.fileNameList[selected].set(name)
+                # OMNI pump times
+                # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
+                #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
+                self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
+                                                          0.200,0.130,0.080,0.050,0.030,0.020]
+                self.recordList[selected].cocConc = 5.0
+                self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
+                # textBox.insert('1.0', name+" opened \n\n")
+                if fName.find(".str") > 0:
+                    self.recordList[selected].datalist = stream01.read_str_file(fName)               
+                elif fName.find(".dat") > 0:
+                    aFile = open(fName,'r')
+                    for line in  aFile:
+                        pair = line.split()
+                        pair[0] = int(pair[0])
+                        self.recordList[selected].datalist.append(pair)
+                    aFile.close()
+                self.recordList[selected].extractStatsFromList()
+
+                # ------------  fillLists ---------
+                verbose = True
+                pumpStarttime = 0
+                blockNum = -1 
+                pumpOn = False
+                leverTotal = 0       
+                pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
+                responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
+                """
+                This procedure assumes the datafile if a Threshold file and fills the
+                response and consumption lists accordingly - i.e. 12 bins.
+                But a PR daatfile could have many more bins which could throw an error.
+                So for now, if the bin number does not count higher than 11.
+
+                Eventually, 
+
+                """
+                for pairs in self.recordList[selected].datalist:
+                    if pairs[1] == 'B':
+                        if blockNum < 11:
+                            blockNum= blockNum + 1
+                    elif pairs[1] == 'P':
+                        pumpStartTime = pairs[0]
+                        pumpOn = True
+                        responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
+                        leverTotal = leverTotal + 1                        # using pump for responses
+                    elif pairs[1] == 'p':
+                        if pumpOn:
+                            duration = pairs[0]-pumpStartTime
+                            if blockNum <= 12:
+                                pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
+                            pumpOn = False
+                    # else no nothing
+                # print("responseList = ", responseList)
+                consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
+                mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
+                if verbose:
+                    print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
+                    print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
+                    print("cocaine mg/sec:", mgPerSec)
+                for i in range(12):
+                    consumptionList[i] = pumpTimeList[i] * mgPerSec
+                    if consumptionList[i] == 0:
+                        consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
+                totalResp = 0
+                totalIntake = 0
+                for i in range(12):
+                    totalResp = totalResp + responseList[i]
+                    totalIntake = totalIntake + consumptionList[i]
+                print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
+                priceList = []      
+                for i in range(12):
+                    # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
+                    dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
+                                      self.recordList[selected].cocConc * \
+                                      (self.recordList[selected].pumpSpeed)
+                    price = round(1/dosePerResponse,2)
+                    priceList.append(price)
+                self.recordList[selected].priceList = priceList
+                self.recordList[selected].consumptionList = consumptionList
+                self.recordList[selected].responseList = responseList
+
+                # ------------- end fillLists -----------------
+                print(self.recordList[selected])
+                selected = selected + 1
+            else:
+                print("More files selected than spots available")
+        print("Path =", self.initialDir)
+            
+    def openWakeFile(self, fileName):      
+        if fileName == '':
+            fileName = filedialog.askopenfilename(initialdir=self.initialDir)
+        # print(fileName)
+        if len(fileName) > 0:
+            selected = self.fileChoice.get()
+            self.recordList[selected].datalist = []
+            name = fileName[fileName.rfind('/')+1:]
+            path = fileName[0:fileName.rfind('/')+1]
+            self.initialDir = path
+            # print('path =',path)
+            self.recordList[selected].fileName = name
+            self.fileNameList[selected].set(name)
+            # OMNI pump times
+            # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
+            #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
+            self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
+                                                      0.200,0.130,0.080,0.050,0.030,0.020]
+            self.recordList[selected].cocConc = 5.0
+            self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
+            # textBox.insert('1.0', name+" opened \n\n")
+            if fileName.find(".str") > 0:
+                self.recordList[selected].datalist = stream01.read_str_file(fileName)               
+            elif fileName.find(".dat") > 0:
+                aFile = open(fileName,'r')
+                for line in  aFile:
+                    pair = line.split()
+                    pair[0] = int(pair[0])
+                    self.recordList[selected].datalist.append(pair)
+                aFile.close()
+            self.recordList[selected].extractStatsFromList()
+
+        # ------------  fillLists ---------
+        verbose = True
+        pumpStarttime = 0
+        blockNum = -1 
+        pumpOn = False
+        leverTotal = 0       
+        pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
+        responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
+        """
+        This procedure assumes the datafile if a Threshold file and fills the
+        response and consumption lists according - i.e. 12 bins.
+        But a PR daatfile could have many more bins which could throw an error.
+        So for now, if the bin number will not count higher than 11.
+
+        Eventually, 
+
+        """
+        for pairs in self.recordList[selected].datalist:
+            if pairs[1] == 'B':
+                if blockNum < 11:
+                    blockNum= blockNum + 1
+            elif pairs[1] == 'P':
+                pumpStartTime = pairs[0]
+                pumpOn = True
+                responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
+                leverTotal = leverTotal + 1                        # using pump for responses
+            elif pairs[1] == 'p':
+                if pumpOn:
+                    duration = pairs[0]-pumpStartTime
+                    if blockNum <= 12:
+                        pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
+                    pumpOn = False
+            # else no nothing
+        # print("responseList = ", responseList)
+        consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
+        mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
+        if verbose:
+            print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
+            print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
+            print("cocaine mg/sec:", mgPerSec)
+        for i in range(12):
+            consumptionList[i] = pumpTimeList[i] * mgPerSec
+            if consumptionList[i] == 0:
+                consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
+        totalResp = 0
+        totalIntake = 0
+        for i in range(12):
+            totalResp = totalResp + responseList[i]
+            totalIntake = totalIntake + consumptionList[i]
+        print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
+        priceList = []      
+        for i in range(12):
+            # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
+            dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
+                              self.recordList[selected].cocConc * \
+                              (self.recordList[selected].pumpSpeed)
+            price = round(1/dosePerResponse,2)
+            priceList.append(price)
+        self.recordList[selected].priceList = priceList
+        self.recordList[selected].consumptionList = consumptionList
+        self.recordList[selected].responseList = responseList
+
+        # ------------- end fillLists -----------------
+        print(self.recordList[selected])
+        print("Path =", self.initialDir)
+    
+
+        # **********************  The Controllers  ***********************************
+        # Controllers converts user input into calls on functions that manipulate data
+        # ****************************************************************************
 
     def pyPlotEventRecord(self):
         injNum = 0
@@ -985,27 +1242,6 @@ class myGUI(object):
     def testStuff3(self):
         print("testStuff3")
 
-    def save_TH_Figure(self):
-        """
-        None > save a "Figure.png" in current directory.
-        The will overwrite current file. Rename if you want to keep it. 
-
-        self.fig is defined in myGUI and used as a container in all pyplot plots.
-        This procedure saves the current self.fig to Figure.png
-        Changing the extension will change the format:  eg. ".pdf" 
-
-        """
-        print("Saving Figure.png")
-        # Spawn an Info dialog box?
-        self.matPlotFigure.savefig('Figure.png')
-
-    def saveTestFigure(self):
-        """
-        Define a TestFigure coresponding to Test Tab
-        """
-        print("saveTestFigure()")
-
-
     def draw_TH_Curve(self, params, priceList):
         verbose = True
         if verbose: print("draw_TH_Curve()")
@@ -1070,10 +1306,7 @@ class myGUI(object):
         responseLine = Line2D(priceList,responseList, color = 'black')
         self.responsePlot.add_line(responseLine)
         """
-        self.threshold_matPlot_Canvas.draw()
-        
-        
-        
+        self.threshold_matPlot_Canvas.draw()       
 
     def drawThreshold(self):
         """
@@ -1175,14 +1408,16 @@ class myGUI(object):
         
         self.draw_TH_Curve(TH_params, priceList)
 
-
-    def load_2L_testFile(self):
+        # Error message if previous axes instance exists.
         """
-        Called from testAreaTab Button2
-        """
-        print("load_2L-testFile()")
+        Adding an axes using the same arguments as a previous axes currently reuses the earlier instance.
+        In a future version, a new instance will always be created and returned.  Meanwhile, this warning
+        can be suppressed, and the future behavior ensured, by passing a unique label to each axes instance.
 
+        Solution: Add a unique label
+        Maybe query the list of axes.
         
+        """
     # *************** Two Lever ********************
 
     def TwoLeverCR(self):
@@ -1433,7 +1668,6 @@ class myGUI(object):
             self.textBox.insert("1.0","TwoLeverTest2\n")
 
     # ************ End Two Lever *******************
-
 
     def testText1(self):
         Examples.showTextFormatExamples(self.textBox)
@@ -1769,228 +2003,6 @@ class myGUI(object):
         # print("fileChoice: ", self.fileChoice.get())
         pass
 
-    def openWakeFiles(self,filename):
-        """
-        The procedure will read Wake datafiles that originate either from OMNI (.str) or from the
-        Feather system (.dat).  If a filename is passed to this procedure then it will be opened. This
-        is how filename Speed Buttons are handled.
-        If no filename ("") is passed, then a File Open Dialog is spawned. One or several files can
-        be selected and loaded.
-        """       
-        fileList = []
-        fPath = ""
-        if filename == "":
-            fileList = filedialog.askopenfilenames(initialdir=self.initialDir)
-        else:
-            fileList.append(filename)
-        """
-        filenum = 0
-        for file in fileList:
-            filenum = filenum + 1
-            fName = file[file.rfind('/')+1:]
-            fPath = file[0:file.rfind('/')+1]
-            print('File ',str(filenum), file)
-        self.initialDir = fPath
-        print("Path =", self.initialDir)
-        """
-        selected = self.fileChoice.get()
-        for fName in fileList:
-            if (selected < 10):
-                print("Selection number:",selected)                
-                self.recordList[selected].datalist = []
-                name = fName[fName.rfind('/')+1:]
-                path = fName[0:fName.rfind('/')+1]
-                self.initialDir = path
-                # print('path =',path)
-                self.recordList[selected].fileName = name
-                self.fileNameList[selected].set(name)
-                # OMNI pump times
-                # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
-                #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
-                self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
-                                                          0.200,0.130,0.080,0.050,0.030,0.020]
-                self.recordList[selected].cocConc = 5.0
-                self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
-                # textBox.insert('1.0', name+" opened \n\n")
-                if fName.find(".str") > 0:
-                    self.recordList[selected].datalist = stream01.read_str_file(fName)               
-                elif fName.find(".dat") > 0:
-                    aFile = open(fName,'r')
-                    for line in  aFile:
-                        pair = line.split()
-                        pair[0] = int(pair[0])
-                        self.recordList[selected].datalist.append(pair)
-                    aFile.close()
-                self.recordList[selected].extractStatsFromList()
-
-                # ------------  fillLists ---------
-                verbose = True
-                pumpStarttime = 0
-                blockNum = -1 
-                pumpOn = False
-                leverTotal = 0       
-                pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
-                responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
-                """
-                This procedure assumes the datafile if a Threshold file and fills the
-                response and consumption lists accordingly - i.e. 12 bins.
-                But a PR daatfile could have many more bins which could throw an error.
-                So for now, if the bin number does not count higher than 11.
-
-                Eventually, 
-
-                """
-                for pairs in self.recordList[selected].datalist:
-                    if pairs[1] == 'B':
-                        if blockNum < 11:
-                            blockNum= blockNum + 1
-                    elif pairs[1] == 'P':
-                        pumpStartTime = pairs[0]
-                        pumpOn = True
-                        responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
-                        leverTotal = leverTotal + 1                        # using pump for responses
-                    elif pairs[1] == 'p':
-                        if pumpOn:
-                            duration = pairs[0]-pumpStartTime
-                            if blockNum <= 12:
-                                pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
-                            pumpOn = False
-                    # else no nothing
-                # print("responseList = ", responseList)
-                consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
-                mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
-                if verbose:
-                    print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
-                    print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
-                    print("cocaine mg/sec:", mgPerSec)
-                for i in range(12):
-                    consumptionList[i] = pumpTimeList[i] * mgPerSec
-                    if consumptionList[i] == 0:
-                        consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
-                totalResp = 0
-                totalIntake = 0
-                for i in range(12):
-                    totalResp = totalResp + responseList[i]
-                    totalIntake = totalIntake + consumptionList[i]
-                print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
-                priceList = []      
-                for i in range(12):
-                    # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
-                    dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
-                                      self.recordList[selected].cocConc * \
-                                      (self.recordList[selected].pumpSpeed)
-                    price = round(1/dosePerResponse,2)
-                    priceList.append(price)
-                self.recordList[selected].priceList = priceList
-                self.recordList[selected].consumptionList = consumptionList
-                self.recordList[selected].responseList = responseList
-
-                # ------------- end fillLists -----------------
-                print(self.recordList[selected])
-                selected = selected + 1
-            else:
-                print("More files selected than spots available")
-        print("Path =", self.initialDir)
-            
-
-    def openWakeFile(self, fileName):      
-        if fileName == '':
-            fileName = filedialog.askopenfilename(initialdir=self.initialDir)
-        # print(fileName)
-        if len(fileName) > 0:
-            selected = self.fileChoice.get()
-            self.recordList[selected].datalist = []
-            name = fileName[fileName.rfind('/')+1:]
-            path = fileName[0:fileName.rfind('/')+1]
-            self.initialDir = path
-            # print('path =',path)
-            self.recordList[selected].fileName = name
-            self.fileNameList[selected].set(name)
-            # OMNI pump times
-            # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
-            #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
-            self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
-                                                      0.200,0.130,0.080,0.050,0.030,0.020]
-            self.recordList[selected].cocConc = 5.0
-            self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
-            # textBox.insert('1.0', name+" opened \n\n")
-            if fileName.find(".str") > 0:
-                self.recordList[selected].datalist = stream01.read_str_file(fileName)               
-            elif fileName.find(".dat") > 0:
-                aFile = open(fileName,'r')
-                for line in  aFile:
-                    pair = line.split()
-                    pair[0] = int(pair[0])
-                    self.recordList[selected].datalist.append(pair)
-                aFile.close()
-            self.recordList[selected].extractStatsFromList()
-
-        # ------------  fillLists ---------
-        verbose = True
-        pumpStarttime = 0
-        blockNum = -1 
-        pumpOn = False
-        leverTotal = 0       
-        pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
-        responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
-        """
-        This procedure assumes the datafile if a Threshold file and fills the
-        response and consumption lists according - i.e. 12 bins.
-        But a PR daatfile could have many more bins which could throw an error.
-        So for now, if the bin number will not count higher than 11.
-
-        Eventually, 
-
-        """
-        for pairs in self.recordList[selected].datalist:
-            if pairs[1] == 'B':
-                if blockNum < 11:
-                    blockNum= blockNum + 1
-            elif pairs[1] == 'P':
-                pumpStartTime = pairs[0]
-                pumpOn = True
-                responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
-                leverTotal = leverTotal + 1                        # using pump for responses
-            elif pairs[1] == 'p':
-                if pumpOn:
-                    duration = pairs[0]-pumpStartTime
-                    if blockNum <= 12:
-                        pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
-                    pumpOn = False
-            # else no nothing
-        # print("responseList = ", responseList)
-        consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
-        mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
-        if verbose:
-            print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
-            print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
-            print("cocaine mg/sec:", mgPerSec)
-        for i in range(12):
-            consumptionList[i] = pumpTimeList[i] * mgPerSec
-            if consumptionList[i] == 0:
-                consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
-        totalResp = 0
-        totalIntake = 0
-        for i in range(12):
-            totalResp = totalResp + responseList[i]
-            totalIntake = totalIntake + consumptionList[i]
-        print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
-        priceList = []      
-        for i in range(12):
-            # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
-            dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
-                              self.recordList[selected].cocConc * \
-                              (self.recordList[selected].pumpSpeed)
-            price = round(1/dosePerResponse,2)
-            priceList.append(price)
-        self.recordList[selected].priceList = priceList
-        self.recordList[selected].consumptionList = consumptionList
-        self.recordList[selected].responseList = responseList
-
-        # ------------- end fillLists -----------------
-        print(self.recordList[selected])
-        print("Path =", self.initialDir)
-    
 
     def clearTHCanvas(self):
         self.graphCanvas.delete('all')
