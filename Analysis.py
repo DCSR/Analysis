@@ -152,6 +152,10 @@ class myGUI(object):
             self.initialDir = "C:/"
         print("Initial Directory:", self.initialDir)
 
+        # **********************************************************************
+        # *************** Variables and Lists associated with the View *********
+        # **********************************************************************
+        
         #Construct ten empty dataRecords
         self.record0 = DataRecord([],"empty")         
         self.record1 = DataRecord([],"empty")
@@ -168,12 +172,9 @@ class myGUI(object):
         self.recordList = [self.record0,self.record1,self.record2,self.record3,self.record4, \
                            self.record5,self.record6,self.record7,self.record8,self.record9]
 
-        # *************   The Model - vaiables, lists and files *********
+        # Header row
+        self.showOn_tkCanvas = BooleanVar(value = True) # Either tk Canvas or pyplot
         self.clockTimeStringVar = StringVar(value="0:00:00")
-        self.max_x_scale = IntVar(value=360)
-        self.max_y_scale = IntVar(value=500)
-        self.neumaierDose = IntVar(value=2)
-        # self.max_x_scale.set(120)
         
         self.fileChoice = IntVar(value=0)
         self.fileName0 = StringVar(value = self.recordList[0].fileName)
@@ -190,20 +191,42 @@ class myGUI(object):
         self.fileNameList = [self.fileName0,self.fileName1,self.fileName2,self.fileName3,self.fileName4,\
                              self.fileName5,self.fileName6,self.fileName7,self.fileName8,self.fileName9]
 
-        # Threshold tab
+        # Threshold stuff
+        self.pumpTimes = IntVar()                           # Use OMNI or M0 pumptimes
+        self.pumpTimes.set(0)                               # Default to OMNI pumptimes
+        self.logXVar = BooleanVar(value = True) 
+        self.logYVar = BooleanVar(value = True)
+        self.showPmaxLine = BooleanVar(value = True)
+        self.showOmaxLine = BooleanVar(value = True)
+        self.manualCurveFitVar = BooleanVar(value = True)
+        self.QzeroVar = DoubleVar()                         # Qzero
+        self.alphaVar = DoubleVar()                         # alpha
+        self.k_Var = DoubleVar()                            # k 
+        self.rangeBegin = IntVar()                          # First Point
+        self.rangeBegin.set(1)
+        self.rangeEnd = IntVar()                            # Last Point
+        self.rangeEnd.set(11)
+        self.responseCurveVar = BooleanVar(value = True)    # Show Response Curve
         self.respMax = IntVar()
         self.respMax.set(200)
-        self.rangeEnd = IntVar()
-        self.rangeEnd.set(11)
-        self.rangeBegin = IntVar()
-        self.rangeBegin.set(1)
-        self.average_TH_FilesVar = BooleanVar(value=False)
-        self.pumpTimes = IntVar()
-        self.pumpTimes.set(0)
+        self.average_TH_FilesVar = BooleanVar(value=False)  # Not associated with widget
+        
+        # Graphs Tab
+        self.showBPVar = BooleanVar(value = True)
+        self.max_x_scale = IntVar(value=360)
+        self.max_y_scale = IntVar(value=500)
 
-        #*************  The View ************       
+        # Text Tab
+        self.startTimeVar = IntVar()                        # Associated with startTimeScale, initialized to zero       
+        self.endTimeVar = IntVar()                          # Associated with endTimeScale, initialized to 360
+        self.drugConcStr = StringVar(value="5.0")
+        self.weightStr = StringVar(value="350")
 
-        #************* Root Frame
+        # ************************************************************
+        # **************************  Frames *************************
+        # ************************************************************
+
+        # ************* Root Frame ********************
         self.rootFrame = Frame(self.root, borderwidth=2, relief="sunken")
         self.rootFrame.grid(column = 0, row = 0)
         headerFrame= Frame(self.root,borderwidth=2, relief="sunken")
@@ -223,7 +246,7 @@ class myGUI(object):
         myNotebook.add(self.testAreaTab,text = "Test Area")
         myNotebook.grid(row=0,column=0)
 
-        #**************Header Row ******************
+        # **************Header Row ******************
         openFileButton = Button(headerFrame, text="Open File", command= lambda: self.openWakeFile("")).grid(row=0,column=0, sticky=W)
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
@@ -240,7 +263,7 @@ class myGUI(object):
         loadTestButton4 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
                               self.openWakeFile("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
         """
-        self.showOn_tkCanvas = BooleanVar(value = True)
+        
         spacer2Label = Label(headerFrame, text="                    ").grid(row = 0,column = 8)
         canvasButton = Radiobutton(headerFrame, text = "tk Canvas", variable = self.showOn_tkCanvas, value = 1).grid(row = 0, column = 9, sticky = E)
         pyplotButton = Radiobutton(headerFrame, text = "pyplot ", variable = self.showOn_tkCanvas, value = 0).grid(row = 0, column = 10, sticky = E)
@@ -256,7 +279,7 @@ class myGUI(object):
                               self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N)
         cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
                               self.drawCumulativeRecord(self.recordList[self.fileChoice.get()])).grid(row=2,column=0,sticky=N)
-        self.showBPVar = BooleanVar(value = True)      
+      
         showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
                                    command= lambda: self.drawCumulativeRecord(self.recordList[self.fileChoice.get()]))
         showBPButton.grid(row = 3,column=0)      
@@ -381,17 +404,13 @@ class myGUI(object):
 
         responseLabel = Label(self.thresholdButtonFrame, text="Draw Response Curve").grid(row = 3, column = 0, sticky = EW)
 
-        self.logXVar = BooleanVar(value = True)      
-        logLogCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log X", variable = self.logXVar, \
+     
+        logLogXCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log X", variable = self.logXVar, \
                                         onvalue = True, offvalue = False).grid(row = 4, column = 0, sticky = W)
-        self.logYVar = BooleanVar(value = True)      
-        logLogCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log Y", variable = self.logYVar, \
-                                        onvalue = True, offvalue = False).grid(row = 4, column = 1)
-
-        self.showPmaxLine = BooleanVar(value = True)      
+        logLogYCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log Y", variable = self.logYVar, \
+                                        onvalue = True, offvalue = False).grid(row = 4, column = 1)        
         showPmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Pmax line", variable = self.showPmaxLine, \
                                         onvalue = True, offvalue = False).grid(row = 5, column = 0, stick = W)
-        self.showOmaxLine = BooleanVar(value = True)
         showOmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Omax line", variable = self.showOmaxLine, \
                                         onvalue = True, offvalue = False).grid(row = 5, column = 1, sticky = W)
 
@@ -407,32 +426,30 @@ class myGUI(object):
         #************* "drawThresholdFrame within thresholdButtonFrame ********       
         self.drawThresholdFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.drawThresholdFrame.grid(row = 6, column = 0, columnspan = 2, sticky = EW)
-
-        self.manualCurveFitVar = BooleanVar(value = True)
+                
         curveFitCheckButton = Checkbutton(self.drawThresholdFrame, text = "Manual Curve Fit", \
                     variable = self.manualCurveFitVar, onvalue = True, \
                     offvalue = False).grid(row = 4, column = 0, columnspan = 2, stick=W)
                 
-        self.QzeroVar = DoubleVar()
+
         self.QzeroLabel = Label(self.drawThresholdFrame, text = "Qzero").grid(row=8,column=0,columnspan = 2,sticky=EW)
         self.scale_Q_zero = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.05, \
                                   from_=0.25, to=5.0, variable = self.QzeroVar)
-        self.scale_Q_zero.set(1.0)
         self.scale_Q_zero.grid(row=9,column=0, columnspan = 2)
+        self.scale_Q_zero.set(1.0)
 
-        self.alphaVar = DoubleVar()
+
         self.alphaLabel = Label(self.drawThresholdFrame, text = "alpha").grid(row=10,column=0,columnspan = 2,sticky=EW)
         self.scale_alpha = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.00025, \
                                  from_= 0.0005, to = 0.02, variable = self.alphaVar)
-        self.scale_alpha.set(0.005)
         self.scale_alpha.grid(row=11,column=0, columnspan = 2)
+        self.scale_alpha.set(0.005)
 
-        self.k_Var = DoubleVar()
         self.k_Label = Label(self.drawThresholdFrame, text = "k").grid(row=12,column=0,columnspan = 2,sticky=EW)
         self.scale_k = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.1, \
                                  from_= 0.0, to = 9.9, variable = self.k_Var)
-        self.scale_k.set(5.0)
         self.scale_k.grid(row=13,column=0, columnspan = 2)
+        self.scale_k.set(5.0)
     
         self.startStopFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.startStopFrame.grid(columnspan=2, row = 9, column = 0)
@@ -458,7 +475,6 @@ class myGUI(object):
         self.responseButtonFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.responseButtonFrame.grid(row = 50, column = 0, sticky = EW)
 
-        self.responseCurveVar = BooleanVar(value = True)
         self.responseCurveCheckButton = Checkbutton(self.responseButtonFrame, text = "Show Response Curve", variable = self.responseCurveVar, \
                                         onvalue = True, offvalue = False).grid(row = 0, column = 0, columnspan = 2)
         
@@ -498,6 +514,7 @@ class myGUI(object):
         self.threshold_matPlot_Canvas.get_tk_widget().grid(row=1,column=0)
 
         #*************** Text Tab *****************
+         
         self.textButtonFrame = Frame(self.textTab, borderwidth=5, relief="sunken")
         self.textButtonFrame.grid(column = 0, row = 0, sticky=N)
 
@@ -518,14 +535,14 @@ class myGUI(object):
                               self.doseReport()).grid(row=4,column=0,columnspan = 2,sticky=N)
 
         self.startTimeLabel = Label(self.textButtonFrame, text = "T1").grid(row=5,column=0,sticky=W)        
-        self.startTimeVar = IntVar()
+
         self.startTimeScale = Scale(self.textButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
                                   from_=0, to=360, variable = self.startTimeVar)
         self.startTimeScale.grid(row=5,column=1)
         self.startTimeScale.set(0)
 
         self.endTimeLabel = Label(self.textButtonFrame, text = "T2").grid(row=6,column=0,sticky=W) 
-        self.endTimeVar = IntVar()
+
         self.endTimeScale = Scale(self.textButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
                                   from_=0, to=360, variable = self.endTimeVar)
         self.endTimeScale.grid(row=6,column=1)
@@ -533,14 +550,14 @@ class myGUI(object):
         
         concentrationLabel = Label(self.textButtonFrame, text="Conc (mg/ml)")
         concentrationLabel.grid(row = 7, column = 0)
-        self.drugConcStr = StringVar(value="5.0")
-        self.concentrationEntry = Entry(self.textButtonFrame, width=6,textvariable=self.drugConcStr)
+        
+        self.concentrationEntry = Entry(self.textButtonFrame, width=6,textvariable = self.drugConcStr)
         self.concentrationEntry.grid(row = 7, column = 1)
 
         weightLabel = Label(self.textButtonFrame, text="Body weight (gms)")
         weightLabel.grid(row = 8, column = 0)
-        self.weightStr = StringVar(value="350")
-        self.weightEntry = Entry(self.textButtonFrame, width=6,textvariable=self.weightStr)
+
+        self.weightEntry = Entry(self.textButtonFrame, width=6,textvariable = self.weightStr)
         self.weightEntry.grid(row = 8, column = 1)
 
         intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
