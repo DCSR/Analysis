@@ -603,16 +603,14 @@ class myGUI(object):
         
         Button1 = Button(self.testAreaButtonFrame, text="twoLever_PR_Figure()", command= lambda: \
                               self.twoLever_PR_Figure()).grid(row=0,column=0,columnspan=2,sticky=N)
-        Button2 = Button(self.testAreaButtonFrame, text="1_H406_Apr_27.str", command= lambda: \
-                              self.openWakeFile("1_H406_Apr_27.str")).grid(row=1,column=0,columnspan=2,sticky=N)
-        Button3 = Button(self.testAreaButtonFrame, text="Save Test Tab Figure", command= lambda: \
-                              self.saveTestFigure()).grid(row=2,column=0,columnspan=2,sticky=N)
-        Button4 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
-                              self.matPlotEventRecord()).grid(row=4,column=0,columnspan=2, sticky=N)
-        Button5 = Button(self.testAreaButtonFrame, text="eventRecordHD()", command= lambda: \
-                              self.eventRecordHD()).grid(row=5,column=0,columnspan=2, sticky=N)
-
-
+        Button2 = Button(self.testAreaButtonFrame, text="8_H841_Jul_29.str", command= lambda: \
+                              self.openWakeFile("8_H841_Jul_29.str")).grid(row=1,column=0,columnspan=2,sticky=N)
+        Button3 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
+                              self.matPlotEventRecord()).grid(row=3,column=0,columnspan=2, sticky=N)
+        Button4 = Button(self.testAreaButtonFrame, text="bin_HD_Records()", command= lambda: \
+                              self.bin_HD_Records()).grid(row=4,column=0,columnspan=2, sticky=N)
+        # Button5 = Button(self.testAreaButtonFrame, text="unused", command= lambda: \
+        # self.someCommand()).grid(row=5,column=0,columnspan=2,sticky=N)
 
         #*************** FileSelectorFrame stuff ****************
         padding = 20
@@ -645,7 +643,7 @@ class myGUI(object):
     def save_TH_Figure(self):
         """
         None > save a "Figure.png" in current directory.
-        The will overwrite current file. Rename if you want to keep it. 
+        This will overwrite current file. Rename if you want to keep it. 
 
         self.fig is defined in myGUI and used as a container in all pyplot plots.
         This procedure saves the current self.fig to Figure.png
@@ -654,12 +652,6 @@ class myGUI(object):
         """
         print("Saving Figure.png")
         self.matPlotFigure.savefig('Figure.png')
-
-    def saveTestFigure(self):
-        """
-        Define a TestFigure coresponding to Test Tab
-        """
-        print("saveTestFigure()")
 
     def load_2L_testFile(self):
         """
@@ -939,103 +931,142 @@ class myGUI(object):
 
         self.testArea_MatPlot_Canvas.draw()
 
-    def eventRecordHD(self):
+    def bin_HD_Records(self):
         """
-        Creates an event record using Object Oriented style.
+        To Do: Presently defaults to 30 second access period. Supply other options. 
+
+        This graph can be rendered either to the tkinter canvas or to a pyplot window
+        by selecting the appropriate radio button in the header row. The pyplot window
+        can be used to save the graph to a *.prn file.
+
+        This function uses the MatplotLib Object Oriented style. That is, it uses the Figure
+        and Axes objects rather than the shorthand plt.* instruction set. 
 
         B, b = Start and stop of a drug lever block
-        L, l = Drug lever down and up
+        P, p = Pump on and off
+
+        This has been checked against "L" and "l" (lever down and up) and it is within a few milliseconds.
+
+        The first trial line is plotted at y = 20 and the subsequent trails are drawn below.
+        
         
         """
-        import matplotlib.ticker as ticker
         
-        x = [0]
-        y = [0]
-        blockBeginList = []
-        blockEndList = []
-        # Generate a list starting at 0, ending at 60000 with an interval of 1000
-        t = np.arange(0,7200000,1000)
-        presses = 0
+        from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
+
+        if (self.showOn_tkCanvas.get()):
+            fig = self.matPlotTestFigure                # Previously defined Figure containing matPlotCanvas
+            fig.clf()
+        else:
+            fig = plt.figure(figsize=(9,8), dpi=80, constrained_layout = True)  # Newly instantaited pyplot figure
+
+        ax1 = fig.add_subplot(111,label="1")
+        ax1.set_position([0.15, 0.05, 0.7, 0.80])      # Modify this to resize or move it around the canvas
+
+        ax1.text(0.5, 0.93, "Access Time (Seconds)", ha = 'center', fontsize = 14, transform = fig.transFigure)
+        
+        ax1.xaxis.set_ticks_position('top')             # Put x ticks and labels on the top
+        ax1.spines['top'].set_color('black')
+        ax1.spines['top'].set
+        ax1.xaxis.set_major_locator(MaxNLocator(3))     # Number of x tick intervals
+        ax1.xaxis.set_minor_locator(MaxNLocator(30))    # Number of minor tick intervals
+        xLabels = ['0','10','20','30']                  # Manually set labels
+        ax1.set_xticklabels(xLabels, fontsize = 16)     # and font size
+
+        ax1.spines['top'].set_linewidth(1)              # 0.5 would be very thin
+        # x ticks and labels
+        ax1.tick_params(axis='x', colors='black', width=2, length = 8, labelcolor = 'black', direction = 'out')
+        # minor
+        ax1.tick_params(axis='x', which = 'minor', colors='black', width=1, length = 4, direction = 'in')
+
+        ax1.set_yticks([])                              # Suppress tick labels with empty list
+     
+        ax1.spines['bottom'].set_color('none')          # Make bottom spine disappear
+        ax1.spines['left'].set_color('none')            # Make left axis disapear
+        ax1.spines['right'].set_color('none')           # Make right spine disapear
+               
+        ax1.set_xlim(0, 30000)                          # 30 seconds - data are in mSec 
+        # Max number of trials
+        maxTrials = 26
+        ax1.set_ylim(0, maxTrials)                             # (Arbitrarily) graphs a maximum of 20 trials 
+
+        pumpOnTime = 0
+        pumpDuration = 0
+        trialDuration = 0
+        totalPumpTime = 0
+        trial = 0
+        
+        firstLine = 24.5                                # Positioning of the first line
+        height = 0.6                                    # Height of event line
+        spacing = 1.4                                   # Spacing between lines
+
+        x = [0]                                         # starting x and y coordinates
+        y = [firstLine]
+        lineY = firstLine                               # This is y value of the line which will change for each trial
+        pumpOn = False
         aRecord = self.recordList[self.fileChoice.get()]
+        
         for pairs in aRecord.datalist:
-            if pairs[1] == 'L':
-                presses = presses + 1
-                x.append(pairs[0])
-                y.append(0)
-                x.append(pairs[0])
-                y.append(1)
-            elif pairs[1] == 'l':
-                x.append(pairs[0])
-                y.append(1)
-                x.append(pairs[0])
-                y.append(0)
-            elif pairs[1] == 'B':
-                blockBeginList.append(pairs[0])
-            elif pairs[1] == 'b':
-                blockEndList.append(pairs[0])
+            #if len(blockEndList) < 8:                   
+                #print(pairs)
+                if pairs[1] == 'P':
+                    x.append(pairs[0]-startTime)        # Store the x coordinate of pump going on in "bin" time
+                    y.append(lineY)                     # Store the y coordinate of start time to 0
+                    x.append(pairs[0]-startTime)        # Store the bin time again
+                    y.append(lineY+height)              # Set value = 1, this produces an upward line
+                    pumpOn = True
+                    pumpOnTime = pairs[0]
+                elif pairs[1] == 'p':                   # Pump goes off
+                    if pumpOn:                          # This ignores "safety" instructions sent while pump is off
+                        x.append(pairs[0]-startTime)    # Store the x coordinate of pump going off in "bin" time
+                        y.append(lineY+height)          # Store the y coordinate of pump going off at high level
+                        x.append(pairs[0]-startTime)    # Store the x coordinate again
+                        y.append(lineY)                 # Store the y coordinate at low level - creating a downward line
+                        pumpDuration = pairs[0]-pumpOnTime              # Calculate and store pumpDuration
+                        trialDuration = trialDuration + pumpDuration
+                        totalPumpTime = totalPumpTime + pumpDuration
+                        pumpOn = False
+                elif pairs[1] == 'B':                   # Drug access period starts
+                    startTime = pairs[0]                # Get startTime
+                    x = [0]                             # Reset x coordinate to start of line                    
+                    lineY = firstLine-(trial*spacing)   # Calculate y coodinate for line - counting down from top
+                    y = [lineY]                         # Assign y coordinate
+                elif pairs[1] == 'b':                   # Drug access period ends
+                    x.append(30000)                     # Assign x coordinate to draw line to end
+                    if pumpOn == False:                 # Normally the pump is off
+                        y.append(lineY)                 # so assign y coordinate to draw a line to the end
+                    else:                               # But if the pump is ON
+                        y.append(lineY+height)          # Draw a line to end in up position
+                        x.append(30000)                 # Then draw a downward line at the very end
+                        y.append(lineY)
 
-        fig = plt.figure()
+                    line1 = Line2D(x,y, color = 'black', ls = 'solid', marker = 'None')
+                    ax1.add_line(line1)
 
-        timeInterval = 30000
-        
-        ax0 = fig.add_subplot(30,1,1)
-        ax1 = fig.add_subplot(30,1,2)
-        ax2 = fig.add_subplot(30,1,3)
-        ax3 = fig.add_subplot(30,1,4)
-        ax4 = fig.add_subplot(30,1,5)
-        ax5 = fig.add_subplot(30,1,6)
-        ax6 = fig.add_subplot(30,1,7)
-        ax7 = fig.add_subplot(30,1,8)
-        ax8 = fig.add_subplot(30,1,9)
-        ax9 = fig.add_subplot(30,1,10)
-        ax10 = fig.add_subplot(30,1,11)
-        ax11 = fig.add_subplot(30,1,12)
-        ax12 = fig.add_subplot(30,1,13)
-        ax13 = fig.add_subplot(30,1,14)
-        ax14 = fig.add_subplot(30,1,15)
-        ax15 = fig.add_subplot(30,1,16)
-        ax16 = fig.add_subplot(30,1,17)
-        ax17 = fig.add_subplot(30,1,18)
-        ax18 = fig.add_subplot(30,1,19)
-        ax19 = fig.add_subplot(30,1,20)
-        ax20 = fig.add_subplot(30,1,21)
-        ax21 = fig.add_subplot(30,1,22)
-        ax22 = fig.add_subplot(30,1,23)
-        ax23 = fig.add_subplot(30,1,24)
-        ax24 = fig.add_subplot(30,1,25)
-        ax25 = fig.add_subplot(30,1,26)
-        ax26 = fig.add_subplot(30,1,27)
-        ax27 = fig.add_subplot(30,1,28)
-        ax28 = fig.add_subplot(30,1,29)
-        ax29 = fig.add_subplot(30,1,30)
-        
-        axisArray = [ax0,ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8,ax9, \
-                     ax10,ax11,ax12,ax13,ax14,ax15,ax16,ax17,ax18,ax19, \
-                     ax20,ax21,ax22,ax23,ax24,ax25,ax26,ax27,ax28,ax29]
-        
-        i = 0
-        for ax in axisArray:
-            ax = axisArray[i]
-            ax.spines['left'].set_color('blue')
-            ax.spines['top'].set_color(None)
-            ax.spines['right'].set_color(None)
-            ax.spines['bottom'].set_color('green')
-            ax.tick_params(axis='x',colors='white')
-            ax.tick_params(axis='y',colors='white')
-            ax.plot(x,y)
-            ax.eventplot(t, lineoffsets = 0, linelengths=1.0, color ='red')  # 1 sec ticks
+                    trial = trial + 1
+                    
+                    # ax1.transData means it will use the data coordinates
+                    # Whereas fig.transFigure would use x/y coordinates based on the entire figure - see Title above
+                    # Write trial number to left of line
+                    ax1.text(-500, lineY, str(trial), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                    # Write pump trialDuration to the right of the line
+                    ax1.text(35000, lineY, str(trialDuration), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                    trialDuration = 0
+
+        ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)
+                   
+        #print("totalDownTime", totalPumpTime)
+
+        ax1.set_ylabel('Trial Number', fontsize = 16)
+        ax1.yaxis.labelpad = 35                  # Move label left or right
             
-            if len(blockBeginList) > i:
-                start = blockBeginList[i]
-                stop = blockBeginList[i] + timeInterval
-                ax.set_xlim(start,stop)
-            else:
-                ax.set_xlim(0, 30000)
-            i = i + 1
-            ax.set_ylim(0, 2)
+        if (self.showOn_tkCanvas.get()):
+            self.testArea_MatPlot_Canvas.draw()
+        else:
+            plt.show()
 
-        print("Presses", presses)
-        plt.show()
 
     def twoLever_PR_Figure(self):
         """
