@@ -23,6 +23,8 @@ from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
+from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
+import matplotlib.ticker as ticker
 
 """
 Models, Views and Controllers (MCV) design: keep the representation of the data separate
@@ -609,6 +611,8 @@ class myGUI(object):
                               self.matPlotEventRecord()).grid(row=3,column=0,columnspan=2, sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="bin_HD_Records()", command= lambda: \
                               self.bin_HD_Records()).grid(row=4,column=0,columnspan=2, sticky=N)
+        Button5 = Button(self.testAreaButtonFrame, text="bin_HD_10SecCount()", command= lambda: \
+                              self.bin_HD_10SecCount()).grid(row=5,column=0,columnspan=2, sticky=N)
         # Button5 = Button(self.testAreaButtonFrame, text="unused", command= lambda: \
         # self.someCommand()).grid(row=5,column=0,columnspan=2,sticky=N)
 
@@ -914,7 +918,6 @@ class myGUI(object):
                 injNum = injNum + 1
                 injTimeList.append(pairs[0]/60000)  # Min
 
-        self.testArea_MatPlot_Canvas.draw()
         self.eventRecord = self.matPlotTestFigure.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
 
         self.eventRecord.axes.get_yaxis().set_visible(False)
@@ -952,7 +955,7 @@ class myGUI(object):
         
         """
         
-        from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
+        #from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
 
         if (self.showOn_tkCanvas.get()):
             fig = self.matPlotTestFigure                # Previously defined Figure containing matPlotCanvas
@@ -1067,21 +1070,207 @@ class myGUI(object):
         else:
             plt.show()
 
+    def bin_HD_10SecCount(self):
+        """
+
+        Addition to bin_HD_Records()        
+        
+        """
+
+        #from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
+
+        if (self.showOn_tkCanvas.get()):
+            fig = self.matPlotTestFigure                # Previously defined Figure containing matPlotCanvas
+            fig.clf()
+        else:
+            fig = plt.figure(figsize=(9,8), dpi=80, constrained_layout = True)  # Newly instantaited pyplot figure
+
+        ax1 = fig.add_subplot(111,label="1")
+        ax1.set_position([0.15, 0.05, 0.7, 0.80])      # Modify this to resize or move it around the canvas
+
+        ax1.text(0.5, 0.93, "Access Time (Seconds)", ha = 'center', fontsize = 14, transform = fig.transFigure)
+        
+        ax1.xaxis.set_ticks_position('top')             # Put x ticks and labels on the top
+        ax1.spines['top'].set_color('black')
+        ax1.spines['top'].set
+        ax1.xaxis.set_major_locator(MaxNLocator(3))     # Number of x tick intervals
+        ax1.xaxis.set_minor_locator(MaxNLocator(30))    # Number of minor tick intervals
+        xLabels = ['0','10','20','30']                  # Manually set labels
+        ax1.set_xticklabels(xLabels, fontsize = 16)     # and font size
+
+        ax1.spines['top'].set_linewidth(1)              # 0.5 would be very thin
+        # x ticks and labels
+        ax1.tick_params(axis='x', colors='black', width=2, length = 8, labelcolor = 'black', direction = 'out')
+        # minor
+        ax1.tick_params(axis='x', which = 'minor', colors='black', width=1, length = 4, direction = 'in')
+
+        ax1.set_yticks([])                              # Suppress tick labels with empty list
+     
+        ax1.spines['bottom'].set_color('none')          # Make bottom spine disappear
+        ax1.spines['left'].set_color('none')            # Make left axis disapear
+        ax1.spines['right'].set_color('none')           # Make right spine disapear
+               
+        ax1.set_xlim(0, 30000)                          # 30 seconds - data are in mSec 
+        # Max number of trials
+        maxTrials = 26
+        ax1.set_ylim(0, maxTrials)                             # (Arbitrarily) graphs a maximum of 20 trials 
+
+        pumpOnTime = 0
+        pumpDuration = 0
+        trialDuration = 0
+        totalPumpTime = 0
+        trial = 0
+        
+        firstLine = 24.5                                # Positioning of the first line
+        height = 0.6                                    # Height of event line
+        spacing = 1.4                                   # Spacing between lines
+
+        x = [0]                                         # starting x and y coordinates
+        y = [firstLine]
+        lineY = firstLine                               # This is y value of the line which will change for each trial
+        pumpOn = False
+
+        timeSampleSize = 15000                          # 10 sec
+        sampleTotal = 0
+        sampleList = []
+
+        
+
+        aRecord = self.recordList[self.fileChoice.get()]
+
+        testRecord = DataRecord([],"empty")
+        """
+        Starts at 10 sec
+        # bin time 1 sec for 1 sec
+        # bin time 4 sec for 1/2 sec
+        # bin time 9 sec for 2 sec
+        bin time 15 sec for 2 sec 
+        Ends at 30 sec
+        """
+
+        testRecord.datalist = [[10000, 'B'], \
+                            [10500, 'P'], [11500, 'p'], \
+                            [14000, 'P'], [14500, 'p'], \
+                            [19000, 'P'], [21020, 'p'], \
+                            [25000, 'P'], [27000, 'p'], \
+                            [40000, 'b'], \
+                            [60000, 'B'], \
+                            [60500, 'P'], [61500, 'p'], \
+                            [64000, 'P'], [64500, 'p'], \
+                            [69000, 'P'], [71020, 'p'], \
+                            [75000, 'P'], [77000, 'p'], \
+                            [90000, 'b']] 
+        
+        for pairs in aRecord.datalist:
+            #if len(blockEndList) < 8:                   
+                #print(pairs)
+                if pairs[1] == 'P':
+                    pumpStartTime = pairs[0]-startTime  # Calculate time of pump going on in "bin" time
+                    x.append(pumpStartTime)              # Store binStartTime as x coordinate 
+                    y.append(lineY)                     # Store the y coordinate of start time to 0
+                    x.append(pairs[0]-startTime)        # Store the bin time again
+                    y.append(lineY+height)              # Set value = 1, this produces an upward line
+                    pumpOn = True
+                    pumpOnTime = pairs[0]
+                elif pairs[1] == 'p':                   # Pump goes off
+                    if pumpOn:                          # This ignores "safety" instructions sent while pump is off
+                        pumpStopTime = pairs[0]-startTime  # Calculate time of pump going off in "bin" time
+                        x.append(pumpStopTime)                      # Store binStopTime as x coordinate
+                        # Store the x coordinate of pump going off in "bin" time
+                        y.append(lineY+height)          # Store the y coordinate of pump going off at high level
+                        x.append(pairs[0]-startTime)    # Store the x coordinate again
+                        y.append(lineY)                 # Store the y coordinate at low level - creating a downward line
+                        pumpDuration = pairs[0]-pumpOnTime              # Calculate and store pumpDuration
+                        trialDuration = trialDuration + pumpDuration
+                        totalPumpTime = totalPumpTime + pumpDuration
+                        # changes to bin_HD_Records
+                        if pumpStartTime < timeSampleSize:
+                            if pumpStopTime < timeSampleSize:    # Add to total if withing time criteria
+                                sampleTotal = sampleTotal + pumpDuration
+                            else:
+                                timeOver = pumpStopTime - timeSampleSize # Time past criteria
+                                sampleTotal = sampleTotal + pumpDuration - timeOver                       
+                        pumpOn = False
+                elif pairs[1] == 'B':                   # Drug access period starts
+                    startTime = pairs[0]                # Get startTime
+                    x = [0]                             # Reset x coordinate to start of line                    
+                    lineY = firstLine-(trial*spacing)   # Calculate y coodinate for line - counting down from top
+                    y = [lineY]                         # Assign y coordinate
+                elif pairs[1] == 'b':                   # Drug access period ends
+                    x.append(30000)                     # Assign x coordinate to draw line to end
+                    if pumpOn == False:                 # Normally the pump is off
+                        y.append(lineY)                 # so assign y coordinate to draw a line to the end
+                    else:                               # But if the pump is ON
+                        y.append(lineY+height)          # Draw a line to end in up position
+                        x.append(30000)                 # Then draw a downward line at the very end
+                        y.append(lineY)
+
+                    line1 = Line2D(x,y, color = 'black', ls = 'solid', marker = 'None')
+                    ax1.add_line(line1)
+
+                    sampleList.append(sampleTotal)
+                    sampleTotal = 0
+
+                    trial = trial + 1
+                    
+                    # ax1.transData means it will use the data coordinates
+                    # Whereas fig.transFigure would use x/y coordinates based on the entire figure - see Title above
+                    # Write trial number to left of line
+                    ax1.text(-500, lineY, str(trial), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                    # Write pump trialDuration to the right of the line
+                    ax1.text(35000, lineY, str(trialDuration), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                    trialDuration = 0
+
+
+        if len(sampleList) > 0:
+            print("Time Sample Size =", timeSampleSize, "First sample", sampleList[0])
+        total = 0
+        for i in range(len(sampleList)):
+            total = total + sampleList[i]
+        print('total:', total) 
+        print(sampleList)
+            
+
+        ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)
+                   
+        #print("totalDownTime", totalPumpTime)
+
+        ax1.set_ylabel('Trial Number', fontsize = 16)
+        ax1.yaxis.labelpad = 35                  # Move label left or right
+            
+        if (self.showOn_tkCanvas.get()):
+            self.testArea_MatPlot_Canvas.draw()
+        else:
+            plt.show()
 
     def twoLever_PR_Figure(self):
         """
+        To Do: select X axis limit from radio button.
+
         Resolutions:
         aRecord.datalist  - mSec 10800000 mSec in 180 minute session
         cumRecTimes - transforms all times into fractions of a minute so that it can be plotted in minutes
         binStartTimes     - fractions of a minute
         binStartTimesSec  - second
+
+        testAreaFigureFrame    - tk container (a Frame)
+        self.matPlotTestFigure              - the thing that axes and lines are drawn on        
+        self.threshold_tk_Canvas         - drawing space for things like event records
+        self.testArea_matPlot_Canvas    - container for the MatPlotLib Figure
+                                        - This is the thing that gets redrawn after things are changed.
         """
         verbose = True    # local - couple to a global variable and checkbox?
+
+        if (self.showOn_tkCanvas.get()):
+            fig = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
+            fig.clf()
+        else:
+            fig = plt.figure(figsize=(6,6), dpi=80, constrained_layout = False)  # Newly instantaited pyplot figure
         
         max_x_scale = self.max_x_scale.get()
         max_y_scale = self.max_y_scale.get()
-
-        self.matPlotTestFigure.clf()
 
         gs = gridspec.GridSpec(nrows = 4, ncols= 3)
         """
@@ -1102,34 +1291,59 @@ class myGUI(object):
         array([0, 1, 2])
         """
 
-        aCumRecGraph = self.matPlotTestFigure.add_subplot(gs[0:2,0:3],label="1")  # row [0,1] and col [0,1,2]  
-        aBarGraph = self.matPlotTestFigure.add_subplot(gs[2,0:3],label="2")       # row [2]   and col [0,1,2]
-        aCocConcGraph = self.matPlotTestFigure.add_subplot(gs[3,0:3],label='3')   # row [3]   and col [0,1,2]
+        showLabels = False
 
+        aCumRecGraph = fig.add_subplot(gs[0:2,0:3],label="1")  # row [0,1] and col [0,1,2]  
+        aBarGraph = fig.add_subplot(gs[2,0:3],label="2")       # row [2]   and col [0,1,2]
+        aCocConcGraph = fig.add_subplot(gs[3,0:3],label='3')   # row [3]   and col [0,1,2]
+        
+
+        # Coc Conc graph in mSec so have to do the X axis labels maunally
+        xLabels = ['0','30','60','90','120','150','180','210','240','270','300','330','360','390']
+        
         aRecord = self.recordList[self.fileChoice.get()]        
-        aCumRecGraph.set_title(aRecord.fileName)
-        aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)      
-        aCumRecGraph.set_ylabel('Access Lever Responses', fontsize = 12)       
+        if (showLabels):
+            aCumRecGraph.set_title(aRecord.fileName)
+            
+        #aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)
+        aCumRecGraph.spines['top'].set_color('none')
+        aCumRecGraph.spines['right'].set_color('none')
+        aCumRecGraph.set_ylabel('PR Lever Responses', fontsize = 12)
+        #aCumRecGraph.yaxis.labelpad = 15
         aCumRecGraph.set_xscale("linear")
         aCumRecGraph.set_yscale("linear")
         aCumRecGraph.set_xlim(0, max_x_scale)  
         aCumRecGraph.set_ylim(0, max_y_scale)
+        aCumRecGraph.xaxis.set_major_locator(MultipleLocator(30))       # 30 min intervals
+        aCumRecGraph.spines['left'].set_position(('axes', -0.02))
 
-        #aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)      
-        aBarGraph.set_ylabel('Dose mg', fontsize = 12)       
+        #aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)
+        aBarGraph.spines['left'].set_position(('axes', -0.02))
+        aBarGraph.spines['top'].set_color('none')
+        aBarGraph.spines['right'].set_color('none')
+        aBarGraph.set_ylabel('Dose (mg)', fontsize = 12)
+        #aBarGraph.yaxis.labelpad = 15
         aBarGraph.set_xscale("linear")
         aBarGraph.set_yscale("linear")
         aBarGraph.set_xlim(0, max_x_scale)
-        aBarGraph.set_xticklabels("")                 # Suppress tick labels
         aBarGraph.set_ylim(0, 1.5)
-
-        #aCocConcGraph.set_xlabel('Session Time (min)', fontsize = 12)      
-        aCocConcGraph.set_ylabel('Cocaine', fontsize = 12)       
+        aBarGraph.xaxis.set_major_locator(MultipleLocator(30))       # 30 min intervals
+        #aBarGraph.set_xticklabels(xLabels)                 # Suppress tick labels
+        
+        aCocConcGraph.spines['left'].set_position(('axes', -0.02))
+        aCocConcGraph.spines['top'].set_color('none')
+        aCocConcGraph.spines['right'].set_color('none')
+        aCocConcGraph.set_xlabel('Session Time (min)', fontsize = 12)
+        #aCocConcGraph.xaxis.labelpad = 20
+        aCocConcGraph.set_ylabel('Cocaine', fontsize = 12)
+        #aCocConcGraph.yaxis.labelpad = 15
         aCocConcGraph.set_xscale("linear")
         aCocConcGraph.set_yscale("linear")
         aCocConcGraph.set_xlim(0, max_x_scale*60000)
-        aCocConcGraph.set_xticklabels("")              # Suppress tick labels (because it is in mSec)
+        aCocConcGraph.xaxis.set_major_locator(ticker.LinearLocator(int(max_x_scale/30)+1))
+        aCocConcGraph.set_xticklabels(xLabels) 
         aCocConcGraph.set_ylim(0, 25)
+        
 
         # make an array of x in fractions of a min.
         # make an array of y - total responses.
@@ -1208,7 +1422,7 @@ class myGUI(object):
             tickY = max_y_scale * 0.02  # make the tick mark proportional (2%) to the Y axis length 
             tickMarkX = [binStartTimes[i], binStartTimes[i] + tickX]
             tickMarkY = [tickPositionY[i], tickPositionY[i] - tickY]
-            aTickMark = Line2D(tickMarkX, tickMarkY, color = "red")
+            aTickMark = Line2D(tickMarkX, tickMarkY, color = "black")
             aTickMark.set_lw(1.0) 
             aCumRecGraph.add_line(aTickMark)                          
 
@@ -1218,7 +1432,7 @@ class myGUI(object):
         print("doseList =", doseList)
         print("pumpTimeList = ", pumpTimeList)        
         bar_width = 2.0     # The units correspond to Y values, so will get skinny with high max_y_scale.    
-        aBarGraph.bar(binStartTimes,doseList,bar_width)
+        aBarGraph.bar(binStartTimes,doseList,bar_width, color = "black")
 
         # ***********  Cocaine Concentration curve **********************
         resolution = 5  # seconds  
@@ -1232,7 +1446,7 @@ class myGUI(object):
             timeList.append(cocConcXYList[i][0])       # essentially a list in 5 sec intervals           
             cocConcList.append(cocConcXYList[i][1])
             
-        cocConcLine = Line2D(timeList,cocConcList, color = 'blue', ls = 'solid')
+        cocConcLine = Line2D(timeList,cocConcList, color = 'black', ls = 'solid')
         aCocConcGraph.add_line(cocConcLine)
 
         # ***********  Prediction of dose selected by cocaine levels
@@ -1261,20 +1475,21 @@ class myGUI(object):
             print(finalRatioStr)
             print(totalDoseStr)
             print(rStr)
+        if (showLabels):
+            self.matPlotTestFigure.text(0.1, 0.96, drugAccessLengthStr)
+            self.matPlotTestFigure.text(0.1, 0.94, totalDrugBinsStr)
+            self.matPlotTestFigure.text(0.1, 0.92, finalRatioStr)        
+            self.matPlotTestFigure.text(0.1, 0.90, totalDoseStr)
+            self.matPlotTestFigure.text(0.8, 0.18, rStr)
 
-        self.matPlotTestFigure.text(0.1, 0.92, drugAccessLengthStr)
-        self.matPlotTestFigure.text(0.1, 0.90, totalDrugBinsStr)
-        self.matPlotTestFigure.text(0.1, 0.88, finalRatioStr)        
-        self.matPlotTestFigure.text(0.1, 0.86, totalDoseStr)
-        self.matPlotTestFigure.text(0.8, 0.18, rStr)
-
-        
-        
         # ********************************************************************
 
-        self.matPlotTestFigure.tight_layout()
-        self.testArea_MatPlot_Canvas.draw()
+        
 
+        if (self.showOn_tkCanvas.get()):
+            self.testArea_MatPlot_Canvas.draw()
+        else:
+            plt.show()
 
     def clearFigure(self):
         print("placeholder()")
