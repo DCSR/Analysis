@@ -1077,6 +1077,10 @@ class myGUI(object):
         
         """
 
+        xMax = 180000
+        timeSampleSize = 10000                          # 10 sec
+        xLabels = ['0','60','120','180']                # Manually set labels 
+
         #from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
 
         if (self.showOn_tkCanvas.get()):
@@ -1095,7 +1099,7 @@ class myGUI(object):
         ax1.spines['top'].set
         ax1.xaxis.set_major_locator(MaxNLocator(3))     # Number of x tick intervals
         ax1.xaxis.set_minor_locator(MaxNLocator(30))    # Number of minor tick intervals
-        xLabels = ['0','10','20','30']                  # Manually set labels
+
         ax1.set_xticklabels(xLabels, fontsize = 16)     # and font size
 
         ax1.spines['top'].set_linewidth(1)              # 0.5 would be very thin
@@ -1110,7 +1114,7 @@ class myGUI(object):
         ax1.spines['left'].set_color('none')            # Make left axis disapear
         ax1.spines['right'].set_color('none')           # Make right spine disapear
                
-        ax1.set_xlim(0, 30000)                          # 30 seconds - data are in mSec 
+        ax1.set_xlim(0, xMax)                          # 30 seconds - data are in mSec 
         # Max number of trials
         maxTrials = 26
         ax1.set_ylim(0, maxTrials)                             # (Arbitrarily) graphs a maximum of 20 trials 
@@ -1130,7 +1134,6 @@ class myGUI(object):
         lineY = firstLine                               # This is y value of the line which will change for each trial
         pumpOn = False
 
-        timeSampleSize = 15000                          # 10 sec
         sampleTotal = 0
         sampleList = []
 
@@ -1197,12 +1200,12 @@ class myGUI(object):
                     lineY = firstLine-(trial*spacing)   # Calculate y coodinate for line - counting down from top
                     y = [lineY]                         # Assign y coordinate
                 elif pairs[1] == 'b':                   # Drug access period ends
-                    x.append(30000)                     # Assign x coordinate to draw line to end
+                    x.append(xMax)                     # Assign x coordinate to draw line to end
                     if pumpOn == False:                 # Normally the pump is off
                         y.append(lineY)                 # so assign y coordinate to draw a line to the end
                     else:                               # But if the pump is ON
                         y.append(lineY+height)          # Draw a line to end in up position
-                        x.append(30000)                 # Then draw a downward line at the very end
+                        x.append(xMax)                 # Then draw a downward line at the very end
                         y.append(lineY)
 
                     line1 = Line2D(x,y, color = 'black', ls = 'solid', marker = 'None')
@@ -1219,7 +1222,7 @@ class myGUI(object):
                     ax1.text(-500, lineY, str(trial), ha = 'right', fontsize = 14, transform=ax1.transData)
 
                     # Write pump trialDuration to the right of the line
-                    ax1.text(35000, lineY, str(trialDuration), ha = 'right', fontsize = 14, transform=ax1.transData)
+                    ax1.text(xMax+30000, lineY, str(trialDuration), ha = 'right', fontsize = 14, transform=ax1.transData)
 
                     trialDuration = 0
 
@@ -1233,7 +1236,7 @@ class myGUI(object):
         print(sampleList)
             
 
-        ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)
+        # ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)
                    
         #print("totalDownTime", totalPumpTime)
 
@@ -2188,16 +2191,23 @@ class myGUI(object):
         self.textBox.insert(END,"Inj  Time (sec) Time (min) interval (sec)\n")
         for pairs in aRecord.datalist:
             if pairs[1] == 'P':
+                pumpStartTime = pairs[0]
                 injection = injection + 1
                 secTime = pairs[0]/1000
                 minTime = secTime/60
                 interval = secTime - previousInjTime
-                if injection == 1:
-                    tempString = "{0} {1:10.2f} {2:10.2f}".format(injection,secTime,minTime,interval)
-                else:
-                    tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,secTime,minTime,interval)
-                self.textBox.insert(END,tempString+"\n")
                 previousInjTime = secTime
+                pumpOn = True
+            if pairs[1] == 'p':
+                if pumpOn:
+                    pumpOn = False
+                    duration = pairs[0]-pumpStartTime
+                    if injection == 1:
+                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,duration,secTime,minTime,interval)
+                    else:
+                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f} {4:10.2f}".format(injection,duration,secTime,minTime,interval)
+                    self.textBox.insert(END,tempString+"\n")
+                
         self.textBox.insert(END,"Number of injections: "+str(injection)+"\n")
 
     def doseReport(self):
