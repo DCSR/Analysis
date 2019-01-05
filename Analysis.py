@@ -18,7 +18,7 @@ from scipy.stats.stats import pearsonr
 
 import matplotlib
 matplotlib.use('TkAgg')
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
 from matplotlib import gridspec
