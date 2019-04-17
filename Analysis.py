@@ -451,7 +451,7 @@ class myGUI(object):
         self.scale_k = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.1, \
                                  from_= 0.0, to = 9.9, variable = self.k_Var)
         self.scale_k.grid(row=13,column=0, columnspan = 2)
-        self.scale_k.set(5.0)
+        self.scale_k.set(2.5)
     
         self.startStopFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.startStopFrame.grid(columnspan=2, row = 9, column = 0)
@@ -1506,72 +1506,6 @@ class myGUI(object):
     def testStuff3(self):
         print("testStuff3")
 
-    def draw_TH_Curve(self, params, priceList):
-        verbose = True
-        if verbose: print("draw_TH_Curve()")
-        
-        Qzero = params[0]
-        k = params[1]
-        alpha = params[2]
-
-        fitLine = []
-        for x in priceList:
-            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
-            fitLine.append(y)
-        if verbose: print("CurveFit y values for fitLine", fitLine)
-        self.demandCurve = self.matPlotFigure.add_subplot(111)  # initialize a fig and a pair of axes
-        self.demandCurve.set_xscale("log")
-        self.demandCurve.set_yscale("log")
-        self.demandCurve.set_ylabel('Consumption')
-        self.demandCurve.set_xlabel('Price')
-        self.demandCurve.set_title('Demand Curve\nFrom MatPlotLib')
-        self.demandCurve.set_xlim(1, 3000)  # or (1e0, 1e4)
-        self.demandCurve.set_ylim(0.01, 3) # 
-        self.demandCurve.loglog(priceList, fitLine, color ='red')
-
-        
-        # self.demandCurve.scatter(priceList, consumptionList, color = "blue")
-        """
-        r = pearsonr(consumptionList,fitLine)
-        label = "r = {:.3f}, N = {}".format(r[0],len(fitLine))
-        self.threshold_tk_Canvas.create_text(300, 10, text=label)
-        """
-
-
-        """
-        Bentxley et al. (2013) offers the following formula for 1st derivative so presumably:
-        slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
-        equivalent to:
-        slope = -alpha*Qzero*x*k*np.e**(-alpha*Qzero*x)
-        """            
-        if self.showPmaxLine.get():
-            PmaxFound = False
-            for x in range(10,1500):
-                if (PmaxFound != True):
-                    slope = -self.alpha*self.Qzero*x*self.k*np.exp(-self.alpha*self.Qzero*x)
-                    if verbose:
-                        if (slope < -0.98) and (slope > -1.02):
-                            print(x, slope)
-                    if slope < -1.0:
-                        Pmax = x 
-                        PmaxFound = True
-            if PmaxFound:
-                print(Pmax)
-                x = [Pmax,Pmax]
-                y = [0.001,3.0]
-                pmaxLine = Line2D(x,y, color = 'green')
-                self.demandCurve.add_line(pmaxLine)
-
-        """
-        # instantiate a second axes that shares the same x-axis as self.demandCurve
-        self.responsePlot = self.demandCurve.twinx()
-        self.responsePlot.set_ylabel('Responses')
-        self.responsePlot.set_ylim(0,250)
-        responseLine = Line2D(priceList,responseList, color = 'black')
-        self.responsePlot.add_line(responseLine)
-        """
-        self.threshold_matPlot_Canvas.draw()       
-
     def drawThreshold(self):
         """
         started life as testMatPlotFit()
@@ -1636,12 +1570,17 @@ class myGUI(object):
         x_zero = 150
         y_zero = 50
         x_pixel_width = 600
+        y_pixel_height = 400
         max_x_scale = 1000
+        x_startValue = 1            # used for Log scale; non-log defaults to 0
+        y_startValue = 0.01 
+        x_logRange = 3              # 3 Orders of magnitude: 1-1000
+        y_logRange = 3              # 3 Orders of magnitude: 0.01-10
 
         GraphLib.eventRecord(self.threshold_tk_Canvas, 50, 50, 500, 120, datalist, ["P"], "")
 
         self.Qzero = (consumptionList[0]+consumptionList[1]+consumptionList[2])/3
-        if verbose: print("Use first three bins to calculate Qzero =", self.Qzero)
+        if verbose: print("Using first three bins to calculate Qzero =", self.Qzero)
 
         #***** Fit the curve - find alpha *******
         param_bounds=([0.001],[0.02])
@@ -1651,10 +1590,13 @@ class myGUI(object):
         if verbose: print (aString)
         #print (fitCovariances)
         
-        #***** Draw Qzero **************
+        #***** Draw Qzero **************    def draw_TH_Curve(self, params, priceList, consumptionList):
+        verbose = True
+        if verbose: print("draw_TH_Curve()")      
+
         """
         self.scale_Q_zero.set(Qzero)           
-            if self.showOmaxLine.get():            
+            if self.showOmaxLine.get():            ConsumptionList = 1.578, 1.113, 0.375, 0.281, 0.435, 0.336, 0.209, 0.293, 0.105, 0.074, 0.096, 0.001,
                 x = [MIN_X_SCALE,MAX_X_SCALE]
                 y = [Qzero,Qzero]
                 #self.matPlotFigure.loglog(x, y, color ='red')
@@ -1666,11 +1608,70 @@ class myGUI(object):
         # may want a smoother curve
         #x = np.arange(priceList[0],priceList[11], 0.1)
         #y = demandFunction(priceList,self.Qzero)
+                
+        if verbose: print("drawing TH Curve")
         
-        TH_params = [self.Qzero,self.k,self.alpha]
-        print(TH_params)
-        
-        self.draw_TH_Curve(TH_params, priceList)
+        Qzero = self.Qzero
+        k = self.k
+        alpha = self.alpha
+
+        fitLine = []
+        for x in priceList:
+            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            fitLine.append(y)
+        if verbose: print("CurveFit y values for fitLine", fitLine)
+        self.demandCurve = self.matPlotFigure.add_subplot(111)  # initialize a fig and a pair of axes
+        self.demandCurve.set_xscale("log")
+        self.demandCurve.set_yscale("log")
+        self.demandCurve.set_ylabel('Consumption')
+        self.demandCurve.set_xlabel('Price')
+        self.demandCurve.set_title('Demand Curve\nFrom MatPlotLib')
+        self.demandCurve.set_xlim(1, 3000)  # or (1e0, 1e4)
+        self.demandCurve.set_ylim(0.01, 3) # 
+        self.demandCurve.loglog(priceList, fitLine, color ='red')
+        self.demandCurve.scatter(priceList,consumptionList, color = 'blue')
+
+        """
+        r = pearsonr(consumptionList,fitLine)
+        label = "r = {:.3f}, N = {}".format(r[0],len(fitLine))
+        self.threshold_tk_Canvas.create_text(300, 10, text=label)
+        """
+
+
+        """
+        Bentxley et al. (2013) offers the following formula for 1st derivative so presumably:
+        slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
+        equivalent to:
+        slope = -alpha*Qzero*x*k*np.e**(-alpha*Qzero*x)
+        """            
+        if self.showPmaxLine.get():
+            PmaxFound = False
+            for x in range(10,1500):
+                if (PmaxFound != True):
+                    slope = -self.alpha*self.Qzero*x*self.k*np.exp(-self.alpha*self.Qzero*x)
+                    if verbose:
+                        if (slope < -0.98) and (slope > -1.02):
+                            print(x, slope)
+                    if slope < -1.0:
+                        Pmax = x 
+                        PmaxFound = True
+            if PmaxFound:
+                print(Pmax)
+                x = [Pmax,Pmax]
+                y = [0.001,3.0]
+                pmaxLine = Line2D(x,y, color = 'green')
+                self.demandCurve.add_line(pmaxLine)
+
+        """
+        # instantiate a second axes that shares the same x-axis as self.demandCurve
+        self.responsePlot = self.demandCurve.twinx()
+        self.responsePlot.set_ylabel('Responses')
+        self.responsePlot.set_ylim(0,250)
+        responseLine = Line2D(priceList,responseList, color = 'black')
+        self.responsePlot.add_line(responseLine)
+        """
+        self.threshold_matPlot_Canvas.draw()       
+
 
         # Error message if previous axes instance exists.
         """
