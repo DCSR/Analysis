@@ -1,4 +1,28 @@
 
+"""
+April 18, 2019
+First attempt at complete rewrite of drawThreshold() starting on line 1518
+
+The Figure will contain the graph and an event record.
+
+Event record shifted to the left according to latency to start
+
+
+To Do:
+
+Resolve self.k, self.k_Var, self.scale_k.get()
+
+self.k_Var is associated with self.scale_k
+
+
+drawThreshold_old1() and drawThreshold_old2()  remain for now.
+
+drawThreshold_old2() called by teststuff2()
+
+
+
+"""
+
 # adapted from Dropbox/SelfAdministration/Analysis/Analysis102.py
 from tkinter import *
 from tkinter.ttk import Notebook
@@ -21,6 +45,8 @@ matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
+import matplotlib.patches as patches
+import matplotlib.lines as lines
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
@@ -200,10 +226,10 @@ class myGUI(object):
         self.logYVar = BooleanVar(value = True)
         self.showPmaxLine = BooleanVar(value = True)
         self.showOmaxLine = BooleanVar(value = True)
-        self.manualCurveFitVar = BooleanVar(value = True)
+        self.manualCurveFitVar = BooleanVar(value = False)
         self.QzeroVar = DoubleVar()                         # Qzero
         self.alphaVar = DoubleVar()                         # alpha
-        self.k_Var = DoubleVar()                            # k 
+        self.k_Var = DoubleVar(value=3.0)                   # k 
         self.rangeBegin = IntVar()                          # First Point
         self.rangeBegin.set(1)
         self.rangeEnd = IntVar()                            # Last Point
@@ -374,13 +400,23 @@ class myGUI(object):
         #************** Threshold Tab **************
         # Two subframes:        
         #
-        # thresholdButtonFrame 
-        #      drawThresholdFrame
+        # Column 0
+        # thresholdButtonFrame
+        #       lots of widgets
+        #       Draw Demand Curve/ Clear Canvas/ OMNI vs M0 etc 
+        #   drawThresholdFrame
+        #       more widgets
+        #       Qzero / alpha / k
+        #       firstPointFrame
+        #          1 2 3 4
+        #          9 10 11 12
+        #       Save Figure
+        #       testStuff2() testStuff3()
+        #       responseButtonFrame
+        #          Show Response Curve
+        #           25 50 100 200
         #
-        #
-        #
-        #
-        #      responseButtonFrame
+        # Column 1
         # TH_FigureFrame    - tk container
         #      self.tkCanvas     - drawing space for things loke event records
         #      self.matPlotCanvas - container for the MatPlotLib Figure
@@ -394,67 +430,41 @@ class myGUI(object):
 
 
         #************** Threshold Button Frame *****
-
-        thresholdButton = Button(self.thresholdButtonFrame, text="Draw Demand Curve", command= lambda: \
-                                 self.drawThreshold()).grid(row = 0, column = 0, columnspan = 2)
         
         clearTHCanvasButton = Button(self.thresholdButtonFrame, text="Clear Canvas", \
-                                     command = lambda: self.clearFigure()).grid(row=1,column=0, columnspan = 2, sticky = EW)
+                                     command = lambda: self.clearFigure()).grid(row=0,column=0, columnspan = 2, sticky = EW)
 
-        pumpTimesOMNI = Radiobutton(self.thresholdButtonFrame, text = "OMNI", variable = self.pumpTimes, value = 0).grid(row = 2,column = 0, sticky = W)
-        cumRecButton2 = Radiobutton(self.thresholdButtonFrame, text = "M0 ", variable = self.pumpTimes, value = 1).grid(row = 2,column = 1, sticky = W)
+        thresholdButton = Button(self.thresholdButtonFrame, text="Draw Demand Curve", command= lambda: \
+                                 self.drawThreshold()).grid(row=1,column=0,columnspan = 2)
 
-        responseLabel = Label(self.thresholdButtonFrame, text="Draw Response Curve").grid(row = 3, column = 0, sticky = EW)
-
-     
-        logLogXCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log X", variable = self.logXVar, \
-                                        onvalue = True, offvalue = False).grid(row = 4, column = 0, sticky = W)
-        logLogYCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log Y", variable = self.logYVar, \
-                                        onvalue = True, offvalue = False).grid(row = 4, column = 1)        
-        showPmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Pmax line", variable = self.showPmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 5, column = 0, stick = W)
-        showOmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Omax line", variable = self.showOmaxLine, \
-                                        onvalue = True, offvalue = False).grid(row = 5, column = 1, sticky = W)
+        pumpTimeLabel = Label(self.thresholdButtonFrame, text = "Pump Times").grid(row=2,column=0,sticky=W)
 
 
+        pumpTimesOMNI = Radiobutton(self.thresholdButtonFrame, text = "OMNI", variable = self.pumpTimes, value = 0).grid(row =3,column = 0, sticky = W)
+        pumpTimesM0 = Radiobutton(self.thresholdButtonFrame, text = "M0 ", variable = self.pumpTimes, value = 1).grid(row = 4,column = 0, sticky = W)
 
 
-        #self.average_TH_FilesCheckButton = Checkbutton(self.ThresholdButtonFrame, text = "Average Files", \
-        #        variable = self.average_TH_FilesVar, onvalue = True, offvalue = False).grid(row = 1, column = 0, columnspan = 2, sticky=W)
+        self.kFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
+        self.kFrame.grid(row = 5, column = 0, columnspan=2, sticky=EW)
 
+        k_Label = Label(self.kFrame, text = "k = ").grid(row=0,column=0,sticky=W)
 
-        #Contains:..
-
-        #************* "drawThresholdFrame within thresholdButtonFrame ********       
-        self.drawThresholdFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
-        self.drawThresholdFrame.grid(row = 6, column = 0, columnspan = 2, sticky = EW)
-                
-        curveFitCheckButton = Checkbutton(self.drawThresholdFrame, text = "Manual Curve Fit", \
-                    variable = self.manualCurveFitVar, onvalue = True, \
-                    offvalue = False).grid(row = 4, column = 0, columnspan = 2, stick=W)
-                
-
-        self.QzeroLabel = Label(self.drawThresholdFrame, text = "Qzero").grid(row=8,column=0,columnspan = 2,sticky=EW)
-        self.scale_Q_zero = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.05, \
-                                  from_=0.25, to=5.0, variable = self.QzeroVar)
-        self.scale_Q_zero.grid(row=9,column=0, columnspan = 2)
-        self.scale_Q_zero.set(1.0)
-
-
-        self.alphaLabel = Label(self.drawThresholdFrame, text = "alpha").grid(row=10,column=0,columnspan = 2,sticky=EW)
-        self.scale_alpha = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.00025, \
-                                 from_= 0.0005, to = 0.02, variable = self.alphaVar)
-        self.scale_alpha.grid(row=11,column=0, columnspan = 2)
-        self.scale_alpha.set(0.005)
-
-        self.k_Label = Label(self.drawThresholdFrame, text = "k").grid(row=12,column=0,columnspan = 2,sticky=EW)
-        self.scale_k = Scale(self.drawThresholdFrame, orient=HORIZONTAL, length=200, resolution = 0.1, \
+        self.scale_k = Scale(self.kFrame, orient=HORIZONTAL, length=100, resolution = 0.1, \
                                  from_= 0.0, to = 9.9, variable = self.k_Var)
-        self.scale_k.grid(row=13,column=0, columnspan = 2)
-        self.scale_k.set(2.5)
+        self.scale_k.grid(row=0,column=1, columnspan = 1,stick = W)
+
     
+        logLogXCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log X", variable = self.logXVar, \
+                                        onvalue = True, offvalue = False).grid(row = 7, column = 0, sticky = W)
+        logLogYCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Log Y", variable = self.logYVar, \
+                                        onvalue = True, offvalue = False).grid(row = 8, column = 0, sticky = W)        
+        showPmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Show Pmax line", variable = self.showPmaxLine, \
+                                        onvalue = True, offvalue = False).grid(row = 9, column = 0, stick = W)
+        showOmaxCheckButton = Checkbutton(self.thresholdButtonFrame, text = "Show Omax line", variable = self.showOmaxLine, \
+                                        onvalue = True, offvalue = False).grid(row = 10, column = 0, sticky = W)
+
         self.startStopFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
-        self.startStopFrame.grid(columnspan=2, row = 9, column = 0)
+        self.startStopFrame.grid(row = 11, column = 0, columnspan=2, sticky=EW)
         
         self.firstPointFrame = Frame(self.startStopFrame, borderwidth=2, relief="sunken")
         self.firstPointFrame.grid(row = 0, column = 0, sticky=W)
@@ -475,45 +485,63 @@ class myGUI(object):
         cumRecButton4 = Radiobutton(self.lastPointFrame, text = "12  ", variable= self.rangeEnd, value = 11).grid(row=4,column=0)
 
         self.responseButtonFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
-        self.responseButtonFrame.grid(row = 50, column = 0, sticky = EW)
+        self.responseButtonFrame.grid(row = 12, column = 0, sticky = EW)
 
         self.responseCurveCheckButton = Checkbutton(self.responseButtonFrame, text = "Show Response Curve", variable = self.responseCurveVar, \
                                         onvalue = True, offvalue = False).grid(row = 0, column = 0, columnspan = 2)
-        
-        respMaxLable = Label(self.responseButtonFrame, text="Response Max").grid(row=1,column = 0, sticky=(N))
+
+
+        respMaxLable = Label(self.responseButtonFrame, text="Responses (Y Scale)").grid(row=1,column = 0, columnspan = 2, sticky=(N))
         respMaxButton1 = Radiobutton(self.responseButtonFrame, text = "25   ", variable=self.respMax, value = 25).grid(row=2,column=0)
         respMaxButton2 = Radiobutton(self.responseButtonFrame, text = "50   ", variable=self.respMax, value = 50).grid(row=3,column=0)
         respMaxButton3 = Radiobutton(self.responseButtonFrame, text = "100   ", variable=self.respMax, value = 100).grid(row=2,column=1)
         respMaxButton4 = Radiobutton(self.responseButtonFrame, text = "200   ", variable=self.respMax, value = 200).grid(row=3,column=1)
 
         test2Button = Button(self.thresholdButtonFrame, text="Save Figure.png", command= lambda: \
-                             self.save_TH_Figure()).grid(row=20,column=0,sticky=S)
+                             self.save_TH_Figure()).grid(row=13,column=0,sticky=S)
         test3Button = Button(self.thresholdButtonFrame, text="testStuff2()", command= lambda: \
-                             self.testStuff2()).grid(row=21,column=0,sticky=S)
+                             self.testStuff2()).grid(row=14,column=0,sticky=S)
         test4Button = Button(self.thresholdButtonFrame, text="testStuff3()", command = lambda: \
-                             self.testStuff3()).grid(row=23,column=0,sticky=N)
+                             self.testStuff3()).grid(row=15,column=0,sticky=N)
+
+        #************* "drawThresholdFrame within thresholdButtonFrame ********       
+        self.manualFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
+        self.manualFrame.grid(row = 16, column = 0, columnspan = 1, sticky = EW)
+                
+        curveFitCheckButton = Checkbutton(self.manualFrame, text = "Manual Curve Fit", \
+                    variable = self.manualCurveFitVar, onvalue = True, \
+                    offvalue = False).grid(row = 0, column = 0, columnspan = 2, stick=W)
+
+        self.QzeroLabel = Label(self.manualFrame, text = "Qzero").grid(row=1,column=0,sticky=EW)
+        self.alphaLabel = Label(self.manualFrame, text = "alpha").grid(row=1,column=1,sticky=EW)        
+        self.scale_Q_zero = Scale(self.manualFrame, orient=HORIZONTAL, length=100, resolution = 0.05, \
+                                  from_=0.25, to=5.0, variable = self.QzeroVar)
+        self.scale_Q_zero.grid(row=2,column=0, columnspan = 1)
+        self.scale_Q_zero.set(1.0)
+        self.scale_alpha = Scale(self.manualFrame, orient=HORIZONTAL, length=100, resolution = 0.00025, \
+                                 from_= 0.0005, to = 0.02, variable = self.alphaVar)
+        self.scale_alpha.grid(row=2,column=1, columnspan = 1)
+        self.scale_alpha.set(0.005)
+
+
+    
+
+
+        
+
         
 
         #****************
 
         # TH_FigureFrame    - tk container (a Frame)
         #      self.matPlotFigure              - the thing that axes and lines are drawn on        
-        #      self.threshold_tk_Canvas         - drawing space for things like event records
         #      self.threshold_matPlot_Canvas    - container for the MatPlotLib Figure
         #                                       - This is the thing that gets redrawn after things are changed.
 
-        self.matPlotFigure = Figure(figsize=(7,7), dpi=80)
-        self.matPlotFigure.set_edgecolor("white")  #see help(colors)
-        self.matPlotFigure.set_facecolor("white")
-        #Set whether the figure frame (background) is displayed or invisible
-        self.matPlotFigure.set_frameon(True)
+        self.matPlotFigure = Figure(figsize=(7,8), dpi=80)
         
-        self.threshold_tk_Canvas = Canvas(self.thresholdFigureFrame, width = 600, height = 100)
-        self.threshold_tk_Canvas.grid(row=0,column=0)
-        self.threshold_tk_Canvas.create_text(300,10,text = "Threshold Canvas")
-
         self.threshold_matPlot_Canvas = FigureCanvasTkAgg(self.matPlotFigure, master=self.thresholdFigureFrame)
-        self.threshold_matPlot_Canvas.get_tk_widget().grid(row=1,column=0)
+        self.threshold_matPlot_Canvas.get_tk_widget().grid(row=0,column=0)
 
         #*************** Text Tab *****************
          
@@ -1495,18 +1523,310 @@ class myGUI(object):
             plt.show()
 
     def clearFigure(self):
-        print("placeholder()")
-        self.threshold_tk_Canvas.delete('all')
         self.matPlotFigure.clf()
         self.threshold_matPlot_Canvas.draw()
 
     def testStuff2(self):
-        print("testStuff2")
+        self.drawThreshold_old2()
 
     def testStuff3(self):
         print("testStuff3")
 
     def drawThreshold(self):
+        """
+        TH_FigureFrame                   - tk Frame that will contain the Figure
+        self.threshold_matPlot_Canvas    - container for the MatPlotLib Figure
+                                         - This must be redrawn after things are changed
+        self.matPlotFigure      - This is the Figure that axes and lines are drawn on
+        """
+        verbose = True
+
+        def demandFunction(x,alpha):
+            # **** Note that demandFunction() is local to drawThreshold
+            """
+            Demand function described by Hursch
+            """
+            Qzero = self.Qzero
+            k = self.k_Var.get()
+            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)) 
+            return y
+        
+        if (self.pumpTimes.get() == 0):
+            if verbose: print("Using OMNI pumpTimes")
+            TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.018,0.010,0.0056]
+        else:
+            if verbose: print("Using Feather M0 pumpTimes")
+            TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, 0.200,0.130,0.080,0.050,0.030,0.020]
+
+        # Generate a price list based which pump times were selected
+        # This assumes a standard cocaine concentration of 5 mg/ml and a Razel pump with 5 RPM motor
+        # The pump speed (0.025 ml/sec) was determined as an average across several pumps being
+        # switched intermittently on a PR. Might be worth checking against the total fluid delivered
+        # during a TH session.
+        priceList = []
+        for i in range(12):
+            dosePerResponse = TH_PumpTimes[i] * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+            price = round(1/dosePerResponse,2)
+            priceList.append(price)
+
+        # Retrieve the consumption and response lists from the selected dataRecord.
+        # These lists are extracted from the datafile when initially opened.
+        # Not that 0.01 is substituted for zero to avoid errors in log functions.
+
+        aDataRecord = self.recordList[self.fileChoice.get()]
+        datalist = aDataRecord.datalist    # Event record needs this.
+        consumptionList = aDataRecord.consumptionList
+        responseList = aDataRecord.responseList
+
+        # Truncate the range of priceList and consumptionList according the radio button settings
+        startRange = self.rangeBegin.get()
+        endRange = self.rangeEnd.get()
+        truncPriceList = []
+        truncConsumptionList = []
+        for t in range(startRange,endRange+1):    
+            truncPriceList.append(priceList[t])
+            truncConsumptionList.append(consumptionList[t])
+
+        # Calculate Pmax as price with the highest response rate
+        graphicalPmax = 0
+        for r in responseList:
+            if (r > graphicalPmax):
+                graphicalPmax = r
+
+        print("Graphical Pmax = ", graphicalPmax)
+        
+
+        # Create list of injection times for event record
+        injNum = 0
+        injTimeList = []
+        aRecord = self.recordList[self.fileChoice.get()]
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
+
+        firstInjTime = injTimeList[0]              
+        print("First injection at {0:7.2f} min".format(firstInjTime))
+
+        # Create a list to show the beginnings of each block
+        blockNum = 0
+        finishTime = 0
+        blockTimeList = []
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'B':                     
+                blockNum = blockNum + 1
+                blockTimeList.append(pairs[0]/60000)  # Min
+            if pairs[1] == 'b':
+                finishTime = pairs[0]/60000 + 10
+                # The end of the (presumably) eleventh block plus ten minutes
+                # It appears that the last block does not have a corresponding "b"                                                           
+
+        
+        # Sometimes and animal won't start for an hour. One could erase this interval
+        # by subtracting the time of the first injection from all times
+        """
+        adjustedTimeList = []
+        for t in injTimeList:
+            adjustedTimeList.append(t - firstInjTime)
+        """
+
+        # Create the beginnings of the graph
+        # The user can control whether the graph is embedded into the program ...
+        # Or pushed to a separate window with its own widgets.
+        # The graph in the separate window can be saved as a separate publication quality .prn file
+        if (self.showOn_tkCanvas.get()):
+            fig = self.matPlotFigure    # Previously defined Figure containing matPlotCanvas
+            fig.clf()
+        else:
+            fig = plt.figure(figsize=(6,6), dpi=80, constrained_layout = True)  # Newly instantaited pyplot figure
+
+        # Patch is used to configure colors, lines etc.  
+        fig.patch.set_facecolor("azure")
+        fig.patch.set_edgecolor("blue")    
+        fig.patch.set_linewidth(5.0)       # 0.5 would be very thin
+        fig.set_frameon(True)              # Set whether the figure background is displayed or not
+        # fig.suptitle("Threshold Title", fontsize = 16, x = 0.2, y = 0.94)
+        # gridspec allows greater control over the positioning of plots
+        from matplotlib import gridspec               
+        gs = gridspec.GridSpec(nrows = 20, ncols= 1)
+
+        # **************   EVENT RECORD **********************
+        # Create a subplot for event record
+        eventRecord = fig.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
+        eventRecord.axes.get_yaxis().set_visible(False)
+        
+        eventRecord.text(0.5, 3, aDataRecord.fileName, ha = 'center', transform=eventRecord.transAxes, \
+                fontsize=12, color='black')
+        
+        eventRecord.set_ylabel('')
+        eventRecord.set_yticklabels("")                 # Suppress tick labels
+        eventRecord.set_xlabel('Time (minutes)')
+        eventRecord.spines["top"].set_color('none')
+        eventRecord.spines["left"].set_color('none')
+        eventRecord.spines["right"].set_color('none')
+        startTime = 1                                  # could start from time of second bin
+        eventRecord.set_xlim(startTime, finishTime) 
+        eventRecord.set_ylim(0, 3)
+        eventRecord.eventplot(injTimeList,lineoffsets = 0, linelengths=3)
+        eventRecord.eventplot(blockTimeList,lineoffsets = 0, linelengths=5, color = 'red')
+
+        # ************** DEMAND CURVE *************************
+
+        # Use the k value on the slider. Defaults to 3.
+        # Roberts thinks there is no justification for this parameter.
+
+        print("self.scale_k.get() = ", self.scale_k.get())
+        print("self.k_Var.get() = ",self.k_Var.get()) 
+
+        self.k = self.scale_k.get()
+              
+        kString = "{0:4.1f}".format(self.k)
+        print("Using k from slider = "+kString)
+
+        # The manual curve fit checkbox allows users to play with k and alpha
+        # If unchecked, it uses curvit to calculate alpha
+        if (self.manualCurveFitVar.get() == True):
+            self.alpha = self.alphaVar.get()
+            alphaString = "alpha (from slider) = {0:7.5f}".format(self.alpha)
+            self.Qzero = self.QzeroVar.get()
+            QzeroString = "Qzero (from slider) = {0:6.3f}".format(self.Qzero)
+        else:
+            # Calculate Qzero as the average of the first three bins
+            self.Qzero = (consumptionList[1]+consumptionList[2]+consumptionList[3])/3
+            QzeroString = "Qzero (mean of bins 1..3) = {0:6.3f}".format(self.Qzero)
+            # Fit the curve - find alpha
+            param_bounds=([0.001],[0.02])
+            fitParams, fitCovariances = curve_fit(demandFunction, truncPriceList, truncConsumptionList, bounds=param_bounds)
+            self.alpha = fitParams[0]
+            alphaString = "alpha (curve fit) = {0:7.5f}".format(self.alpha)
+            #print (fitCovariances)
+
+        # Create y values for best fit line
+        fitLine = []
+        Qzero = self.Qzero
+        k = self.k_Var
+        alpha = self.alpha       
+        for x in truncPriceList:
+            # y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            y = demandFunction(x,alpha)
+            fitLine.append(y)
+
+        # ****  Create the demand Curve Plot and set configurations ****  
+
+        demandCurve = fig.add_subplot(gs[1:9,0],label="2")
+        position = [0.15, 0.1, 0.70, 0.6]    # X1,Y1,X2,Y2 - lower left corner, top right corner
+        demandCurve.set_position(position)        
+        if (self.logXVar.get() == True):
+            demandCurve.set_xscale("log")
+        else:
+            demandCurve.set_xscale("linear")
+        if (self.logYVar.get() == True):
+            demandCurve.set_yscale("log")
+            yMax = 5
+        else:
+            demandCurve.set_yscale("linear")
+            yMax = 2
+        xMin = 2
+        xMax = 2000
+        yMin = 0.01
+        demandCurve.set_xlim(xMin,xMax)
+        demandCurve.set_ylim(yMin,yMax)            
+        demandCurve.set_ylabel('Consumption', fontsize = 14)
+        demandCurve.yaxis.labelpad = 15                             # Move label left or right
+        demandCurve.set_xlabel('Price', fontsize = 14)
+        demandCurve.plot(truncPriceList, fitLine, color ='red')     # Draw a loglog line 
+        demandCurve.scatter(truncPriceList, truncConsumptionList)   # and a scatter plot
+
+        # Calculate r as an indicator of goodness of fit
+        r = pearsonr(truncPriceList,fitLine)
+        rString = "r = {:.3f}, N = {}".format(r[0],len(truncPriceList))
+
+
+        """
+        Bentxley et al. (2013) offers the following formula for 1st derivative so presumably:
+        slope = -alpha*Qzero*x*k*np.exp(-alpha*Qzero*x)
+        equivalent to:
+        slope = -alpha*Qzero*x*k*np.e**(-alpha*Qzero*x)
+        """
+
+        # If possible, calculate Pmax and Omax
+        PmaxFound = False
+        OmaxFound = False
+        PmaxString = "Pmax not found"
+        OmaxString = "Omax not found"
+        for x in range(10,1500):
+            if (PmaxFound != True):
+                slope = -self.alpha*self.Qzero*x*self.k*np.exp(-self.alpha*self.Qzero*x)
+                """
+                # Uncomment this section if you want to see it work
+                if (slope < -0.98) and (slope > -1.02):
+                            print(x, slope)
+                """
+                if slope < -1.0:
+                    Pmax = x 
+                    PmaxFound = True                    
+        if PmaxFound:
+            OmaxFound = True
+            Omax = demandFunction(Pmax,alpha)
+            OmaxString = "Omax = {0:6.3f}".format(Omax)
+            if self.showPmaxLine.get():
+                x = [Pmax,Pmax]
+                y = [yMin,Omax]
+                pmaxLine = Line2D(x,y, color = 'green')
+                PmaxString = "Pmax = {0:3.0f}  ".format(Pmax)
+                demandCurve.add_line(pmaxLine)
+                demandCurve.text(Pmax, Omax, PmaxString, ha = 'left', color = 'green',transform=demandCurve.transData)
+
+        if self.showOmaxLine.get():
+            if PmaxFound:
+                x = [xMin,Pmax]
+                y = [Omax,Omax]
+                OmaxLine = Line2D(x,y, color = 'blue')
+                demandCurve.add_line(OmaxLine)
+                OmaxString = "Omax = {0:6.4f}".format(Omax)
+                demandCurve.text(3, Omax - 0.05, OmaxString, ha = 'left', color = 'blue',transform=demandCurve.transData)
+                
+        """
+                x = [1e0, 1e4]
+                y = [Qzero,Qzero]
+                QzeroLine = Line2D(x,y, color = 'blue')
+                demandCurve.add_line(QzeroLine)
+        """
+        
+        # Show responses on second axis
+
+
+        respCurve = demandCurve.twinx()                  # create a 2nd axes that shares the same x-axis
+        respCurve.set_position(position)
+        respCurve.set_ylabel('Responses', fontsize = 14)
+        respCurve.yaxis.labelpad = 20                    # Move label left or right
+        respCurve.set_ylim(0,self.respMax.get())                        # Y axis from 0 to 250
+        respCurve.plot(priceList,responseList, color = 'black')
+
+        # Display stuff on screen
+        demandCurve.text(0.05, 0.95, QzeroString, ha = 'left', transform=demandCurve.transAxes)
+        demandCurve.text(0.05, 0.91, alphaString, ha = 'left', transform=demandCurve.transAxes)
+        demandCurve.text(0.05, 0.87,"k (from slider) ="+kString, ha = 'left', transform=demandCurve.transAxes)
+        demandCurve.text(0.65, 0.95, rString, ha = 'left', transform=demandCurve.transAxes)
+
+        
+        if (self.showOn_tkCanvas.get()):
+            self.threshold_matPlot_Canvas.draw()
+        else:
+            plt.show()
+
+        # Print stuff
+        if (True):
+            
+            print("Finish time =", finishTime)
+            print("priceList", priceList)
+            print("consumption", consumptionList)
+            print("responses", responseList)
+            print("fitLine", fitLine)
+            print("Length of truncated lists = ",len(truncPriceList))
+
+
+    def drawThreshold_old2(self):
         """
         started life as testMatPlotFit()
 
@@ -1520,6 +1840,7 @@ class myGUI(object):
         MAX_Y_SCALE = 3
 
         self.Qzero = 1.0       #Set some default
+        
         self.k = self.scale_k.get()
         print("k =",self.k)
 
@@ -1545,21 +1866,12 @@ class myGUI(object):
             priceList.append(price)
         print("priceList",priceList)
 
-        useMultipleFiles = self.average_TH_FilesVar.get()
-        if (useMultipleFiles == True):
-            print("Averaging multiple files")
-            datalist = []        # Empty - so will not draw an event record
-            consumptionList = []
-            responseList = []
-            # consumptionList = self.getConsumptionList()
-            # responseList = self.getResponseList()
-        else:
-            if verbose: print("Using an individual file")
-            aDataRecord = self.recordList[self.fileChoice.get()]
-            datalist = aDataRecord.datalist    # Event record needs this.
-            consumptionList = aDataRecord.consumptionList
-            responseList = aDataRecord.responseList
-        print(consumptionList)
+        # Retrieve datafile
+        aDataRecord = self.recordList[self.fileChoice.get()]
+        datalist = aDataRecord.datalist    # Event record needs this.
+        consumptionList = aDataRecord.consumptionList
+        responseList = aDataRecord.responseList
+
 
         """
         Need to configure threshold_tk_canvas
@@ -1948,7 +2260,7 @@ class myGUI(object):
             return y       
         
   
-    def drawThreshold_old(self):
+    def drawThreshold_old1(self):
 
         """
         Deprecated
