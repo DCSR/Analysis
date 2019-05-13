@@ -3,16 +3,40 @@
 April 18, 2019
 Complete rewrite of drawThreshold() starting on line 1518
 
+April 24th, 2019
+Using 0.025 ml/sec
+
+Changed demand function -
+if using the same alpha, Qzero and k, it generates the same predicted values as the spreadsheet.
+
+But changes screw up the Pmax calculations. May have to find Pmax iteratively.
+
+
+Crazy things about Hursch
+1. Drops zero values - excludes the most important numbers.
+2. Solves for Qzero and alpha - could distort alpha
+3. k seems to vary depending on the method.
+4. Probably better to use an equation without k.
+
 To Do:
 
-Don't get upset if no data to draw
+What is priority?
+- To show Sara that Hursh's spreadsheet is being used incorectly?
+- Show that Analysis does what Hursh's spreadsheet does. 
+
+- Develope a better function?
+
+Pmax calculated two ways.
+
+
+
+
+Don't throw error if no data to draw
 
 Resolve self.k, self.k_Var, self.scale_k.get()
 
 self.k_Var is associated with self.scale_k 
 
-
-drawThreshold_old1() and drawThreshold_old2() deleted
 
 """
 
@@ -277,8 +301,8 @@ class myGUI(object):
         
         loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
                               self.openWakeFiles("TH_OMNI_test.str")).grid(row=0,column=5,sticky=N, padx = 20)
-        loadTestButton2 = Button(headerFrame, text="2L-PR-example.str", command= lambda: \
-                              self.openWakeFile("2L-PR-example.str")).grid(row=0,column=6,sticky=N, padx = 20)
+        loadTestButton2 = Button(headerFrame, text="1_Q007_Mar_31.str", command= lambda: \
+                              self.openWakeFile("1_Q007_Mar_31.str")).grid(row=0,column=6,sticky=N, padx = 20)
         """
         loadTestButton3 = Button(headerFrame, text="3_H886_Jul_4.str", command= lambda: \
                               self.openWakeFile("3_H886_Jul_4.str")).grid(row=0,column=6,sticky=N, padx = 20)
@@ -439,7 +463,7 @@ class myGUI(object):
         self.kFrame = Frame(self.thresholdButtonFrame, borderwidth=2, relief="sunken")
         self.kFrame.grid(row = 6, column = 0, columnspan=2, sticky=EW)
         k_Label = Label(self.kFrame, text = "k = ").grid(row=0,column=0,sticky=W)
-        self.scale_k = Scale(self.kFrame, orient=HORIZONTAL, length=100, resolution = 0.1, \
+        self.scale_k = Scale(self.kFrame, orient=HORIZONTAL, length=150, resolution = 0.1, \
                                  from_= 0.0, to = 9.9, variable = self.k_Var)
         self.scale_k.grid(row=0,column=1, columnspan = 1,stick = W)
 
@@ -504,11 +528,11 @@ class myGUI(object):
 
         self.QzeroLabel = Label(self.manualFrame, text = "Qzero").grid(row=1,column=0,sticky=EW)
         self.alphaLabel = Label(self.manualFrame, text = "alpha").grid(row=1,column=1,sticky=EW)        
-        self.scale_Q_zero = Scale(self.manualFrame, orient=HORIZONTAL, length=100, resolution = 0.05, \
+        self.scale_Q_zero = Scale(self.manualFrame, orient=HORIZONTAL, length=150, resolution = 0.05, \
                                   from_=0.25, to=5.0, variable = self.QzeroVar)
         self.scale_Q_zero.grid(row=2,column=0, columnspan = 1)
         self.scale_Q_zero.set(1.0)
-        self.scale_alpha = Scale(self.manualFrame, orient=HORIZONTAL, length=100, resolution = 0.00025, \
+        self.scale_alpha = Scale(self.manualFrame, orient=HORIZONTAL, length=150, resolution = 0.00025, \
                                  from_= 0.0005, to = 0.02, variable = self.alphaVar)
         self.scale_alpha.grid(row=2,column=1, columnspan = 1)
         self.scale_alpha.set(0.005)
@@ -584,8 +608,8 @@ class myGUI(object):
         
         TwoLeverTextButton = Button(self.text_2LPR_Frame, text="2L-PR Summary", command= lambda: \
                               self.TwoLeverTextReport()).grid(row=0,column=0,sticky=W)
-        TwoLeverTest1Button = Button(self.text_2LPR_Frame, text="2L-PR Test1", command= lambda: \
-                              self.TwoLeverTest1()).grid(row=1,column=0,sticky=W)
+        TestButton = Button(self.text_2LPR_Frame, text="TH Test", command= lambda: \
+                              self.THTest()).grid(row=1,column=0,sticky=W)
         TwoLeverTest2Button = Button(self.text_2LPR_Frame, text="2L-PR Test2", command= lambda: \
                               self.TwoLeverTest2()).grid(row=3,column=0,sticky="W")
         testText1Button = Button(self.text_2LPR_Frame, text="Text Formatting Examples", command= lambda: \
@@ -1528,10 +1552,17 @@ class myGUI(object):
             """
             Demand function described by Hursh
             """
+            
             Qzero = self.Qzero
-            k = self.k_Var.get()
-            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)) 
-            return y
+            k = self.k_Var.get()           
+            #y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)
+
+            y = 10**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+
+            # Some day experiment with a different equation like:
+            # y = Qzero * np.e**(-x * alpha)
+            
+            return y 
         
         if (self.pumpTimes.get() == 0):
             pumpTimesString = "Using OMNI pumpTimes"
@@ -1701,9 +1732,10 @@ class myGUI(object):
         else:
             demandCurve.set_yscale("linear")
             yMax = 2
-        xMin = 2
-        xMax = 2000
+        xMin = 1
+        xMax = 1000
         yMin = 0.01
+        yMax = 10.0
         demandCurve.set_xlim(xMin,xMax)
         demandCurve.set_ylim(yMin,yMax)            
         demandCurve.set_ylabel('Consumption', fontsize = 14)
@@ -1728,17 +1760,18 @@ class myGUI(object):
         PmaxFound = False
         OmaxFound = False
         PmaxString = "Pmax not found"
+        curveFitPmaxString = "Pmax not found"
         OmaxString = "Omax not found"
-        for x in range(10,1500):
+        for p in range(10,1500):
             if (PmaxFound != True):
-                slope = -self.alpha*self.Qzero * x * k * np.exp(-self.alpha*self.Qzero*x)
+                slope = -np.log(10**k) * Qzero * p * alpha * np.exp(-alpha * Qzero * p)
                 """
                 # Uncomment this section if you want to see it work
                 if (slope < -0.98) and (slope > -1.02):
                             print(x, slope)
                 """
                 if slope < -1.0:
-                    Pmax = x 
+                    Pmax = p 
                     PmaxFound = True
                     curveFitPmaxString = "Pmax (curve fit) = {0:6.0f}".format(Pmax)
         if PmaxFound:
@@ -1767,7 +1800,7 @@ class myGUI(object):
                 y = [Qzero,Qzero]
                 QzeroLine = Line2D(x,y, color = 'blue')
                 demandCurve.add_line(QzeroLine)
-        """
+        """       
         
         # Show responses on second axis
 
@@ -2056,8 +2089,8 @@ class myGUI(object):
                         self.textBox.insert(END,str(pumpTimeList[i])+'\n')
                     print(pumpTimeList)       
         
-    def TwoLeverTest1(self):
-            self.textBox.insert("1.0","TwoLeverTest1\n")
+    def THTest(self):
+            self.textBox.insert("1.0","THTest\n")
 
     def TwoLeverTest2(self):
             self.textBox.insert("1.0","TwoLeverTest2\n")
@@ -2123,6 +2156,7 @@ class myGUI(object):
         injection = 0
         previousInjTime = 0
         self.textBox.insert(END,"Inj  Time (sec) Time (min) interval (sec)\n")
+        pumpOn = False
         for pairs in aRecord.datalist:
             if pairs[1] == 'P':
                 pumpStartTime = pairs[0]
