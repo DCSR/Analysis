@@ -299,8 +299,8 @@ class myGUI(object):
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
         openFilesButton = Button(headerFrame, text="Open Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=4, sticky=W)
         
-        loadTestButton1 = Button(headerFrame, text="TH_OMNI_test.str", command= lambda: \
-                              self.openWakeFiles("TH_OMNI_test.str")).grid(row=0,column=5,sticky=N, padx = 20)
+        loadTestButton1 = Button(headerFrame, text="6_P183_Sep_1.str", command= lambda: \
+                              self.openWakeFiles("6_P183_Sep_1.str")).grid(row=0,column=5,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="1_Q007_Mar_31.str", command= lambda: \
                               self.openWakeFile("1_Q007_Mar_31.str")).grid(row=0,column=6,sticky=N, padx = 20)
         """
@@ -2155,7 +2155,7 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         injection = 0
         previousInjTime = 0
-        self.textBox.insert(END,"Inj  Time (sec) Time (min) interval (sec)\n")
+        self.textBox.insert(END,"Inj Duration   Time (sec)   Time (min) Interval (sec)\n")
         pumpOn = False
         for pairs in aRecord.datalist:
             if pairs[1] == 'P':
@@ -2521,13 +2521,15 @@ class myGUI(object):
         numInj = 0
         numIntervals = 0
         outOfRange = 0
+        totalIntervals = 0
         for pairs in aRecord.datalist:
             if pairs[1] == "P":
                 numInj = numInj + 1
                 T2 = pairs[0]
                 if T1 > 0:
                     numIntervals = numIntervals + 1
-                    interval = round((T2-T1)/(binSize*60000),1)   # rounded to a minute with one decimal point
+                    interval = round((T2-T1)/(binSize*60000),3)   # rounded to a minute with one decimal point
+                    totalIntervals = totalIntervals + interval
                     index = int(interval)
                     if index < len(intervals)-1:
                         intervals[index] = intervals[index]+1
@@ -2538,6 +2540,7 @@ class myGUI(object):
         self.graphCanvas.create_text(450, y_zero-50, fill = "blue", text = tempStr)
         # print("Number of Inter-injection Intervals =",numIntervals)
         print("Inter-injection Intervals = ",intervals)
+        meanInterval = round(totalIntervals / numIntervals,3)
         x_zero = 75
         y_zero = 450
         x_pixel_width = 400
@@ -2558,6 +2561,14 @@ class myGUI(object):
         #Draw OutOfRange Bar
         x = x_zero + (len(intervals)*width) + 20
         drawBar(self.graphCanvas,x,y_zero,outOfRange*unitPixelHeight,width)
+        tempStr = "Mean interval (min) = "+ str(meanInterval)
+        self.graphCanvas.create_text(200, y_zero-y_pixel_height, fill = "red", text = tempStr)
+        rate = round(60/meanInterval,3)
+        tempStr = "Rate (inj/hr) = "+str(rate)
+        self.graphCanvas.create_text(450, y_zero-y_pixel_height, fill = "blue", text = tempStr)
+        
+        self.graphCanvas.create_line(x_zero+int(width*meanInterval), y_zero, x_zero+int(width*meanInterval), y_zero-y_pixel_height+20, fill="red")
+        
         tempStr = "Each Bin = "+str(binSize)+" minute"
         self.graphCanvas.create_text(250, y_zero+50, fill = "blue", text = tempStr)
         
@@ -2700,7 +2711,32 @@ class myGUI(object):
     def summaryText(self):
         # print(dataRecordList[self.fileChoice.get()])    # This will print to the Python Shell
         self.textBox.insert("1.0",self.recordList[self.fileChoice.get()])
-        self.textBox.insert("1.0","***************************\n")
+
+        aRecord = self.recordList[self.fileChoice.get()]
+
+        timeFirstInjection = 0
+        T1 = 0
+        numInj = 0
+        numIntervals = 0
+        totalIntervals = 0       
+        for pairs in aRecord.datalist:
+            if pairs[1] == "P":
+                if numInj == 0: timeFirstInjection = pairs[0]
+                numInj = numInj + 1
+                T2 = pairs[0]
+                if T1 > 0:
+                    numIntervals = numIntervals + 1
+                    interval = T2-T1
+                    totalIntervals = totalIntervals + interval
+                T1 = T2
+        timeLastInjection = T1
+        self.textBox.insert(END,"First inj = "+str(round(timeFirstInjection/1000,1))+" sec ("+str(round(timeFirstInjection/60000,0))+" min)\n")
+        self.textBox.insert(END,"Last inj  = "+str(round(timeLastInjection/ 1000,1))+" sec ("+str(round(timeLastInjection/ 60000,0))+" min)\n")
+        self.textBox.insert(END,"Total of "+str(numIntervals)+" intervals = "+str(round(totalIntervals/ 1000,1))+" sec, ("+str(round(totalIntervals/60000,0))+" min)\n")
+        meanInterval = totalIntervals/numIntervals
+        self.textBox.insert(END,"Mean interval = "+str(round(meanInterval/1000,1))+" sec, ("+str(round(meanInterval/60000,2))+" min)\n")
+        self.textBox.insert(END,"Rate (inj/hr) = "+str(round(60/(meanInterval/60000),3))+"\n")
+        self.textBox.insert(END,"***************************\n")
 
     def periodic_check(self):
         thisTime = datetime.now()
