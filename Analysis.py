@@ -1,35 +1,59 @@
 
 """
-April 18, 2019
-Complete rewrite of drawThreshold() starting on line 1518
 
-April 24th, 2019
-Using 0.025 ml/sec
+May 15:
 
-Changed demand function -
-if using the same alpha, Qzero and k, it generates the same predicted values as the spreadsheet.
+See Hursh_Revisited.pptx
 
-But changes screw up the Pmax calculations. May have to find Pmax iteratively.
+Data from "Hursh with Cond 2 solved using solver.xls"
+
+Cost: 2.37
+4.21
+7.5
+13.3
+24.2
+42.1
+75
+133.9
+241.9
+416.7
+750
+
+Consumption: 1.684
+1.185
+0.399
+0.3
+0.451
+0.36
+0.221
+0.3075
+0.1066
+0.0816
+0.0832
+
+Prediction: 0.9862
+0.9756
+0.9570
+0.9251
+0.8684
+0.7833
+0.6500
+0.4698
+0.2668
+0.1151
+0.0291  Col D10..D20?
 
 
-Crazy things about Hursch
-1. Drops zero values - excludes the most important numbers.
-2. Solves for Qzero and alpha - could distort alpha
-3. k seems to vary depending on the method.
-4. Probably better to use an equation without k.
-
-To Do:
-
-What is priority?
-- To show Sara that Hursh's spreadsheet is being used incorectly?
-- Show that Analysis does what Hursh's spreadsheet does. 
-
-- Develope a better function?
-
-Pmax calculated two ways.
+Manual checkbox used as override to display Stevens values
 
 
+- The prototype animal is 1_Q007_Mar_31.str
+- What's wrong? Anything?
+- Are we good with Pmax etc?
+    Pmax calculated two ways.
 
+- Find way to prove we get the same thing as Hursh.
+- I think, if using the same alpha, Qzero and k, it generates the same predicted values as the spreadsheet.
 
 Don't throw error if no data to draw
 
@@ -1305,9 +1329,10 @@ class myGUI(object):
             fig = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
             fig.clf()
         else:
-            fig = plt.figure(figsize=(6,6), dpi=80, constrained_layout = False)  # Newly instantaited pyplot figure
+            fig = plt.figure(figsize=(6,6), dpi=150, constrained_layout = False)  # Newly instantaited pyplot figure
         
         max_x_scale = self.max_x_scale.get()
+        # max_x_scale = 300
         max_y_scale = self.max_y_scale.get()
 
         gs = gridspec.GridSpec(nrows = 4, ncols= 3)
@@ -1344,6 +1369,7 @@ class myGUI(object):
             aCumRecGraph.set_title(aRecord.fileName)
             
         #aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)
+        aCumRecGraph.patch.set_facecolor("none")
         aCumRecGraph.spines['top'].set_color('none')
         aCumRecGraph.spines['right'].set_color('none')
         aCumRecGraph.set_ylabel('PR Lever Responses', fontsize = 12)
@@ -1356,6 +1382,8 @@ class myGUI(object):
         aCumRecGraph.spines['left'].set_position(('axes', -0.02))
 
         #aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)
+        
+        aBarGraph.patch.set_facecolor("none")
         aBarGraph.spines['left'].set_position(('axes', -0.02))
         aBarGraph.spines['top'].set_color('none')
         aBarGraph.spines['right'].set_color('none')
@@ -1367,7 +1395,8 @@ class myGUI(object):
         aBarGraph.set_ylim(0, 1.5)
         aBarGraph.xaxis.set_major_locator(MultipleLocator(30))       # 30 min intervals
         #aBarGraph.set_xticklabels(xLabels)                 # Suppress tick labels
-        
+
+        aCocConcGraph.patch.set_facecolor("none")
         aCocConcGraph.spines['left'].set_position(('axes', -0.02))
         aCocConcGraph.spines['top'].set_color('none')
         aCocConcGraph.spines['right'].set_color('none')
@@ -1465,12 +1494,22 @@ class myGUI(object):
             aCumRecGraph.add_line(aTickMark)                          
 
         # *********** Draw Bar chart of doses **************************
+        """ binStartTimes are fractions of a minute.
+            The problem was that the first bar was too thin because it was too close to the edge.
+            Here, they are rounded up to an integer and shift 1 min which helps.
+            There is still an issue that some of the bars are a slightly different width. 
+            Perhaps this has to do with the size of the x scale
+        """
+        binStartTimesInt = []
+        for num in binStartTimes:
+            binStartTimesInt.append(round(num)+1)
 
         print("binStartTimes = ", binStartTimes)
+        print("binStartTimesInt = ", binStartTimesInt)
         print("doseList =", doseList)
         print("pumpTimeList = ", pumpTimeList)        
-        bar_width = 2.0     # The units correspond to Y values, so will get skinny with high max_y_scale.    
-        aBarGraph.bar(binStartTimes,doseList,bar_width, color = "black")
+        bar_width = 2.5     # The units correspond to X values, so will get skinny with high max_x_scale.    
+        aBarGraph.bar(binStartTimesInt,doseList,bar_width, color = "black")
 
         # ***********  Cocaine Concentration curve **********************
         resolution = 5  # seconds  
@@ -1551,37 +1590,45 @@ class myGUI(object):
         def demandFunction(x,alpha):
             """
             Demand function described by Hursh
-            """
             
-            Qzero = self.Qzero
-            k = self.k_Var.get()           
-            #y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1)
 
-            y = 10**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+            y = np.e**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
 
             # Some day experiment with a different equation like:
             # y = Qzero * np.e**(-x * alpha)
             
+            """
+            
+            Qzero = self.Qzero
+            #k = self.k_Var.get()
+
+            k = 4.19
+            y = 10**(np.log10(Qzero)+k*(np.exp(-alpha*Qzero*x)-1))
+                       
             return y 
         
         if (self.pumpTimes.get() == 0):
             pumpTimesString = "Using OMNI pumpTimes"
-            TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.018,0.010,0.0056]
+            TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, 0.100,0.056,0.031,0.017,0.010,0.0056]
         else:
             pumpTimesString = "Using Feather M0 pumpTimes"
             TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, 0.200,0.130,0.080,0.050,0.030,0.020]
 
 
-        # Generate a price list based which pump times were selected
+        # Generate a price list based on which pump times were selected
         # This assumes a standard cocaine concentration of 5 mg/ml and a Razel pump with 5 RPM motor
         # The pump speed (0.025 ml/sec) was determined as an average across several pumps being
         # switched intermittently on a PR. Might be worth checking against the total fluid delivered
         # during a TH session.
+        # Pump Speed was empirically determined. Razel tables show 0.0275 ml/sec
         priceList = []
         for i in range(12):
             dosePerResponse = TH_PumpTimes[i] * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+            print(dosePerResponse)            
             price = round(1/dosePerResponse,2)
             priceList.append(price)
+
+        print(priceList)
 
         # Retrieve the consumption and response lists from the selected dataRecord.
         # These lists are extracted from the datafile when initially opened.
@@ -1591,6 +1638,24 @@ class myGUI(object):
         datalist = aDataRecord.datalist    # Event record needs this.
         consumptionList = aDataRecord.consumptionList
         responseList = aDataRecord.responseList
+
+        # ****************************************************************
+        #
+        #  SUBSTITUTIONS
+        #
+        # ****************************************************************
+        # There is a very small discrepancy in how the mg/resp is calculated in Hursh's spreadsheet
+        # Apparently Cody came up with the following mg/resp:
+        mgPerRespList = [0.421,0.237,0.133,0.075, 0.041,0.024,0.013,0.0075,0.0041,0.0024,0.0013,0.000715]
+        # I've estimated a 12th entry
+        # This corresponds to the following pricelist from Hursh's spreadsheet.       
+        priceList = [2.37,4.21,7.5,13.3,24.2,42.1,75,133.9,241.9,416.7,750,1398]
+
+        # substitute the consumptionList that would be used by Steven
+        for i in range(12):
+            consumptionList[i] = responseList[i] * mgPerRespList[i]
+
+        # *****************************************************************
 
         # Truncate the range of priceList and consumptionList according the radio button settings
         startRange = self.rangeBegin.get()
@@ -1686,7 +1751,7 @@ class myGUI(object):
         # ************** DEMAND CURVE *************************
 
         # The k value is derived from the slider. Defaults to 3 (see definition on line 232)
-        # Roberts thinks there is no justification the function to have this parameter.
+        # Roberts thinks there is no justification for the function to have this parameter.
 
         k = self.scale_k.get()             
         kString = "Using k from slider = {0:4.1f}".format(k)
@@ -1694,10 +1759,21 @@ class myGUI(object):
         # The manual curve fit checkbox allows users to play with k and alpha
         # If unchecked, it uses curvit to calculate alpha
         if (self.manualCurveFitVar.get() == True):
+
+            # Override for now and use Steven's values:
+            self.Qzero = 1.0
+            QzeroString = "Qzero (mean of bins 1..3) = {0:6.3f}".format(self.Qzero)
+            self.alpha = 0.00060899
+            alphaString = "alpha (curve fit) = {0:7.5f}".format(self.alpha)
+            k = 4.190
+            kString = "Using k from Hursh = {0:4.3f}".format(k)
+
+            """
             self.alpha = self.alphaVar.get()
             alphaString = "alpha (from slider) = {0:7.5f}".format(self.alpha)
             self.Qzero = self.QzeroVar.get()
             QzeroString = "Qzero (from slider) = {0:6.3f}".format(self.Qzero)
+            """
         else:
             # Calculate Qzero as the average of the first three bins
             self.Qzero = (consumptionList[1]+consumptionList[2]+consumptionList[3])/3
@@ -1733,7 +1809,7 @@ class myGUI(object):
             demandCurve.set_yscale("linear")
             yMax = 2
         xMin = 1
-        xMax = 1000
+        xMax = 1500
         yMin = 0.01
         yMax = 10.0
         demandCurve.set_xlim(xMin,xMax)
@@ -2316,15 +2392,15 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         aList = aRecord.datalist
         count = ListLib.count_char('L',aList)
-        aString = 'Nunber of responses: '+str(count)
+        aString = 'Number of responses: '+str(count)
         self.textBox.insert(END,aString+"\n")
         
         count = ListLib.count_char('P',aList)
-        aString = 'Nunber of injections: '+str(count)
+        aString = 'Number of injections: '+str(count)
         self.textBox.insert(END,aString+"\n")
 
-        count = ListLib.count_char('B',aList)
-        aString = 'Nunber of blocks: '+str(count)
+        blockCount = ListLib.count_char('B',aList)
+        aString = 'Number of blocks: '+str(blockCount)
         self.textBox.insert(END,aString+"\n")
 
         pump_count_list = ListLib.get_pump_count_per_block(aList)
@@ -2332,8 +2408,9 @@ class myGUI(object):
         for item in pump_count_list:
             aString = aString + str(item) + ' '
         self.textBox.insert(END,aString+"\n")
+        print(pump_count_list)
 
-        for b in range (12):    
+        for b in range (blockCount):    
             pump_duration_list = ListLib.get_pump_duration_list(aList, b)
             aString = 'Block '+str(b)+': '
             for i in range (len(pump_duration_list)):
@@ -2598,7 +2675,7 @@ class myGUI(object):
         totalConc = 0
         totalRecords = 0
         startAverageTime = 10 * 60000    # 10 min
-        endAverageTime = 120 * 60000     # 120 min
+        endAverageTime = 180 * 60000     # 120 min
         for pairs in cocConcXYList:
             if pairs[0] >= startAverageTime:
                 if pairs[0] < endAverageTime:
@@ -2623,7 +2700,7 @@ class myGUI(object):
         Y  = y_zero-((averageConc) * y_scaler) // 1
         X2 = x_zero + (endAverageTime * x_scaler) // 1
         self.graphCanvas.create_line(X1, Y, X2, Y, fill= "red")
-        tempStr = "Average Conc (10-120 min): "+str(averageConc)
+        tempStr = "Average Conc (10-180 min): "+str(averageConc)
         self.graphCanvas.create_text(500, Y, fill = "red", text = tempStr)
         
 

@@ -55,9 +55,13 @@ def get_time_list_for_code(letter_code, aList):
 
 def pump_durations_per_block(aList):
     ''' (list) -> list
-        Returns a list of pump durations for each block
+        Returns a list of pump durations for each block detected
     '''
-    durations = [0,0,0,0,0,0,0,0,0,0,0,0]
+    blockCount = count_char("B",aList)
+    print("pump_duration_per_block() found",blockCount,"Blocks")
+    durations = []
+    for b in range(blockCount):
+        durations.append(0)
     duration = 0
     pumpOn = False
     block_index = -1
@@ -77,9 +81,13 @@ def pump_durations_per_block(aList):
 
 def get_pump_count_per_block(aList):
     ''' (list) -> list
-        Returns a list of pump durations for each block
+        Returns a list of pump durations for each block detected
     '''
-    counts = [0,0,0,0,0,0,0,0,0,0,0,0]
+    blockCount = count_char("B",aList)
+    print("pump_count_per_block() found",blockCount,"Blocks")
+    counts = []
+    for b in range(blockCount):
+        counts.append(0)
     block_index = -1
     for timestamp in aList:           
         if timestamp[1] == 'B':     # end of block
@@ -87,8 +95,6 @@ def get_pump_count_per_block(aList):
         if timestamp[1] == 'P':
             counts[block_index] = counts[block_index] + 1
     return counts
-
-
 
 def get_pump_timestamps (aList, block):
     ''' (list) -> list
