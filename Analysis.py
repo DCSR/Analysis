@@ -317,21 +317,21 @@ class myGUI(object):
         myNotebook.grid(row=0,column=0)
 
         # **************Header Row ******************
-        openFileButton = Button(headerFrame, text="Open File", command= lambda: self.openWakeFile("")).grid(row=0,column=0, sticky=W)
+        # openFileButton = Button(headerFrame, text="Open File", command= lambda: self.openWakeFile("")).grid(row=0,column=0, sticky=W)
+        
+        openFilesButton = Button(headerFrame, text="Open Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=0, sticky=W)        
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
-        openFilesButton = Button(headerFrame, text="Open Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=4, sticky=W)
-        
         loadTestButton1 = Button(headerFrame, text="6_P183_Sep_1.str", command= lambda: \
                               self.openWakeFiles("6_P183_Sep_1.str")).grid(row=0,column=5,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="1_Q007_Mar_31.str", command= lambda: \
-                              self.openWakeFile("1_Q007_Mar_31.str")).grid(row=0,column=6,sticky=N, padx = 20)
+                              self.openWakeFiles("1_Q007_Mar_31.str")).grid(row=0,column=6,sticky=N, padx = 20)
         """
         loadTestButton3 = Button(headerFrame, text="3_H886_Jul_4.str", command= lambda: \
-                              self.openWakeFile("3_H886_Jul_4.str")).grid(row=0,column=6,sticky=N, padx = 20)
+                              self.openWakeFiles("3_H886_Jul_4.str")).grid(row=0,column=6,sticky=N, padx = 20)
         loadTestButton4 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
-                              self.openWakeFile("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
+                              self.openWakeFiles("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
         """
         
         spacer2Label = Label(headerFrame, text="                    ").grid(row = 0,column = 8)
@@ -665,7 +665,7 @@ class myGUI(object):
         Button1 = Button(self.testAreaButtonFrame, text="twoLever_PR_Figure()", command= lambda: \
                               self.twoLever_PR_Figure()).grid(row=0,column=0,columnspan=2,sticky=N)
         Button2 = Button(self.testAreaButtonFrame, text="8_H841_Jul_29.str", command= lambda: \
-                              self.openWakeFile("8_H841_Jul_29.str")).grid(row=1,column=0,columnspan=2,sticky=N)
+                              self.openWakeFiles("8_H841_Jul_29.str")).grid(row=1,column=0,columnspan=2,sticky=N)
         Button3 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
                               self.matPlotEventRecord()).grid(row=3,column=0,columnspan=2, sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="bin_HD_Records()", command= lambda: \
@@ -844,105 +844,7 @@ class myGUI(object):
             else:
                 print("More files selected than spots available")
         print("Path =", self.initialDir)
-            
-    def openWakeFile(self, fileName):      
-        if fileName == '':
-            fileName = filedialog.askopenfilename(initialdir=self.initialDir)
-        # print(fileName)
-        if len(fileName) > 0:
-            selected = self.fileChoice.get()
-            self.recordList[selected].datalist = []
-            name = fileName[fileName.rfind('/')+1:]
-            path = fileName[0:fileName.rfind('/')+1]
-            self.initialDir = path
-            # print('path =',path)
-            self.recordList[selected].fileName = name
-            self.fileNameList[selected].set(name)
-            # OMNI pump times
-            # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
-            #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
-            self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
-                                                      0.200,0.130,0.080,0.050,0.030,0.020]
-            self.recordList[selected].cocConc = 5.0
-            self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
-            # textBox.insert('1.0', name+" opened \n\n")
-            if fileName.find(".str") > 0:
-                self.recordList[selected].datalist = stream01.read_str_file(fileName)               
-            elif fileName.find(".dat") > 0:
-                aFile = open(fileName,'r')
-                for line in  aFile:
-                    pair = line.split()
-                    pair[0] = int(pair[0])
-                    self.recordList[selected].datalist.append(pair)
-                aFile.close()
-            self.recordList[selected].extractStatsFromList()
 
-        # ------------  fillLists ---------
-        verbose = True
-        pumpStarttime = 0
-        blockNum = -1 
-        pumpOn = False
-        leverTotal = 0       
-        pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
-        responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
-        """
-        This procedure assumes the datafile if a Threshold file and fills the
-        response and consumption lists according - i.e. 12 bins.
-        But a PR daatfile could have many more bins which could throw an error.
-        So for now, if the bin number will not count higher than 11.
-
-        Eventually, 
-
-        """
-        for pairs in self.recordList[selected].datalist:
-            if pairs[1] == 'B':
-                if blockNum < 11:
-                    blockNum= blockNum + 1
-            elif pairs[1] == 'P':
-                pumpStartTime = pairs[0]
-                pumpOn = True
-                responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
-                leverTotal = leverTotal + 1                        # using pump for responses
-            elif pairs[1] == 'p':
-                if pumpOn:
-                    duration = pairs[0]-pumpStartTime
-                    if blockNum <= 12:
-                        pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
-                    pumpOn = False
-            # else no nothing
-        # print("responseList = ", responseList)
-        consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
-        mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
-        if verbose:
-            print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
-            print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
-            print("cocaine mg/sec:", mgPerSec)
-        for i in range(12):
-            consumptionList[i] = pumpTimeList[i] * mgPerSec
-            if consumptionList[i] == 0:
-                consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
-        totalResp = 0
-        totalIntake = 0
-        for i in range(12):
-            totalResp = totalResp + responseList[i]
-            totalIntake = totalIntake + consumptionList[i]
-        print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
-        priceList = []      
-        for i in range(12):
-            # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
-            dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
-                              self.recordList[selected].cocConc * \
-                              (self.recordList[selected].pumpSpeed)
-            price = round(1/dosePerResponse,2)
-            priceList.append(price)
-        self.recordList[selected].priceList = priceList
-        self.recordList[selected].consumptionList = consumptionList
-        self.recordList[selected].responseList = responseList
-
-        # ------------- end fillLists -----------------
-        print(self.recordList[selected])
-        print("Path =", self.initialDir)
-    
 
         # **********************  The Controllers  ***********************************
         # Controllers converts user input into calls on functions that manipulate data
