@@ -9,7 +9,6 @@ Branch "2L-PR-Figs" used to generate a Figure or two for 2L-PR-HD paper
 8_H383_Mar_21.str - Fig 1 bottom
 8_H383_Mar_27.str - Fig 6 2L-PR-HD
 
-
 """
 
 # adapted from Dropbox/SelfAdministration/Analysis/Analysis102.py
@@ -1173,8 +1172,134 @@ class myGUI(object):
         self.fileChoice.set(3)        
         self.openWakeFiles("/Users/daveroberts/Documents/Two Lever PR/Raw Data/Final/H383/8_H383_Mar_27.str")
 
+
+    # ****************************** New **************************************
+    """
+    To Do:
+
+    Get fig1_2L_PR() to work
+
+    Start with using matPlotEventRecord(self) to draw records for the four datafiles 
+
+    Then re-work showModel_Rev
+      GraphLib.eventRecord throws error
+      Error - possibly because GraphLib.py 
+      File "/Users/daveroberts/Documents/Git/Analysis/GraphLib.py", line 202, in eventRecord
+      aCanvas.create_text(x_zero-30, y_zero-5, fill="blue", text = aLabel)
+      AttributeError: 'Figure' object has no attribute 'create_text'
+    
+    Rather than fix the error, just develop matPlotEventRecord. 
+
+
+    """
+    # *************************************************************************
+
+    def showModel_Rev(self,aRecord, resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
+
+        #if clear:
+        #    self.matPlotTestFigure.delete('all')
+
+        aCanvas = self.testArea_MatPlot_Canvas
+
+        x_zero = 75
+        y_zero = 350
+        x_pixel_width = 700
+        y_pixel_height = 200
+        x_divisions = 12
+        y_divisions = 5
+        max_x_scale = self.max_x_scale.get()
+        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
+        # max_y_scale = self.max_y_scale.get()
+        # max_y_scale = 25
+        GraphLib.eventRecord(aCanvas, x_zero, 100, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "Test")
+        GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "red")
+        GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "blue")
+        x_scaler = x_pixel_width / (max_x_scale*60*1000)
+        y_scaler = y_pixel_height / max_y_scale
+        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc, aRecord.pumpSpeed, resolution)
+        # print(modelList)
+        x = x_zero
+        y = y_zero
+        totalConc = 0
+        totalRecords = 0
+        startAverageTime = 10 * 60000    # 10 min
+        endAverageTime = 180 * 60000     # 120 min
+        for pairs in cocConcXYList:
+            if pairs[0] >= startAverageTime:
+                if pairs[0] < endAverageTime:
+                    totalRecords = totalRecords + 1
+                    totalConc = totalConc + pairs[1]
+            concentration = round(pairs[1],2)
+            newX = x_zero + pairs[0] * x_scaler // 1
+            newY = y_zero - concentration * y_scaler // 1
+            aCanvas.create_line(x, y, newX, newY, fill= aColor)
+            # self.graphCanvas.create_oval(newX-2, newY-2, newX+2, newY+2, fill=aColor)
+            x = newX
+            y = newY
+            
+        # aCanvas.create_text(300, 400, fill = "blue", text = aRecord.fileName)
+        """
+        dose = 2.8*aRecord.cocConc * aRecord.pumpSpeed
+        tempStr = "Duration (2.8 sec) * Pump Speed ("+str(aRecord.pumpSpeed)+" ml/sec) * cocConc ("+str(aRecord.cocConc)+" mg/ml) = Unit Dose "+ str(round(dose,3))+" mg/inj"
+        aCanvas.create_text(300, 450, fill = "blue", text = tempStr)
+        """
+        averageConc = round((totalConc/totalRecords),3)
+        # draw average line
+        X1 = x_zero + (startAverageTime * x_scaler) // 1
+        Y  = y_zero-((averageConc) * y_scaler) // 1
+        X2 = x_zero + (endAverageTime * x_scaler) // 1
+        aCanvas.create_line(X1, Y, X2, Y, fill= "red")
+        tempStr = "Average Conc (10-180 min): "+str(averageConc)
+        # aCanvas.create_text(500, Y, fill = "red", text = tempStr)
+
     def fig1_2L_PR(self):
-        pass
+        # aRecord = self.recordList[self.fileChoice.get()] 
+        self.matPlotTestFigure.clf()
+        gs = gridspec.GridSpec(nrows = 10, ncols= 1)
+
+        injNum = 0
+        injTimeList = []       
+        aRecord = self.recordList[0]
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
+
+        eventRecord1 = self.matPlotTestFigure.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
+
+        eventRecord1.axes.get_yaxis().set_visible(False)
+        
+        eventRecord1.set_ylabel('')
+        eventRecord1.set_yticklabels("")                 # Suppress tick labels
+        eventRecord1.set_xlabel('Time (minutes)')
+        eventRecord1.set_title('Figure plotted through fig1_2L_PR()')
+        startTime = self.startTimeScale.get()
+        endTime = self.endTimeScale.get()
+        eventRecord1.set_xlim(startTime, endTime) 
+        eventRecord1.set_ylim(0.01, 1)
+        eventRecord1.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
+
+        injNum = 0
+        injTimeList = []       
+        aRecord = self.recordList[1]
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
+
+        eventRecord2 = self.matPlotTestFigure.add_subplot(gs[1,0],label="1")  # row [0] and col [0]]
+        eventRecord2.axes.get_yaxis().set_visible(False)        
+        eventRecord2.set_ylabel('')
+        eventRecord2.set_yticklabels("")                 # Suppress tick labels
+        eventRecord2.set_xlabel('Time (minutes)')
+        eventRecord2.set_title('Figure plotted through fig1_2L_PR()')
+        startTime = self.startTimeScale.get()
+        endTime = self.endTimeScale.get()
+        eventRecord2.set_xlim(startTime, endTime) 
+        eventRecord2.set_ylim(0.01, 1)
+        eventRecord2.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
+
+        self.testArea_MatPlot_Canvas.draw()      
 
     def fig2_2L_PR(self):
         """
@@ -1187,8 +1312,8 @@ class myGUI(object):
         binStartTimesSec  - second
 
         testAreaFigureFrame    - tk container (a Frame)
-        self.matPlotTestFigure              - the thing that axes and lines are drawn on        
-        self.threshold_tk_Canvas         - drawing space for things like event records
+        self.matPlotTestFigure          - the thing that axes and lines are drawn on        
+        self.threshold_tk_Canvas        - drawing space for things like event records
         self.testArea_matPlot_Canvas    - container for the MatPlotLib Figure
                                         - This is the thing that gets redrawn after things are changed.
         """
