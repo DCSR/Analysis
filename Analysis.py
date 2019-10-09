@@ -2,7 +2,13 @@
 """
 October 8,
 
-Branch "2L-PR-Figs" used to generate a Figure or two for 2L-PR-HD paper 
+Branch "2L-PR-Figs" used to generate a Figure or two for 2L-PR-HD paper
+
+8_H383_Mar_10.str - Fig 1 top
+8_H383_Mar_11.str - Fig 1 middle
+8_H383_Mar_21.str - Fig 1 bottom
+8_H383_Mar_27.str - Fig 6 2L-PR-HD
+
 
 """
 
@@ -604,16 +610,20 @@ class myGUI(object):
         self.testArea_MatPlot_Canvas = FigureCanvasTkAgg(self.matPlotTestFigure, master=self.testAreaFigureFrame)
         self.testArea_MatPlot_Canvas.get_tk_widget().grid(row=0,column=0)
         
-        Button1 = Button(self.testAreaButtonFrame, text="twoLever_PR_Figure()", command= lambda: \
-                              self.twoLever_PR_Figure()).grid(row=0,column=0,columnspan=2,sticky=N)
-        Button2 = Button(self.testAreaButtonFrame, text="8_H841_Jul_29.str", command= lambda: \
-                              self.openWakeFiles("8_H841_Jul_29.str")).grid(row=1,column=0,columnspan=2,sticky=N)
+
+        Button1 = Button(self.testAreaButtonFrame, text="fig1_2L_PR()", command= lambda: \
+                              self.fig1_2L_PR()).grid(row=0,column=0,columnspan=2,sticky=N)
+        Button2 = Button(self.testAreaButtonFrame, text="fig2_2L_PR()", command= lambda: \
+                              self.fig2_2L_PR()).grid(row=1,column=0,columnspan=2,sticky=N)
         Button3 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
                               self.matPlotEventRecord()).grid(row=3,column=0,columnspan=2, sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="bin_HD_Records()", command= lambda: \
                               self.bin_HD_Records()).grid(row=4,column=0,columnspan=2, sticky=N)
         Button5 = Button(self.testAreaButtonFrame, text="bin_HD_10SecCount()", command= lambda: \
                               self.bin_HD_10SecCount()).grid(row=5,column=0,columnspan=2, sticky=N)
+        Button6 = Button(self.testAreaButtonFrame, text="Load 2L_PR Files", command= lambda: \
+                              self.load_2L_PR_Files()).grid(row=6,column=0,columnspan=2,sticky=N)
+        
         # Button5 = Button(self.testAreaButtonFrame, text="unused", command= lambda: \
         # self.someCommand()).grid(row=5,column=0,columnspan=2,sticky=N)
 
@@ -658,11 +668,6 @@ class myGUI(object):
         print("Saving Figure.png")
         self.matPlotFigure.savefig('Figure.png')
 
-    def load_2L_testFile(self):
-        """
-        Called from testAreaTab Button2
-        """
-        print("load_2L-testFile()")
 
     def openWakeFiles(self,filename):
         """
@@ -1151,7 +1156,27 @@ class myGUI(object):
         else:
             plt.show()
 
-    def twoLever_PR_Figure(self):
+    def load_2L_PR_Files(self):
+        """
+        Load 4 files of subject H383
+        8_H383_Mar_10.str  - 1L-FR
+        8_H383_Mar_10.str  - 1L-HD
+        8_H383_Mar_10.str  - 2L-FR-HD 
+        8_H383_Mar_10.str  - 2L-PR-HD
+        """
+        self.fileChoice.set(0)        
+        self.openWakeFiles("/Users/daveroberts/Documents/Two Lever PR/Raw Data/Final/H383/8_H383_Mar_10.str")
+        self.fileChoice.set(1)        
+        self.openWakeFiles("/Users/daveroberts/Documents/Two Lever PR/Raw Data/Final/H383/8_H383_Mar_11.str")
+        self.fileChoice.set(2)        
+        self.openWakeFiles("/Users/daveroberts/Documents/Two Lever PR/Raw Data/Final/H383/8_H383_Mar_21.str")
+        self.fileChoice.set(3)        
+        self.openWakeFiles("/Users/daveroberts/Documents/Two Lever PR/Raw Data/Final/H383/8_H383_Mar_27.str")
+
+    def fig1_2L_PR(self):
+        pass
+
+    def fig2_2L_PR(self):
         """
         To Do: select X axis limit from radio button.
 
