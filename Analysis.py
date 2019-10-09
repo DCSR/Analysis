@@ -1,66 +1,8 @@
 
 """
+October 8,
 
-May 15:
-
-See Hursh_Revisited.pptx
-
-Data from "Hursh with Cond 2 solved using solver.xls"
-
-Cost: 2.37
-4.21
-7.5
-13.3
-24.2
-42.1
-75
-133.9
-241.9
-416.7
-750
-
-Consumption: 1.684
-1.185
-0.399
-0.3
-0.451
-0.36
-0.221
-0.3075
-0.1066
-0.0816
-0.0832
-
-Prediction: 0.9862
-0.9756
-0.9570
-0.9251
-0.8684
-0.7833
-0.6500
-0.4698
-0.2668
-0.1151
-0.0291  Col D10..D20?
-
-
-Manual checkbox used as override to display Stevens values
-
-
-- The prototype animal is 1_Q007_Mar_31.str
-- What's wrong? Anything?
-- Are we good with Pmax etc?
-    Pmax calculated two ways.
-
-- Find way to prove we get the same thing as Hursh.
-- I think, if using the same alpha, Qzero and k, it generates the same predicted values as the spreadsheet.
-
-Don't throw error if no data to draw
-
-Resolve self.k, self.k_Var, self.scale_k.get()
-
-self.k_Var is associated with self.scale_k 
-
+Branch "2L-PR-Figs" used to generate a Figure or two for 2L-PR-HD paper 
 
 """
 
