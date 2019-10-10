@@ -1175,24 +1175,197 @@ class myGUI(object):
 
     # ****************************** New **************************************
     """
-    To Do:
+    Got fig1_2L_PR() to work
 
-    Get fig1_2L_PR() to work
+    Using matPlotEventRecord(self) to draw records for the four datafiles
 
-    Start with using matPlotEventRecord(self) to draw records for the four datafiles 
+    Add lever 2 event (access lever) 
+    Add event record for lever 1 access (HD)
 
-    Then re-work showModel_Rev
-      GraphLib.eventRecord throws error
-      Error - possibly because GraphLib.py 
-      File "/Users/daveroberts/Documents/Git/Analysis/GraphLib.py", line 202, in eventRecord
-      aCanvas.create_text(x_zero-30, y_zero-5, fill="blue", text = aLabel)
-      AttributeError: 'Figure' object has no attribute 'create_text'
+    See Timestamp procedure to get codes
     
-    Rather than fix the error, just develop matPlotEventRecord. 
-
 
     """
     # *************************************************************************
+
+    def fig1_2L_PR(self):
+
+        if (self.showOn_tkCanvas.get()):
+            fig = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
+            fig.clf()
+        else:
+            fig = plt.figure(figsize=(6,6), dpi=150, constrained_layout = False)  # Newly instantaited pyplot figure
+
+        gs = gridspec.GridSpec(nrows = 30, ncols= 1)
+
+        max_x_scale = 360
+        xLabels = ['0','30','60','90','120','150','180','210','240','270','300','330','360','390']
+
+
+        eventRecord0 = fig.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
+        cocGraph0 = fig.add_subplot(gs[2:8,0],label='2')   # rows 2 - 7, col 0
+        eventRecord1 = fig.add_subplot(gs[10,0],label="2")  # row [10] and col [0]]
+        cocGraph1 = fig.add_subplot(gs[12:18,0],label='2')   # rows 2 - 7, col 0
+        eventRecord2 = fig.add_subplot(gs[20,0],label="2")  # row [10] and col [0]]
+        cocGraph2 = fig.add_subplot(gs[24:30,0],label='2')   # rows 2 - 7, col 0
+
+        # *** Top ***
+        
+        injNum = 0
+        injTimeList = []       
+        record0 = self.recordList[0]
+        for pairs in record0.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
+        eventRecord0.axes.get_yaxis().set_visible(False)
+        eventRecord0.set_ylabel('')
+        eventRecord0.set_yticklabels("")                 # Suppress tick labels
+        #eventRecord0.set_xlabel('Time (minutes)')
+        #eventRecord0.set_title('Figure plotted through fig1_2L_PR()')
+        eventRecord0.set_xlim(0,max_x_scale)
+        eventRecord0.xaxis.set_major_locator(MaxNLocator(7))       # Four major intervals
+        eventRecord0.xaxis.set_minor_locator(AutoMinorLocator(4))  # 5 ticks per interval
+        eventRecord0.spines['left'].set_color('white')
+        eventRecord0.spines['top'].set_color('white')
+        eventRecord0.spines['right'].set_color('white')
+        eventRecord0.set_ylim(0.01, 1)
+        eventRecord0.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5, colors = "black")
+        # ***********  Cocaine Concentration curve **********************
+        cocGraph0.patch.set_facecolor("none")
+        cocGraph0.spines['left'].set_position(('axes', -0.02))
+        cocGraph0.spines['top'].set_color('none')
+        cocGraph0.spines['right'].set_color('none')
+        #cocGraph0.set_xlabel('Session Time (min)', fontsize = 12)
+        #cocGraph0.xaxis.labelpad = 20
+        cocGraph0.set_ylabel('Cocaine', fontsize = 12)
+        #cocGraph0.yaxis.labelpad = 15
+        cocGraph0.set_xscale("linear")
+        cocGraph0.set_yscale("linear")
+        cocGraph0.set_xlim(0, max_x_scale*60000)
+        cocGraph0.xaxis.set_major_locator(ticker.LinearLocator(int(max_x_scale/30)+1))
+        cocGraph0.set_xticklabels(xLabels) 
+        cocGraph0.set_ylim(0, 25)
+        
+        resolution = 5  # seconds
+        cocConcXYList = model.calculateCocConc(record0.datalist,record0.cocConc, record0.pumpSpeed, resolution)
+        # cocConcXYList returns a list of [time,conc].
+        # The following separates these into two equal length lists to be plotted
+        cocConcList = []
+        timeList = []
+        for i in range(len(cocConcXYList)):
+            timeList.append(cocConcXYList[i][0])       # essentially a list in 5 sec intervals           
+            cocConcList.append(cocConcXYList[i][1])
+            
+        cocConcLine = Line2D(timeList,cocConcList, color = 'black', ls = 'solid')
+        cocGraph0.add_line(cocConcLine)
+
+        # *** Middle ***
+        injNum = 0
+        injTimeList = []       
+        record1 = self.recordList[1]
+        for pairs in record1.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
+        eventRecord1.axes.get_yaxis().set_visible(False)
+        eventRecord1.set_ylabel('')
+        eventRecord1.set_yticklabels("")                 # Suppress tick labels
+        #eventRecord1.set_xlabel('Time (minutes)')
+        #eventRecord1.set_title('Figure plotted through fig1_2L_PR()')
+        eventRecord1.set_xlim(0,max_x_scale)
+        eventRecord1.xaxis.set_major_locator(MaxNLocator(7))       # Four major intervals
+        eventRecord1.xaxis.set_minor_locator(AutoMinorLocator(4))  # 5 ticks per interval
+        eventRecord1.spines['left'].set_color('white')
+        eventRecord1.spines['top'].set_color('white')
+        eventRecord1.spines['right'].set_color('white')
+        eventRecord1.set_ylim(0.01, 1)
+        eventRecord1.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5, colors = "black")
+        # ***********  Cocaine Concentration curve **********************
+        cocGraph1.patch.set_facecolor("none")
+        cocGraph1.spines['left'].set_position(('axes', -0.02))
+        cocGraph1.spines['top'].set_color('none')
+        cocGraph1.spines['right'].set_color('none')
+        #cocGraph1.set_xlabel('Session Time (min)', fontsize = 12)
+        #cocGraph1.xaxis.labelpad = 20
+        cocGraph1.set_ylabel('Cocaine', fontsize = 12)
+        #cocGraph1.yaxis.labelpad = 15
+        cocGraph1.set_xscale("linear")
+        cocGraph1.set_yscale("linear")
+        cocGraph1.set_xlim(0, max_x_scale*60000)
+        cocGraph1.xaxis.set_major_locator(ticker.LinearLocator(int(max_x_scale/30)+1))
+        cocGraph1.set_xticklabels(xLabels) 
+        cocGraph1.set_ylim(0, 25)
+        
+        resolution = 5  # seconds
+        cocConcXYList = model.calculateCocConc(record1.datalist,record1.cocConc, record1.pumpSpeed, resolution)
+        # cocConcXYList returns a list of [time,conc].
+        # The following separates these into two equal length lists to be plotted
+        cocConcList = []
+        timeList = []
+        for i in range(len(cocConcXYList)):
+            timeList.append(cocConcXYList[i][0])       # essentially a list in 5 sec intervals           
+            cocConcList.append(cocConcXYList[i][1])
+            
+        cocConcLine = Line2D(timeList,cocConcList, color = 'black', ls = 'solid')
+        cocGraph1.add_line(cocConcLine)
+
+        # *** Bottom ***
+        injNum = 0
+        injTimeList = []       
+        record2 = self.recordList[2]
+        for pairs in record2.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
+        eventRecord2.axes.get_yaxis().set_visible(False)
+        eventRecord2.set_ylabel('')
+        eventRecord2.set_yticklabels("")                 # Suppress tick labels
+        #eventRecord2.set_xlabel('Time (minutes)')
+        #eventRecord2.set_title('Figure plotted through fig1_2L_PR()')
+        eventRecord2.set_xlim(0,max_x_scale)
+        eventRecord2.xaxis.set_major_locator(MaxNLocator(7))       # Four major intervals
+        eventRecord2.xaxis.set_minor_locator(AutoMinorLocator(4))  # 5 ticks per interval
+        eventRecord2.spines['left'].set_color('white')
+        eventRecord2.spines['top'].set_color('white')
+        eventRecord2.spines['right'].set_color('white')
+        eventRecord2.set_ylim(0.01, 1)
+        eventRecord2.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5, colors = "black")
+        # ***********  Cocaine Concentration curve **********************
+        cocGraph2.patch.set_facecolor("none")
+        cocGraph2.spines['left'].set_position(('axes', -0.02))
+        cocGraph2.spines['top'].set_color('none')
+        cocGraph2.spines['right'].set_color('none')
+        cocGraph2.set_xlabel('Session Time (min)', fontsize = 12)
+        #cocGraph2.xaxis.labelpad = 20
+        cocGraph2.set_ylabel('Cocaine', fontsize = 12)
+        #cocGraph2.yaxis.labelpad = 15
+        cocGraph2.set_xscale("linear")
+        cocGraph2.set_yscale("linear")
+        cocGraph2.set_xlim(0, max_x_scale*60000)
+        cocGraph2.xaxis.set_major_locator(ticker.LinearLocator(int(max_x_scale/30)+1))
+        cocGraph2.set_xticklabels(xLabels) 
+        cocGraph2.set_ylim(0, 25)
+        
+        resolution = 5  # seconds
+        cocConcXYList = model.calculateCocConc(record2.datalist,record2.cocConc, record2.pumpSpeed, resolution)
+        # cocConcXYList returns a list of [time,conc].
+        # The following separates these into two equal length lists to be plotted
+        cocConcList = []
+        timeList = []
+        for i in range(len(cocConcXYList)):
+            timeList.append(cocConcXYList[i][0])       # essentially a list in 5 sec intervals           
+            cocConcList.append(cocConcXYList[i][1])
+            
+        cocConcLine = Line2D(timeList,cocConcList, color = 'black', ls = 'solid')
+        cocGraph2.add_line(cocConcLine)
+
+        if (self.showOn_tkCanvas.get()):
+            self.testArea_MatPlot_Canvas.draw()
+        else:
+            plt.show()
+
+    
 
     def showModel_Rev(self,aRecord, resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
 
@@ -1250,56 +1423,7 @@ class myGUI(object):
         X2 = x_zero + (endAverageTime * x_scaler) // 1
         aCanvas.create_line(X1, Y, X2, Y, fill= "red")
         tempStr = "Average Conc (10-180 min): "+str(averageConc)
-        # aCanvas.create_text(500, Y, fill = "red", text = tempStr)
-
-    def fig1_2L_PR(self):
-        # aRecord = self.recordList[self.fileChoice.get()] 
-        self.matPlotTestFigure.clf()
-        gs = gridspec.GridSpec(nrows = 10, ncols= 1)
-
-        injNum = 0
-        injTimeList = []       
-        aRecord = self.recordList[0]
-        for pairs in aRecord.datalist:
-            if pairs[1] == 'P':                     
-                injNum = injNum + 1
-                injTimeList.append(pairs[0]/60000)  # Min
-
-        eventRecord1 = self.matPlotTestFigure.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
-
-        eventRecord1.axes.get_yaxis().set_visible(False)
-        
-        eventRecord1.set_ylabel('')
-        eventRecord1.set_yticklabels("")                 # Suppress tick labels
-        eventRecord1.set_xlabel('Time (minutes)')
-        eventRecord1.set_title('Figure plotted through fig1_2L_PR()')
-        startTime = self.startTimeScale.get()
-        endTime = self.endTimeScale.get()
-        eventRecord1.set_xlim(startTime, endTime) 
-        eventRecord1.set_ylim(0.01, 1)
-        eventRecord1.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
-
-        injNum = 0
-        injTimeList = []       
-        aRecord = self.recordList[1]
-        for pairs in aRecord.datalist:
-            if pairs[1] == 'P':                     
-                injNum = injNum + 1
-                injTimeList.append(pairs[0]/60000)  # Min
-
-        eventRecord2 = self.matPlotTestFigure.add_subplot(gs[1,0],label="1")  # row [0] and col [0]]
-        eventRecord2.axes.get_yaxis().set_visible(False)        
-        eventRecord2.set_ylabel('')
-        eventRecord2.set_yticklabels("")                 # Suppress tick labels
-        eventRecord2.set_xlabel('Time (minutes)')
-        eventRecord2.set_title('Figure plotted through fig1_2L_PR()')
-        startTime = self.startTimeScale.get()
-        endTime = self.endTimeScale.get()
-        eventRecord2.set_xlim(startTime, endTime) 
-        eventRecord2.set_ylim(0.01, 1)
-        eventRecord2.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
-
-        self.testArea_MatPlot_Canvas.draw()      
+        # aCanvas.create_text(500, Y, fill = "red", text = tempStr)     
 
     def fig2_2L_PR(self):
         """
