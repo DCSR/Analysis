@@ -270,8 +270,8 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
-        loadTestButton1 = Button(headerFrame, text="6_P183_Sep_1.str", command= lambda: \
-                              self.openWakeFiles("6_P183_Sep_1.str")).grid(row=0,column=5,sticky=N, padx = 20)
+        loadTestButton1 = Button(headerFrame, text="3_B099_Apr_6.str", command= lambda: \
+                              self.openWakeFiles("3_B099_Apr_6.str")).grid(row=0,column=5,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="1_Q007_Mar_31.str", command= lambda: \
                               self.openWakeFiles("1_Q007_Mar_31.str")).grid(row=0,column=6,sticky=N, padx = 20)
         """
@@ -343,10 +343,10 @@ class myGUI(object):
         TwoLever_frame_lable = Label(self.graph_2LPR_frame, text = "2L-PR").grid(row = 0, column=0)
         TwoLever_CR_button = Button(self.graph_2LPR_frame, text="Cum Rec", command= lambda: \
             self.TwoLeverCR()).grid(row=1,column=0,sticky=N)
-        TwoLever_Test1_button = Button(self.graph_2LPR_frame, text="Test 1", command= lambda: \
-            self.TwoLeverGraphTest1()).grid(row=2,column=0,sticky=N)
-        TwoLever_Test2_button = Button(self.graph_2LPR_frame, text="Test 2", command= lambda: \
-            self.TwoLeverGraphTest2()).grid(row=3,column=0,sticky=N)
+        TwoLever_Test1_button = Button(self.graph_2LPR_frame, text="TwoLeverFig()", command= lambda: \
+            self.TwoLeverFig()).grid(row=2,column=0,sticky=N)
+        TwoLever_Test2_button = Button(self.graph_2LPR_frame, text="Test 1", command= lambda: \
+            self.TwoLeverGraphTest1()).grid(row=3,column=0,sticky=N)
 
         # ******  Example Frame *********
 
@@ -612,8 +612,8 @@ class myGUI(object):
 
         Button1 = Button(self.testAreaButtonFrame, text="fig1_2L_PR()", command= lambda: \
                               self.fig1_2L_PR()).grid(row=0,column=0,columnspan=2,sticky=N)
-        Button2 = Button(self.testAreaButtonFrame, text="fig2_2L_PR()", command= lambda: \
-                              self.fig2_2L_PR()).grid(row=1,column=0,columnspan=2,sticky=N)
+        Button2 = Button(self.testAreaButtonFrame, text="TwoLeverFig()", command= lambda: \
+                              self.TwoLeverFig()).grid(row=1,column=0,columnspan=2,sticky=N)
         Button3 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
                               self.matPlotEventRecord()).grid(row=3,column=0,columnspan=2, sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="bin_HD_Records()", command= lambda: \
@@ -622,6 +622,11 @@ class myGUI(object):
                               self.bin_HD_10SecCount()).grid(row=5,column=0,columnspan=2, sticky=N)
         Button6 = Button(self.testAreaButtonFrame, text="Load 2L_PR Files", command= lambda: \
                               self.load_2L_PR_Files()).grid(row=6,column=0,columnspan=2,sticky=N)
+
+        self.leverCount = IntVar()
+        self.leverCount.set(2)
+        L1Button = Radiobutton(self.testAreaButtonFrame, text = "1L", variable = self.leverCount, value = 1).grid(row = 7, column = 0, sticky = E)
+        L2Button = Radiobutton(self.testAreaButtonFrame, text = "2L", variable = self.leverCount, value = 2).grid(row = 8, column = 0, sticky = E)
         
         # Button5 = Button(self.testAreaButtonFrame, text="unused", command= lambda: \
         # self.someCommand()).grid(row=5,column=0,columnspan=2,sticky=N)
@@ -1189,7 +1194,7 @@ class myGUI(object):
 
     def fig1_2L_PR(self):
         """
-        This function was written in a separate branch to draw a figure ofr the 2L-PR-HD paper
+        This function was written in a separate branch to draw a figure  the 2L-PR-HD paper
 
         "Load 2L-PR Files loads four specific files.
         This function uses the first three files and assumes that
@@ -1458,9 +1463,15 @@ class myGUI(object):
             plt.show()
     
 
-    def fig2_2L_PR(self):
+    def TwoLeverFig(self, lever = 2):
         """
         To Do: select X axis limit from radio button.
+
+        1L-PR uses L1 ("L") as PR lever
+        1L-PR uses only one block ("B")
+
+        2L-PR uses L2 ("J") as PR lever and L1 ("L") as HD lever
+        2L_PR uses "B" to signal access to HD
 
         Resolutions:
         aRecord.datalist  - mSec 10800000 mSec in 180 minute session
@@ -1475,6 +1486,13 @@ class myGUI(object):
                                         - This is the thing that gets redrawn after things are changed.
         """
         verbose = True    # local - couple to a global variable and checkbox?
+        levers = self.leverCount.get()
+        print("Number of Levers =",levers)
+        # Default to Two Lever
+        PR_lever_Char = 'J'
+        if levers == 1:
+             PR_lever_Char = 'L'
+            
 
         if (self.showOn_tkCanvas.get()):
             fig = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
@@ -1590,7 +1608,7 @@ class myGUI(object):
         # ************   Cummulative Record  *************************
 
         for pairs in aRecord.datalist:
-            if pairs[1] == 'J':                     # Access leverChar = 'J'
+            if pairs[1] == PR_lever_Char:           # 1l = 'L'; 2L = 'J'
                 trialResponses = trialResponses + 1
                 respTotal = respTotal + 1
                 adjustedRespTotal = respTotal - (resets * max_y_scale)
@@ -1600,16 +1618,26 @@ class myGUI(object):
                 x = pairs[0]/60000     # fraction of a min
                 cumRecTimes.append(x)
                 cumRecResp.append(adjustedRespTotal)       
-            elif pairs[1] == 'B':                   # Start of Drug Access
-                binStartTime_mSec = pairs[0]                   
-                finalRatio = trialResponses
-                totalDrugBins = totalDrugBins + 1
-                t = pairs[0]/1000    # in seconds
-                binStartTimesSec.append(t)
-                t = pairs[0]/60000   # fraction of a minute
-                binStartTimes.append(t)
-                tickPositionY.append(adjustedRespTotal)
-            elif pairs[1] == 'P':
+            elif pairs[1] == 'B':                   # If 2L then "B" controls tick mark
+                if levers == 2:
+                    binStartTime_mSec = pairs[0]                   
+                    finalRatio = trialResponses
+                    totalDrugBins = totalDrugBins + 1
+                    t = pairs[0]/1000    # in seconds
+                    binStartTimesSec.append(t)
+                    t = pairs[0]/60000   # fraction of a minute
+                    binStartTimes.append(t)
+                    tickPositionY.append(adjustedRespTotal)
+            elif pairs[1] == 'P':                   # If 1L then "P" controls tick mark
+                if levers == 1:
+                    binStartTime_mSec = pairs[0]                   
+                    finalRatio = trialResponses
+                    totalDrugBins = totalDrugBins + 1
+                    t = pairs[0]/1000    # in seconds
+                    binStartTimesSec.append(t)
+                    t = pairs[0]/60000   # fraction of a minute
+                    binStartTimes.append(t)
+                    tickPositionY.append(adjustedRespTotal)
                 pumpStartTime = pairs[0]
                 pumpOn = True
             elif pairs[1] == 'p':
@@ -1617,6 +1645,14 @@ class myGUI(object):
                     pumpDuration = pairs[0]-pumpStartTime
                     binPumpTime = binPumpTime + pumpDuration
                     pumpOn = False
+                    if levers == 1:
+                        trialResponses = 0
+                        pumpTimeList.append(binPumpTime)                
+                        binDose = (binPumpTime/1000) * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+                        totalDose = totalDose + binDose
+                        doseList.append(binDose)
+                        #print(binStartTime,binDose)
+                        binPumpTime = 0
             elif pairs[1] == 'b':   # End of Drug Access Period
                 binEndTime_mSec = pairs[0]
                 totalBinTime_mSec = totalBinTime_mSec + (binEndTime_mSec - binStartTime_mSec) 
@@ -1659,7 +1695,8 @@ class myGUI(object):
         print("binStartTimesInt = ", binStartTimesInt)
         print("doseList =", doseList)
         print("pumpTimeList = ", pumpTimeList)        
-        bar_width = 2.5     # The units correspond to X values, so will get skinny with high max_x_scale.    
+        bar_width = 2.5     # The units correspond to X values, so will get skinny with high max_x_scale.
+
         aBarGraph.bar(binStartTimesInt,doseList,bar_width, color = "black")
 
         # ***********  Cocaine Concentration curve **********************
@@ -1686,9 +1723,7 @@ class myGUI(object):
             cocLevel = cocConcList[t]
             #if verbose: print(t,cocLevel,doseList[i])
             cocLevels.append(cocLevel)              # Create a list of cocaine concentrations corresponding to binDose
-
-        r = pearsonr(doseList,cocLevels)
-        print("r =",r)
+        
 
         # **********   Create formated text strings ************************
         averageBinLength = (totalBinTime_mSec/totalDrugBins)/1000
@@ -1696,7 +1731,10 @@ class myGUI(object):
         totalDrugBinsStr = "Break Point = {}".format(totalDrugBins)
         finalRatioStr = "Final Ratio = {}".format(finalRatio)
         totalDoseStr = "Total Dose = {:.3f} mg".format(totalDose)
-        rStr = "r = {:.3f}".format(r[0])
+        rStr = ""
+        # r = pearsonr(doseList,cocLevels)
+        # print("r =",r)
+        # rStr = "r = {:.3f}".format(r[0])
         if verbose:
             print(drugAccessLengthStr)
             print(totalDrugBinsStr)
