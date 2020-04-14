@@ -216,7 +216,7 @@ def eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, dataList, c
             x = newX
             # aCanvas.create_text(x, y_zero+10, fill="blue", text = pairs[1])  # show char underneath 
 
-def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, dataList, showBP, aTitle):
+def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, dataList, showBP, aTitle, leverChar = 'L'):
     aCanvas.create_text(100, 20, fill="blue", text = aTitle)
     lastX = x_zero
     lastY = y_zero
@@ -235,7 +235,7 @@ def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scal
     BP_X = x_zero
     BP_Y = y_zero
     for pairs in dataList:
-        if pairs[1] == 'L':
+        if pairs[1] == leverChar:
             respTotal = respTotal + 1
             adjustedRespTotal = respTotal - (resets * max_y_scale)
             newX = x_zero + (pairs[0] * x_scaler) // 1
