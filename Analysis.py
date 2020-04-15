@@ -343,7 +343,7 @@ class myGUI(object):
         TwoLever_frame_lable = Label(self.graph_2LPR_frame, text = "2L-PR").grid(row = 0, column=0)
         TwoLever_CR_button = Button(self.graph_2LPR_frame, text="Cum Rec", command= lambda: \
             self.TwoLeverCR()).grid(row=1,column=0,sticky=N)
-        TwoLever_Test1_button = Button(self.graph_2LPR_frame, text="TwoLeverFig()", command= lambda: \
+        TwoLeverFig = Button(self.graph_2LPR_frame, text="TwoLeverFig()", command= lambda: \
             self.TwoLeverFig()).grid(row=2,column=0,sticky=N)
         TwoLever_Test2_button = Button(self.graph_2LPR_frame, text="Test 1", command= lambda: \
             self.TwoLeverGraphTest1()).grid(row=3,column=0,sticky=N)
@@ -1756,6 +1756,7 @@ class myGUI(object):
             self.testArea_MatPlot_Canvas.draw()
         else:
             plt.show()
+            fig.savefig('SavePDFTest.pdf') 
 
     def clearFigure(self):
         self.matPlotFigure.clf()
@@ -2186,10 +2187,7 @@ class myGUI(object):
             label = "TwoLeverGraphTest1"
             self.graphCanvas.delete('all')
             self.graphCanvas.create_text(300,200, text=label)
-    def TwoLeverGraphTest2(self):
-            label = "TwoLeverGraphTest2"
-            self.graphCanvas.delete('all')
-            self.graphCanvas.create_text(300,200, text=label)
+
 
     def TwoLeverTextReport(self):
             """
