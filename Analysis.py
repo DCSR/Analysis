@@ -16,6 +16,7 @@ from tkinter import *
 from tkinter.ttk import Notebook
 from tkinter import filedialog
 from datetime import datetime
+import DataModel as dm
 import stream01
 import math
 import os
@@ -58,93 +59,6 @@ def main(argv=None):
     gui.go()
     return 0
 
-# ********************* The Model **********************
-
-
-class DataRecord:
-    def __init__(self, datalist, fileName):
-        self.fileName = fileName
-        self.datalist = datalist
-        self.numberOfL1Responses = 0
-        self.numberOfL2Responses = 0
-        self.numberOfInfusions = 0
-        self.totalPumpDuration = 0        
-        self.cocConc = 0.0
-        self.pumpSpeed = 0.0
-        self.averagePumpTime = 0.0
-        self.TH_PumpTimes = []
-        self.priceList = []
-        self.consumptionList = []
-        self.responseList = []
-        self.deltaList = []
-        self.notes = "test"
-
-    def __str__(self):
-        """
-            Returns a string of values inside object that is used when the print command is called
-        """
-        consumptionStr = ""
-        for i in range(0,len(self.consumptionList)):
-            consumptionStr = consumptionStr + "{:.3f}, ".format(self.consumptionList[i])
-
-        priceStr = ""
-        for i in range(0,len(self.priceList)):
-            priceStr = priceStr + "{:.2f}, ".format(self.priceList[i])
-
-        responseStr = ""
-        for i in range(0,len(self.responseList)):
-            responseStr = responseStr + "{}, ".format(self.responseList[i])
-                
-        s = "Filename: "+self.fileName+ \
-        "\nNotes: "+self.notes+ \
-        "\nLever 1 Responses: "+str(self.numberOfL1Responses)+ \
-        "\nLever 2 Responses: "+str(self.numberOfL2Responses)+ \
-        "\nInfusions: "+str(self.numberOfInfusions)+ \
-        "\nTotal Pump Time (mSec): "+str(self.totalPumpDuration)+ \
-        "\nAverage Pump Time (mSec): "+str(round(self.averagePumpTime,4))+ \
-        "\nPump Speed (ml/sec): "+str(self.pumpSpeed)+" ml/Sec\n"
-        
-        """
-        "\nPumpTimes = "+str(self.TH_PumpTimes) + \
-        "\nPriceList = " + priceStr + \
-        "\nConsumptionList = " + consumptionStr + \
-        "\nResponseList = " + responseStr +"\n"
-        "\nDelta List: "+str(self.deltaList)+
-        """
-        #"\n============================\n"
-        
-        return s
-
-    def extractStatsFromList(self):
-        self.numberOfL1Responses = 0
-        self.numberOfL2Responses = 0
-        self.numberOfInfusions = 0
-        self.totalPumpDuration = 0
-        leverOut = True
-        pumpOn = False
-        lastTime = 0
-        self.deltaList = []
-        delta = 0
-        for pairs in self.datalist:                   
-            if pairs[1] == 'L':
-                self.numberOfL1Responses = self.numberOfL1Responses + 1
-            if pairs[1] == 'J':
-                self.numberOfL2Responses = self.numberOfL2Responses + 1               
-            if ((pairs[1] == 'P') and (leverOut == True)) :
-                self.numberOfInfusions = self.numberOfInfusions + 1
-                pumpStartTime = pairs[0]
-                delta = pumpStartTime - lastTime
-                self.deltaList.append(round(delta/(1000*60)))
-                lastTime = pumpStartTime
-                pumpOn = True
-            if pairs[1] == 'p':
-                if pumpOn:
-                    duration = pairs[0]-pumpStartTime
-                    pumpOn = False
-                    self.totalPumpDuration = self.totalPumpDuration + duration
-            if self.numberOfInfusions > 0:
-                self.averagePumpTime = round(self.totalPumpDuration / self.numberOfInfusions,2)
-
 
 class myGUI(object):
     def __init__(self):
@@ -172,17 +86,18 @@ class myGUI(object):
         # *************** Variables and Lists associated with the View *********
         # **********************************************************************
         
+        #Data Record defined in DataModel.py imported as dm
         #Construct ten empty dataRecords
-        self.record0 = DataRecord([],"empty")         
-        self.record1 = DataRecord([],"empty")
-        self.record2 = DataRecord([],"empty")
-        self.record3 = DataRecord([],"empty")
-        self.record4 = DataRecord([],"empty")
-        self.record5 = DataRecord([],"empty")
-        self.record6 = DataRecord([],"empty")
-        self.record7 = DataRecord([],"empty")
-        self.record8 = DataRecord([],"empty")
-        self.record9 = DataRecord([],"empty")
+        self.record0 = dm.DataRecord([],"empty")         
+        self.record1 = dm.DataRecord([],"empty")
+        self.record2 = dm.DataRecord([],"empty")
+        self.record3 = dm.DataRecord([],"empty")
+        self.record4 = dm.DataRecord([],"empty")
+        self.record5 = dm.DataRecord([],"empty")
+        self.record6 = dm.DataRecord([],"empty")
+        self.record7 = dm.DataRecord([],"empty")
+        self.record8 = dm.DataRecord([],"empty")
+        self.record9 = dm.DataRecord([],"empty")
         
         # Create a list of these dataRecords so that one can be "selected" with self.fileChoice.get()
         self.recordList = [self.record0,self.record1,self.record2,self.record3,self.record4, \
@@ -1052,7 +967,7 @@ class myGUI(object):
 
         aRecord = self.recordList[self.fileChoice.get()]
 
-        testRecord = DataRecord([],"empty")
+        testRecord = dm.DataRecord([],"empty")
         """
         Starts at 10 sec
         # bin time 1 sec for 1 sec
@@ -2903,7 +2818,7 @@ class myGUI(object):
 
         """        
         # testRecord1  5 sec infusion
-        testRecord1 = DataRecord([],"5 sec") 
+        testRecord1 = dm.DataRecord([],"5 sec") 
         testRecord1.datalist = [[10000, 'P'],[15000, 'p']]
         testRecord1.pumpSpeed = 0.025   # Wake default 0.1 mls/4 sec = 0.025 / sec
         testRecord1.cocConc = 4.0
@@ -2914,7 +2829,7 @@ class myGUI(object):
         print("testRecord1 Duration = {0}; Total Dose = {1:2.1f}".format(duration,dose))
         # testRecord2  50 sec infusion
         duration = 50
-        testRecord2 = DataRecord([],"50 sec") 
+        testRecord2 = dm.DataRecord([],"50 sec") 
         testRecord2.datalist = [[10000, 'P'],[15000, 'p'], [15000, 'P'],[20000, 'p'], \
                                 [20000, 'P'],[25000, 'p'], [25000, 'P'],[30000, 'p'], \
                                 [30000, 'P'],[35000, 'p'], [35000, 'P'],[40000, 'p'], \
@@ -2929,7 +2844,7 @@ class myGUI(object):
         print("testRecord2 Duration = {0}; Total Dose = {1:2.1f}".format(duration,dose))
         # testRecord3  90 sec infusion
         duration = 90
-        testRecord3 = DataRecord([],"90 sec") 
+        testRecord3 = dm.DataRecord([],"90 sec") 
         testRecord3.datalist = [[10000, 'P'],[15000, 'p'], [15000, 'P'],[20000, 'p'], \
                                 [20000, 'P'],[25000, 'p'], [25000, 'P'],[30000, 'p'], \
                                 [30000, 'P'],[35000, 'p'], [35000, 'P'],[40000, 'p'], \
