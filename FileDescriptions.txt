@@ -1,0 +1,17 @@
+Description of supporting files for Analysis.py:
+
+Examples.py -
+GraphLib.py 
+ListLib.pymedAssoc.py
+model.py
+stream01.py
+
+Data Files:
+1L_PR.str - formerly ProgressiveRatio.str - unknown animal number
+2L-PR-HD1.str - 8_H383_Mar_23.str
+2L-PR-HD2.str - 2L_PR-example.str
+TH_FEATHER.dat - formerly TH_FEATHER_test.dat
+TH_OMNI1.str - formerly Bens_TH_example.str
+TH_OMNI2.str - formerly TH_OMNI_test.str
+
+End
