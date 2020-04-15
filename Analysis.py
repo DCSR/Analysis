@@ -17,6 +17,7 @@ from tkinter.ttk import Notebook
 from tkinter import filedialog
 from datetime import datetime
 import DataModel as dm
+import GraphsTab as gt
 import stream01
 import math
 import os
@@ -206,13 +207,8 @@ class myGUI(object):
         self.graphButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
         self.graphButtonFrame.grid(column = 0, row = 0, sticky=N)
         clearCanvasButton = Button(self.graphButtonFrame, text="Clear", command= lambda: \
-                              self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N)
-        cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
-                              self.drawCumulativeRecord(self.recordList[self.fileChoice.get()])).grid(row=2,column=0,sticky=N)
-      
-        showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
-                                   command= lambda: self.drawCumulativeRecord(self.recordList[self.fileChoice.get()]))
-        showBPButton.grid(row = 3,column=0)      
+                            self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N) 
+ 
         eventRecButton = Button(self.graphButtonFrame, text="Event Rec", command= lambda: \
                               self.drawEventRecords()).grid(row=4,column=0,sticky=N)
         timeStampButton = Button(self.graphButtonFrame, text="Timestamps", command= lambda: \
@@ -297,7 +293,14 @@ class myGUI(object):
         self.graphCanvas = Canvas(self.graphCanvasFrame, width = canvas_width, height = canvas_height)
         self.graphCanvas.grid(row=0,column=0)
         self.graphCanvas.create_text(100,10,text = "Graph Canvas")
-                
+
+
+        cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
+            gt.drawCumulativeRecord(self.recordList[self.fileChoice.get()],self.graphCanvas,True)).grid(row=2,column=0,sticky=N)
+
+        showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
+            command= lambda:gt.drawCumulativeRecord(self.recordList[self.fileChoice.get()],self.graphCanvas,self.showBPVar.get())).grid(row = 3,column=0)
+               
 
         #************** Threshold Tab **************
         # Two subframes:        
@@ -2420,26 +2423,6 @@ class myGUI(object):
 
     def clearGraphTabCanvas(self):
         self.graphCanvas.delete('all')
-                                   
-    def drawCumulativeRecord(self,aRecord):
-        self.clearGraphTabCanvas()
-        # print(aRecord)
-        # canvas is 800 x 600
-        x_zero = 50
-        y_zero = 550
-        x_pixel_width = 700                               
-        y_pixel_height = 500
-        x_divisions = 12
-        max_x_scale = self.max_x_scale.get()
-        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-        max_y_scale = self.max_y_scale.get()
-        y_divisions = 10
-        aTitle = aRecord.fileName
-        # def cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, datalist, aTitle)
-        GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
-        GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True)
-        GraphLib.cumRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, \
-                           aRecord.datalist, self.showBPVar.get(), aTitle)
 
     def drawEventRecords(self):
         # canvas is 800 x 600

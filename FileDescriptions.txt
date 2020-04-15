@@ -3,7 +3,8 @@ Description of supporting files for Analysis.py:
 Examples.py -
 GraphLib.py 
 ListLib.pymedAssoc.py
-model.py
+DataModel.py - imported as dm - contains DataRecord 
+    definition and procedures that transform data
 stream01.py
 
 Data Files:
