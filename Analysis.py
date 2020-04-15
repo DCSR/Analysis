@@ -185,16 +185,14 @@ class myGUI(object):
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
         spacer2Label = Label(headerFrame, text="               ").grid(row=0,column=3)
-        loadTestButton1 = Button(headerFrame, text="3_B099_Apr_6.str", command= lambda: \
-                              self.openWakeFiles("3_B099_Apr_6.str")).grid(row=0,column=5,sticky=N, padx = 20)
-        loadTestButton2 = Button(headerFrame, text="1_Q007_Mar_31.str", command= lambda: \
-                              self.openWakeFiles("1_Q007_Mar_31.str")).grid(row=0,column=6,sticky=N, padx = 20)
-        """
-        loadTestButton3 = Button(headerFrame, text="3_H886_Jul_4.str", command= lambda: \
-                              self.openWakeFiles("3_H886_Jul_4.str")).grid(row=0,column=6,sticky=N, padx = 20)
-        loadTestButton4 = Button(headerFrame, text="8_H383_Mar_23.str", command= lambda: \
-                              self.openWakeFiles("8_H383_Mar_23.str")).grid(row=0,column=7,sticky=N, padx = 20)
-        """
+        loadTestButton1 = Button(headerFrame, text="1L_PR.str", command= lambda: \
+                              self.openWakeFiles("1L_PR.str")).grid(row=0,column=4,sticky=N, padx = 20)
+        loadTestButton2 = Button(headerFrame, text="TH_FEATHER.dat", command= lambda: \
+                              self.openWakeFiles("TH_FEATHER.dat")).grid(row=0,column=5,sticky=N, padx = 20)
+        loadTestButton3 = Button(headerFrame, text="TH_OMNI1.str", command= lambda: \
+                              self.openWakeFiles("TH_OMNI1.str")).grid(row=0,column=6,sticky=N, padx = 20)
+        loadTestButton4 = Button(headerFrame, text="2L-PR-HD1.str", command= lambda: \
+                              self.openWakeFiles("2L-PR-HD1.str")).grid(row=0,column=7,sticky=N, padx = 20)
         
         spacer2Label = Label(headerFrame, text="                    ").grid(row = 0,column = 8)
         canvasButton = Radiobutton(headerFrame, text = "tk Canvas", variable = self.showOn_tkCanvas, value = 1).grid(row = 0, column = 9, sticky = E)
