@@ -159,7 +159,7 @@ class myGUI(object):
         # **************************  Frames *************************
         # ************************************************************
 
-        # ************* Root Frame ********************
+        # **************************  Root Frame *********************
         self.rootFrame = Frame(self.root, borderwidth=2, relief="sunken")
         self.rootFrame.grid(column = 0, row = 0)
         headerFrame= Frame(self.root,borderwidth=2, relief="sunken")
@@ -180,6 +180,7 @@ class myGUI(object):
         myNotebook.grid(row=0,column=0)
 
         # **************Header Row ******************
+        
         # openFileButton = Button(headerFrame, text="Open File", command= lambda: self.openWakeFile("")).grid(row=0,column=0, sticky=W)
         
         openFilesButton = Button(headerFrame, text="Open Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=0, sticky=W)        
@@ -200,14 +201,23 @@ class myGUI(object):
         pyplotButton = Radiobutton(headerFrame, text = "pyplot ", variable = self.showOn_tkCanvas, value = 0).grid(row = 0, column = 10, sticky = E)
         
 
-        #************** Graph Tab ******************
+        # *************************************************************
+        # **************        Graph Tab     *************************
+        # *************************************************************
+        
         self.columnFrame = Frame(self.graphTab, borderwidth=2, relief="sunken")
         self.columnFrame.grid(column = 0, row = 0, columnspan= 1, sticky=NS)
         
         self.graphButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
         self.graphButtonFrame.grid(column = 0, row = 0, sticky=N)
         clearCanvasButton = Button(self.graphButtonFrame, text="Clear", command= lambda: \
-                            self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N) 
+                            self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N)
+        cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
+            self.drawCumulativeRecord()).grid(row=2,column=0,sticky=N)
+
+        showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
+            command= lambda:self.drawCumulativeRecord()).grid(row = 3,column=0)
+
  
         eventRecButton = Button(self.graphButtonFrame, text="Event Rec", command= lambda: \
                               self.drawEventRecords()).grid(row=4,column=0,sticky=N)
@@ -295,14 +305,10 @@ class myGUI(object):
         self.graphCanvas.create_text(100,10,text = "Graph Canvas")
 
 
-        cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
-            gt.drawCumulativeRecord(self.recordList[self.fileChoice.get()],self.graphCanvas,True)).grid(row=2,column=0,sticky=N)
+        # *****************************************************************
+        # **************        Threshold Tab     *************************
+        # *****************************************************************
 
-        showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
-            command= lambda:gt.drawCumulativeRecord(self.recordList[self.fileChoice.get()],self.graphCanvas,self.showBPVar.get())).grid(row = 3,column=0)
-               
-
-        #************** Threshold Tab **************
         # Two subframes:        
         #
         # Column 0
@@ -574,6 +580,14 @@ class myGUI(object):
        # *******************************  The Model ********************************************
        #   The Model refers to components that store and retrieve data from databases and files.
        # ***************************************************************************************
+
+    # **************   Procedures called from Graphs Tab  *************
+
+        
+    def drawCumulativeRecord(self):
+        showBP = self.showBPVar.get()
+        gt.drawCumulativeRecord(self.recordList[self.fileChoice.get()],self.graphCanvas,showBP)
+
        
     def save_TH_Figure(self):
         """
