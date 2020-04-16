@@ -214,7 +214,6 @@ class myGUI(object):
                             self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N)
         cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
             self.drawCumulativeRecord()).grid(row=2,column=0,sticky=N)
-
         showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
             command= lambda:self.drawCumulativeRecord()).grid(row = 3,column=0)
 
@@ -582,12 +581,47 @@ class myGUI(object):
        # ***************************************************************************************
 
     # **************   Procedures called from Graphs Tab  *************
-
         
     def drawCumulativeRecord(self):
+        aCanvas = self.graphCanvas
+        aRecord = self.recordList[self.fileChoice.get()]
         showBP = self.showBPVar.get()
-        gt.drawCumulativeRecord(self.recordList[self.fileChoice.get()],self.graphCanvas,showBP)
+        max_x_scale = self.max_x_scale.get()
+        max_y_scale = self.max_y_scale.get()    
+        gt.drawCumulativeRecord(aCanvas,aRecord,showBP,max_x_scale,max_y_scale)
 
+    def drawEventRecords(self):
+        aCanvas = self.graphCanvas
+        aRecordList = self.recordList
+        max_x_scale = self.max_x_scale.get()
+        gt.drawEventRecords(aCanvas,aRecordList,max_x_scale)
+
+    def timeStamps(self,aRecord):
+        self.clearGraphTabCanvas()
+        aCanvas = self.graphCanvas
+        x_zero = 100
+        y_zero = 500
+        x_pixel_width = 650
+        x_divisions = 12
+        max_x_scale = self.max_x_scale.get()
+        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
+        GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-400, x_pixel_width, max_x_scale, aRecord.datalist, ["L"], "L1 active")       
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-360, x_pixel_width, max_x_scale, aRecord.datalist, ["A","a"], "A a")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-340, x_pixel_width, max_x_scale, aRecord.datalist, [">"], "L1 inactive")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-310, x_pixel_width, max_x_scale, aRecord.datalist, ["J"], "L2 active")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-290, x_pixel_width, max_x_scale, aRecord.datalist, ["<"], "L2 inactive") 
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-260, x_pixel_width, max_x_scale, aRecord.datalist, ["P","p"], "Pump")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-230, x_pixel_width, max_x_scale, aRecord.datalist, ["S","s"], "Stim 1")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-210, x_pixel_width, max_x_scale, aRecord.datalist, ["C","c"], "Stim 2")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-180, x_pixel_width, max_x_scale, aRecord.datalist, ["=","."], "Lever 1")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-160, x_pixel_width, max_x_scale, aRecord.datalist, ["-",","], "Lever 2")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-130,  x_pixel_width, max_x_scale, aRecord.datalist, ["T"], "T")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-100,  x_pixel_width, max_x_scale, aRecord.datalist, ["F"], "Food Tray")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-70,  x_pixel_width, max_x_scale, aRecord.datalist, ["B","b"], "Access")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-50,  x_pixel_width, max_x_scale, aRecord.datalist, ["H","h"], "Houselight")
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero-30,  x_pixel_width, max_x_scale, aRecord.datalist, ["G","E"], "Session")
+    
        
     def save_TH_Figure(self):
         """
@@ -2437,53 +2471,7 @@ class myGUI(object):
 
     def clearGraphTabCanvas(self):
         self.graphCanvas.delete('all')
-
-    def drawEventRecords(self):
-        # canvas is 800 x 600
-        self.clearGraphTabCanvas()
-        x_zero = 50
-        x_pixel_width = 700
-        x_divisions = 12
-        max_x_scale = self.max_x_scale.get()
-        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-        GraphLib.drawXaxis(self.graphCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
-        y_zero = 30
-        box = 0
-        # eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, datalist, charList, aLabel)
-        # aTitle = aRecord.fileName
-        for record in self.recordList:
-            y_zero = y_zero + 40
-            box = box + 1
-            aTitle = "Box "+str(box)
-            GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, record.datalist, ["P"], aTitle)
-        # print("event Records")
-
-    def timeStamps(self,aRecord):
-        self.clearGraphTabCanvas()
-        aCanvas = self.graphCanvas
-        x_zero = 100
-        y_zero = 500
-        x_pixel_width = 650
-        x_divisions = 12
-        max_x_scale = self.max_x_scale.get()
-        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-        GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-400, x_pixel_width, max_x_scale, aRecord.datalist, ["L"], "L1 active")       
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-360, x_pixel_width, max_x_scale, aRecord.datalist, ["A","a"], "A a")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-340, x_pixel_width, max_x_scale, aRecord.datalist, [">"], "L1 inactive")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-310, x_pixel_width, max_x_scale, aRecord.datalist, ["J"], "L2 active")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-290, x_pixel_width, max_x_scale, aRecord.datalist, ["<"], "L2 inactive") 
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-260, x_pixel_width, max_x_scale, aRecord.datalist, ["P","p"], "Pump")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-230, x_pixel_width, max_x_scale, aRecord.datalist, ["S","s"], "Stim 1")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-210, x_pixel_width, max_x_scale, aRecord.datalist, ["C","c"], "Stim 2")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-180, x_pixel_width, max_x_scale, aRecord.datalist, ["=","."], "Lever 1")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-160, x_pixel_width, max_x_scale, aRecord.datalist, ["-",","], "Lever 2")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-130,  x_pixel_width, max_x_scale, aRecord.datalist, ["T"], "T")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-100,  x_pixel_width, max_x_scale, aRecord.datalist, ["F"], "Food Tray")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-70,  x_pixel_width, max_x_scale, aRecord.datalist, ["B","b"], "Access")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-50,  x_pixel_width, max_x_scale, aRecord.datalist, ["H","h"], "Houselight")
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero-30,  x_pixel_width, max_x_scale, aRecord.datalist, ["G","E"], "Session")
-        
+       
 
     def threshold_text(self):
         aRecord = self.recordList[self.fileChoice.get()]
