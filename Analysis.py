@@ -222,7 +222,7 @@ class myGUI(object):
                               self.timeStamps()).grid(row=5,column=0,sticky=N)
         
         modelButton = Button(self.graphButtonFrame, text="Model Coc", command= lambda: \
-                              self.showModel(self.recordList[self.fileChoice.get()])).grid(row=6,column=0,sticky=N)
+                              self.showModel()).grid(row=6,column=0,sticky=N)
         histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
                               self.showHistogram(self.recordList[self.fileChoice.get()])).grid(row=7,column=0,sticky=N)
 
@@ -601,8 +601,12 @@ class myGUI(object):
         max_x_scale = self.max_x_scale.get()
         gt.timeStamps(aCanvas,aRecord,max_x_scale)
 
-
-        
+    def showModel(self):
+        aCanvas = self.graphCanvas
+        aRecord = self.recordList[self.fileChoice.get()]
+        max_x_scale = self.max_x_scale.get()
+        gt.showModel(aCanvas,aRecord,max_x_scale) 
+              
        
     def save_TH_Figure(self):
         """
@@ -2716,59 +2720,6 @@ class myGUI(object):
         self.graphCanvas.create_text(250, y_zero+50, fill = "blue", text = tempStr)
         
 
-    def showModel(self,aRecord, resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
-        if clear:
-            self.clearGraphTabCanvas()
-        x_zero = 75
-        y_zero = 350
-        x_pixel_width = 700
-        y_pixel_height = 200
-        x_divisions = 12
-        y_divisions = 5
-        max_x_scale = self.max_x_scale.get()
-        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-        # max_y_scale = self.max_y_scale.get()
-        # max_y_scale = 25
-        GraphLib.eventRecord(self.graphCanvas, x_zero, 100, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "Test")
-        GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "red")
-        GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "blue")
-        x_scaler = x_pixel_width / (max_x_scale*60*1000)
-        y_scaler = y_pixel_height / max_y_scale
-        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc, aRecord.pumpSpeed, resolution)
-        # print(modelList)
-        x = x_zero
-        y = y_zero
-        totalConc = 0
-        totalRecords = 0
-        startAverageTime = 10 * 60000    # 10 min
-        endAverageTime = 180 * 60000     # 120 min
-        for pairs in cocConcXYList:
-            if pairs[0] >= startAverageTime:
-                if pairs[0] < endAverageTime:
-                    totalRecords = totalRecords + 1
-                    totalConc = totalConc + pairs[1]
-            concentration = round(pairs[1],2)
-            newX = x_zero + pairs[0] * x_scaler // 1
-            newY = y_zero - concentration * y_scaler // 1
-            self.graphCanvas.create_line(x, y, newX, newY, fill= aColor)
-            # self.graphCanvas.create_oval(newX-2, newY-2, newX+2, newY+2, fill=aColor)
-            x = newX
-            y = newY
-        self.graphCanvas.create_text(300, 400, fill = "blue", text = aRecord.fileName)
-        """
-        dose = 2.8*aRecord.cocConc * aRecord.pumpSpeed
-        tempStr = "Duration (2.8 sec) * Pump Speed ("+str(aRecord.pumpSpeed)+" ml/sec) * cocConc ("+str(aRecord.cocConc)+" mg/ml) = Unit Dose "+ str(round(dose,3))+" mg/inj"
-        self.graphCanvas.create_text(300, 450, fill = "blue", text = tempStr)
-        """
-        averageConc = round((totalConc/totalRecords),3)
-        # draw average line
-        X1 = x_zero + (startAverageTime * x_scaler) // 1
-        Y  = y_zero-((averageConc) * y_scaler) // 1
-        X2 = x_zero + (endAverageTime * x_scaler) // 1
-        self.graphCanvas.create_line(X1, Y, X2, Y, fill= "red")
-        tempStr = "Average Conc (10-180 min): "+str(averageConc)
-        self.graphCanvas.create_text(500, Y, fill = "red", text = tempStr)
-        
 
     def testModel(self):
         WakePumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188,0.100,0.056,0.031,0.018,0.010,0.0056]
