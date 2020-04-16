@@ -1,13 +1,11 @@
 
 """
-October 8,
+April 15, 2020
 
-Branch "2L-PR-Figs" used to generate a Figure or two for 2L-PR-HD paper
+Move Test Model and Axes Example to GraphsTab.py
 
-8_H383_Mar_10.str - Fig 1 top
-8_H383_Mar_11.str - Fig 1 middle
-8_H383_Mar_21.str - Fig 1 bottom
-8_H383_Mar_27.str - Fig 6 2L-PR-HD
+Rename "Test Area" to 2L-PR 
+
 
 """
 
@@ -224,7 +222,7 @@ class myGUI(object):
         modelButton = Button(self.graphButtonFrame, text="Model Coc", command= lambda: \
                               self.showModel()).grid(row=6,column=0,sticky=N)
         histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
-                              self.showHistogram(self.recordList[self.fileChoice.get()])).grid(row=7,column=0,sticky=N)
+                              self.showHistogram()).grid(row=7,column=0,sticky=N)
 
         self.graph_YaxisRadioButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
         self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 1)
@@ -574,10 +572,9 @@ class myGUI(object):
         radiobutton10 = Radiobutton(fileSelectorFrame, textvariable = self.fileName9, variable = self.fileChoice, \
                                    value = 9, command =lambda: self.selectList()).grid(column=4, row=3,padx=padding)
 
-
-       # *******************************  The Model ********************************************
-       #   The Model refers to components that store and retrieve data from databases and files.
-       # ***************************************************************************************
+    # *********************************
+    # ****  End of __init__(self)  ****
+    # *********************************
 
     # **************   Procedures called from Graphs Tab  *************
         
@@ -605,8 +602,13 @@ class myGUI(object):
         aCanvas = self.graphCanvas
         aRecord = self.recordList[self.fileChoice.get()]
         max_x_scale = self.max_x_scale.get()
-        gt.showModel(aCanvas,aRecord,max_x_scale) 
-              
+        gt.showModel(aCanvas,aRecord,max_x_scale)
+
+    def showHistogram(self):
+        aCanvas = self.graphCanvas
+        aRecord = self.recordList[self.fileChoice.get()]
+        max_x_scale = self.max_x_scale.get()
+        gt.showHistogram(aCanvas,aRecord,max_x_scale)              
        
     def save_TH_Figure(self):
         """
@@ -2633,92 +2635,7 @@ class myGUI(object):
         self.graphCanvas.create_text(300, 100, fill="blue", text = "Total Pump Time: "+str(pump_total))
         dose = (pump_total * 5 * 0.000025) / 0.33
         aString = "Total: {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
-        self.graphCanvas.create_text(300, 130, fill="blue", text = aString)
-        
-
-    def showHistogram(self,aRecord, clear = True):
-        """
-        Draws a histogram using the datalist from aRecord.
-
-        To Do: There is another histogram procedure in GraphLib. Should be merged. 
-
-        """
-        def drawBar(aCanvas,x,y, pixelHeight, width, color = "black"):
-            aCanvas.create_line(x, y, x, y-pixelHeight, fill=color)
-            aCanvas.create_line(x, y-pixelHeight, x+width, y-pixelHeight, fill=color)
-            aCanvas.create_line(x+width, y-pixelHeight, x+width, y, fill=color)
-        
-        if clear:
-            self.clearGraphTabCanvas()          
-        # Draw Event Record
-        x_zero = 75
-        y_zero = 100
-        x_pixel_width = 700
-        y_pixel_height = 200
-        x_divisions = 12
-        y_divisions = 5
-        max_x_scale = self.max_x_scale.get()
-        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-        self.graphCanvas.create_text(200, y_zero-50 , fill = "blue", text = aRecord.fileName)
-        GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "")
-        # Populate bin array
-        binSize = 1   # in minutes
-        intervals = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-        T1 = 0
-        numInj = 0
-        numIntervals = 0
-        outOfRange = 0
-        totalIntervals = 0
-        for pairs in aRecord.datalist:
-            if pairs[1] == "P":
-                numInj = numInj + 1
-                T2 = pairs[0]
-                if T1 > 0:
-                    numIntervals = numIntervals + 1
-                    interval = round((T2-T1)/(binSize*60000),3)   # rounded to a minute with one decimal point
-                    totalIntervals = totalIntervals + interval
-                    index = int(interval)
-                    if index < len(intervals)-1:
-                        intervals[index] = intervals[index]+1
-                    else:
-                        outOfRange = outOfRange+1
-                T1 = T2
-        tempStr = "Number of Injections = "+str(numInj)
-        self.graphCanvas.create_text(450, y_zero-50, fill = "blue", text = tempStr)
-        # print("Number of Inter-injection Intervals =",numIntervals)
-        print("Inter-injection Intervals = ",intervals)
-        meanInterval = round(totalIntervals / numIntervals,3)
-        x_zero = 75
-        y_zero = 450
-        x_pixel_width = 400
-        y_pixel_height = 300 
-        max_x_scale = 20
-        max_y_scale = 20
-        x_divisions = 20
-        y_divisions = max_y_scale
-        labelLeft = True
-        GraphLib.drawXaxis(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
-        GraphLib.drawYaxis(self.graphCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, labelLeft, color = "black")
-        # intervals = [0,1,2,3,4,5,6,5,4,3,2,1,0,0,0,0,0,0,0,1]  #Used for test without loading a file
-        unitPixelHeight = int(y_pixel_height/y_divisions)
-        width = int(x_pixel_width/len(intervals))
-        for i in range(len(intervals)):           
-            x = x_zero + (i*width)
-            drawBar(self.graphCanvas,x,y_zero,intervals[i]*unitPixelHeight,width)
-        #Draw OutOfRange Bar
-        x = x_zero + (len(intervals)*width) + 20
-        drawBar(self.graphCanvas,x,y_zero,outOfRange*unitPixelHeight,width)
-        tempStr = "Mean interval (min) = "+ str(meanInterval)
-        self.graphCanvas.create_text(200, y_zero-y_pixel_height, fill = "red", text = tempStr)
-        rate = round(60/meanInterval,3)
-        tempStr = "Rate (inj/hr) = "+str(rate)
-        self.graphCanvas.create_text(450, y_zero-y_pixel_height, fill = "blue", text = tempStr)
-        
-        self.graphCanvas.create_line(x_zero+int(width*meanInterval), y_zero, x_zero+int(width*meanInterval), y_zero-y_pixel_height+20, fill="red")
-        
-        tempStr = "Each Bin = "+str(binSize)+" minute"
-        self.graphCanvas.create_text(250, y_zero+50, fill = "blue", text = tempStr)
-        
+        self.graphCanvas.create_text(300, 130, fill="blue", text = aString)        
 
 
     def testModel(self):
