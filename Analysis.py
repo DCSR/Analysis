@@ -4,12 +4,10 @@ April 15, 2020
 
 Move Test Model and Axes Example to GraphsTab.py
 
-Rename "Test Area" to 2L-PR 
-
+Rename "Test Area" to 2L-PR
 
 """
 
-# adapted from Dropbox/SelfAdministration/Analysis/Analysis102.py
 from tkinter import *
 from tkinter.ttk import Notebook
 from tkinter import filedialog
@@ -45,10 +43,9 @@ Models, Views and Controllers (MCV) design: keep the representation of the data 
 from the parts of the program that the user interacts with.
 
 View: displays information to the user (Graphical User Interface (tkinter and graphs)
+
 Models: store and retrieve data from databases and files.
 Controllers: convert user input into calls on functions that manipulate data
- 
-
 """
 
 def main(argv=None):
@@ -82,12 +79,11 @@ class myGUI(object):
         print("Initial Directory:", self.initialDir)
 
         # **********************************************************************
-        # *************** Variables and Lists associated with the View *********
+        # *********   Variables and Lists associated with the View     *********
         # **********************************************************************
         
-        #Data Record defined in DataModel.py imported as dm
         #Construct ten empty dataRecords
-        self.record0 = dm.DataRecord([],"empty")         
+        self.record0 = dm.DataRecord([],"empty")   #Data Record defined in DataModel.py      
         self.record1 = dm.DataRecord([],"empty")
         self.record2 = dm.DataRecord([],"empty")
         self.record3 = dm.DataRecord([],"empty")
@@ -121,6 +117,11 @@ class myGUI(object):
         self.fileNameList = [self.fileName0,self.fileName1,self.fileName2,self.fileName3,self.fileName4,\
                              self.fileName5,self.fileName6,self.fileName7,self.fileName8,self.fileName9]
 
+        # Graphs Tab
+        self.showBPVar = BooleanVar(value = True)
+        self.max_x_scale = IntVar(value=360)
+        self.max_y_scale = IntVar(value=500)
+
         # Threshold stuff
         self.printReportVar = BooleanVar(value = True)
         self.pumpTimes = IntVar()                           # Use OMNI or M0 pumptimes
@@ -141,11 +142,6 @@ class myGUI(object):
         self.respMax = IntVar()
         self.respMax.set(200)
         self.average_TH_FilesVar = BooleanVar(value=False)  # Not associated with widget
-        
-        # Graphs Tab
-        self.showBPVar = BooleanVar(value = True)
-        self.max_x_scale = IntVar(value=360)
-        self.max_y_scale = IntVar(value=500)
 
         # Text Tab
         self.startTimeVar = IntVar()                        # Associated with startTimeScale, initialized to zero       
@@ -153,11 +149,14 @@ class myGUI(object):
         self.drugConcStr = StringVar(value="5.0")
         self.weightStr = StringVar(value="350")
 
-        # ************************************************************
-        # **************************  Frames *************************
-        # ************************************************************
+        # Test Area Tab
+        self.leverCount = IntVar()                          # Associated with L1Button & L2Button
+        self.leverCount.set(2)      
 
-        # **************************  Root Frame *********************
+        # ******************************************************************************
+        # **************************         Root Frame            *********************
+        # ******************************************************************************
+        
         self.rootFrame = Frame(self.root, borderwidth=2, relief="sunken")
         self.rootFrame.grid(column = 0, row = 0)
         headerFrame= Frame(self.root,borderwidth=2, relief="sunken")
@@ -171,16 +170,13 @@ class myGUI(object):
         self.thresholdTab = Frame(myNotebook)
         self.textTab = Frame(myNotebook)
         self.testAreaTab = Frame(myNotebook)
+        myNotebook.add(self.graphTab,text = "Graphs")
         myNotebook.add(self.thresholdTab,text = "Threshold")
-        myNotebook.add(self.graphTab,text = "Graphs")      
         myNotebook.add(self.textTab,text = "Text")
         myNotebook.add(self.testAreaTab,text = "Test Area")
         myNotebook.grid(row=0,column=0)
 
-        # **************Header Row ******************
-        
-        # openFileButton = Button(headerFrame, text="Open File", command= lambda: self.openWakeFile("")).grid(row=0,column=0, sticky=W)
-        
+        # **************      Header Row    ******************      
         openFilesButton = Button(headerFrame, text="Open Files", command= lambda: self.openWakeFiles("")).grid(row=0,column=0, sticky=W)        
         spacer1Label = Label(headerFrame, text="               ").grid(row=0,column=1)
         clockTimeLabel = Label(headerFrame, textvariable = self.clockTimeStringVar).grid(row = 0, column=2)
@@ -197,7 +193,30 @@ class myGUI(object):
         spacer2Label = Label(headerFrame, text="                    ").grid(row = 0,column = 8)
         canvasButton = Radiobutton(headerFrame, text = "tk Canvas", variable = self.showOn_tkCanvas, value = 1).grid(row = 0, column = 9, sticky = E)
         pyplotButton = Radiobutton(headerFrame, text = "pyplot ", variable = self.showOn_tkCanvas, value = 0).grid(row = 0, column = 10, sticky = E)
-        
+
+        #*************** FileSelectorFrame stuff ****************
+        padding = 20
+        radiobutton1 = Radiobutton(fileSelectorFrame, textvariable = self.fileName0, variable = self.fileChoice, \
+                                   value = 0, command =lambda: self.selectList()).grid(column=0, row=2, padx=padding)
+        radiobutton2 = Radiobutton(fileSelectorFrame, textvariable = self.fileName1, variable = self.fileChoice, \
+                                   value = 1, command =lambda: self.selectList()).grid(column=1, row=2,padx=padding)
+        radiobutton3 = Radiobutton(fileSelectorFrame, textvariable = self.fileName2, variable = self.fileChoice, \
+                                   value = 2, command =lambda: self.selectList()).grid(column=2, row=2,padx=padding)
+        radiobutton4 = Radiobutton(fileSelectorFrame, textvariable = self.fileName3, variable = self.fileChoice, \
+                                   value = 3, command =lambda: self.selectList()).grid(column=3, row=2,padx=padding)
+        radiobutton5 = Radiobutton(fileSelectorFrame, textvariable = self.fileName4, variable = self.fileChoice, \
+                                   value = 4, command =lambda: self.selectList()).grid(column=4, row=2,padx=padding)
+        radiobutton6 = Radiobutton(fileSelectorFrame, textvariable = self.fileName5, variable = self.fileChoice, \
+                                   value = 5, command =lambda: self.selectList()).grid(column=0, row=3,padx=padding)
+        radiobutton7 = Radiobutton(fileSelectorFrame, textvariable = self.fileName6, variable = self.fileChoice, \
+                                   value = 6, command =lambda: self.selectList()).grid(column=1, row=3,padx=padding)
+        radiobutton8 = Radiobutton(fileSelectorFrame, textvariable = self.fileName7, variable = self.fileChoice, \
+                                   value = 7, command =lambda: self.selectList()).grid(column=2, row=3,padx=padding)
+        radiobutton9 = Radiobutton(fileSelectorFrame, textvariable = self.fileName8, variable = self.fileChoice, \
+                                   value = 8, command =lambda: self.selectList()).grid(column=3, row=3,padx=padding)
+        radiobutton10 = Radiobutton(fileSelectorFrame, textvariable = self.fileName9, variable = self.fileChoice, \
+                                   value = 9, command =lambda: self.selectList()).grid(column=4, row=3,padx=padding)
+
 
         # *************************************************************
         # **************        Graph Tab     *************************
@@ -224,22 +243,9 @@ class myGUI(object):
         histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
                               self.showHistogram()).grid(row=7,column=0,sticky=N)
 
-        self.graph_YaxisRadioButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 1)
-        y_axisButtonLabel = Label(self.graph_YaxisRadioButtonFrame, text = "Y axis").grid(row = 0, column=0)
-        y_scaleRadiobutton250 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="250", variable=self.max_y_scale, value=250)
-        y_scaleRadiobutton250.grid(column = 0, row = 1)
-        y_scaleRadiobutton500 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="500", variable=self.max_y_scale, value=500)
-        y_scaleRadiobutton500.grid(column = 0, row = 2)
-        y_scaleRadiobutton1000 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="1000", variable=self.max_y_scale, value=1000)
-        y_scaleRadiobutton1000.grid(column = 0, row = 3)
-        y_scaleRadiobutton1500 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="1500", variable=self.max_y_scale, value=1500)
-        y_scaleRadiobutton1500.grid(column = 0, row = 4)
-
         # ******  IntA Frame ************
-
         self.graph_IntA_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_IntA_frame.grid(column = 0, row = 2)
+        self.graph_IntA_frame.grid(column = 0, row = 1)
         IntA_frame_lable = Label(self.graph_IntA_frame, text = "IntA").grid(row = 0, column=0)
         IntA_event_button = Button(self.graph_IntA_frame, text="Event records", command= lambda: \
             self.IntA_event_records()).grid(row=1,column=0,sticky=N)
@@ -250,11 +256,9 @@ class myGUI(object):
         IntA_histogram_all_Button = Button(self.graph_IntA_frame, text="Histogram (All)", command= lambda: \
             self.IntAHistogram_all()).grid(row=4,column=0,sticky=N)
 
-
         # ******  2L - PR Frame *********
-
         self.graph_2LPR_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_2LPR_frame.grid(column = 0, row = 3)
+        self.graph_2LPR_frame.grid(column = 0, row = 2)
         TwoLever_frame_lable = Label(self.graph_2LPR_frame, text = "2L-PR").grid(row = 0, column=0)
         TwoLever_CR_button = Button(self.graph_2LPR_frame, text="Cum Rec", command= lambda: \
             self.TwoLeverCR()).grid(row=1,column=0,sticky=N)
@@ -264,14 +268,26 @@ class myGUI(object):
             self.TwoLeverGraphTest1()).grid(row=3,column=0,sticky=N)
 
         # ******  Example Frame *********
-
         self.graph_example_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
-        self.graph_example_frame.grid(column = 0, row = 4)
+        self.graph_example_frame.grid(column = 0, row = 3)
         example_frame_lable = Label(self.graph_example_frame, text = "Examples").grid(row = 0, column=0)
         model_example_button = Button(self.graph_example_frame, text="Test Model", command= lambda: \
                 self.testModel()).grid(row=1,column=0,sticky=N)
         axes_example_button = Button(self.graph_example_frame, text="Axes", command= lambda: \
                               self.test()).grid(row=2,column=0,sticky=N)
+
+        # ******* Y axis frame *********
+        self.graph_YaxisRadioButtonFrame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
+        self.graph_YaxisRadioButtonFrame.grid(column = 0, row = 4)
+        y_axisButtonLabel = Label(self.graph_YaxisRadioButtonFrame, text = "Y axis").grid(row = 0, column=0)
+        y_scaleRadiobutton250 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="250", variable=self.max_y_scale, value=250)
+        y_scaleRadiobutton250.grid(column = 0, row = 1)
+        y_scaleRadiobutton500 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="500", variable=self.max_y_scale, value=500)
+        y_scaleRadiobutton500.grid(column = 0, row = 2)
+        y_scaleRadiobutton1000 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="1000", variable=self.max_y_scale, value=1000)
+        y_scaleRadiobutton1000.grid(column = 0, row = 3)
+        y_scaleRadiobutton1500 = Radiobutton(self.graph_YaxisRadioButtonFrame, text="1500", variable=self.max_y_scale, value=1500)
+        y_scaleRadiobutton1500.grid(column = 0, row = 4)
         
         # *************************************
         
@@ -541,40 +557,14 @@ class myGUI(object):
         Button6 = Button(self.testAreaButtonFrame, text="Load 2L_PR Files", command= lambda: \
                               self.load_2L_PR_Files()).grid(row=6,column=0,columnspan=2,sticky=N)
 
-        self.leverCount = IntVar()
-        self.leverCount.set(2)
         L1Button = Radiobutton(self.testAreaButtonFrame, text = "1L", variable = self.leverCount, value = 1).grid(row = 7, column = 0, sticky = E)
         L2Button = Radiobutton(self.testAreaButtonFrame, text = "2L", variable = self.leverCount, value = 2).grid(row = 8, column = 0, sticky = E)
         
         # Button5 = Button(self.testAreaButtonFrame, text="unused", command= lambda: \
         # self.someCommand()).grid(row=5,column=0,columnspan=2,sticky=N)
 
-        #*************** FileSelectorFrame stuff ****************
-        padding = 20
-        radiobutton1 = Radiobutton(fileSelectorFrame, textvariable = self.fileName0, variable = self.fileChoice, \
-                                   value = 0, command =lambda: self.selectList()).grid(column=0, row=2, padx=padding)
-        radiobutton2 = Radiobutton(fileSelectorFrame, textvariable = self.fileName1, variable = self.fileChoice, \
-                                   value = 1, command =lambda: self.selectList()).grid(column=1, row=2,padx=padding)
-        radiobutton3 = Radiobutton(fileSelectorFrame, textvariable = self.fileName2, variable = self.fileChoice, \
-                                   value = 2, command =lambda: self.selectList()).grid(column=2, row=2,padx=padding)
-        radiobutton4 = Radiobutton(fileSelectorFrame, textvariable = self.fileName3, variable = self.fileChoice, \
-                                   value = 3, command =lambda: self.selectList()).grid(column=3, row=2,padx=padding)
-        radiobutton5 = Radiobutton(fileSelectorFrame, textvariable = self.fileName4, variable = self.fileChoice, \
-                                   value = 4, command =lambda: self.selectList()).grid(column=4, row=2,padx=padding)
-        radiobutton6 = Radiobutton(fileSelectorFrame, textvariable = self.fileName5, variable = self.fileChoice, \
-                                   value = 5, command =lambda: self.selectList()).grid(column=0, row=3,padx=padding)
-        radiobutton7 = Radiobutton(fileSelectorFrame, textvariable = self.fileName6, variable = self.fileChoice, \
-                                   value = 6, command =lambda: self.selectList()).grid(column=1, row=3,padx=padding)
-        radiobutton8 = Radiobutton(fileSelectorFrame, textvariable = self.fileName7, variable = self.fileChoice, \
-                                   value = 7, command =lambda: self.selectList()).grid(column=2, row=3,padx=padding)
-        radiobutton9 = Radiobutton(fileSelectorFrame, textvariable = self.fileName8, variable = self.fileChoice, \
-                                   value = 8, command =lambda: self.selectList()).grid(column=3, row=3,padx=padding)
-        radiobutton10 = Radiobutton(fileSelectorFrame, textvariable = self.fileName9, variable = self.fileChoice, \
-                                   value = 9, command =lambda: self.selectList()).grid(column=4, row=3,padx=padding)
-
-    # *********************************
-    # ****  End of __init__(self)  ****
-    # *********************************
+    # ***************   End of __init__(self)  *************************
+   
 
     # **************   Procedures called from Graphs Tab  *************
         
@@ -608,7 +598,13 @@ class myGUI(object):
         aCanvas = self.graphCanvas
         aRecord = self.recordList[self.fileChoice.get()]
         max_x_scale = self.max_x_scale.get()
-        gt.showHistogram(aCanvas,aRecord,max_x_scale)              
+        gt.showHistogram(aCanvas,aRecord,max_x_scale)
+
+    def IntA_event_records(self):
+        # canvas is 800 x 600
+        aCanvas = self.graphCanvas
+        aRecord = self.recordList[self.fileChoice.get()]
+        gt.IntA_event_records(aCanvas,aRecord)
        
     def save_TH_Figure(self):
         """
@@ -2534,23 +2530,6 @@ class myGUI(object):
         aString = "Total dose (mg/kg): {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
         self.textBox.insert(END, aString)
         """
-
-    def IntA_event_records(self):
-        # canvas is 800 x 600
-        self.clearGraphTabCanvas()
-        aRecord = self.recordList[self.fileChoice.get()]
-        x_zero = 75
-        x_pixel_width = 600
-        x_divisions = 12
-        max_x_scale = 5
-        x_divisions = 5
-        GraphLib.drawXaxis(self.graphCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
-        y_zero = 50
-        for block in range(12):
-            aTitle = str(block+1)
-            pump_timestamps = ListLib.get_pump_timestamps(aRecord.datalist,block)
-            GraphLib.eventRecord(self.graphCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, pump_timestamps, ["P","p"], aTitle)
-            y_zero = y_zero + 45
 
     def IntA_durations(self):
         '''

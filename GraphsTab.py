@@ -1,11 +1,13 @@
 """
 This file contains all the precedures called from the GraphsTab
 
-Index:
+Index: (alphabetical)
 
 drawCumulativeRecord()
 
 drawEventRecords()
+
+IntA_event_records()
 
 showModel()
 
@@ -18,6 +20,7 @@ timeStamps()
 
 import GraphLib
 import model
+import ListLib
 
 def drawCumulativeRecord(aCanvas,aRecord,showBPVar,max_x_scale,max_y_scale):
     aCanvas.delete('all')
@@ -53,6 +56,22 @@ def drawEventRecords(aCanvas,aRecordList,max_x_scale):
         box = box + 1
         aTitle = "Box "+str(box)
         GraphLib.eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, record.datalist, ["P"], aTitle)
+
+def IntA_event_records(aCanvas,aRecord):
+    # graphCanvas is 800 x 600
+    aCanvas.delete('all')
+    x_zero = 75
+    x_pixel_width = 600
+    x_divisions = 12
+    max_x_scale = 5
+    x_divisions = 5
+    GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
+    y_zero = 50
+    for block in range(12):
+        aTitle = str(block+1)
+        pump_timestamps = ListLib.get_pump_timestamps(aRecord.datalist,block)
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, pump_timestamps, ["P","p"], aTitle)
+        y_zero = y_zero + 45
 
 def showModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
     if clear:
