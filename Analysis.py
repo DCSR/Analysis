@@ -229,28 +229,27 @@ class myGUI(object):
         self.graphButtonFrame.grid(column = 0, row = 0, sticky=N)
         clearCanvasButton = Button(self.graphButtonFrame, text="Clear", command= lambda: \
                             self.clearGraphTabCanvas()).grid(row=0,column=0,sticky=N)
-        cumRecButton = Button(self.graphButtonFrame, text="Cum Rec", command= lambda: \
-            self.drawCumulativeRecord()).grid(row=2,column=0,sticky=N)
+        cumRecButton = Button(self.graphButtonFrame, text="cumulativeRecord()", command= lambda: \
+            self.cumulativeRecord()).grid(row=2,column=0,sticky=N)
         showBPButton = Checkbutton(self.graphButtonFrame, text = "show BP", variable = self.showBPVar, onvalue = True, offvalue = False, \
-            command= lambda:self.drawCumulativeRecord()).grid(row = 3,column=0)
-        eventRecButton = Button(self.graphButtonFrame, text="Event Rec", command= lambda: \
-                              self.drawEventRecords()).grid(row=4,column=0,sticky=N)
-        timeStampButton = Button(self.graphButtonFrame, text="Timestamps", command= lambda: \
-                              self.timeStamps()).grid(row=5,column=0,sticky=N)
-        
-        modelButton = Button(self.graphButtonFrame, text="Model Coc", command= lambda: \
-                              self.showModel()).grid(row=6,column=0,sticky=N)
-        histogramButton = Button(self.graphButtonFrame, text="Histogram", command= lambda: \
-                              self.showHistogram()).grid(row=7,column=0,sticky=N)
+            command= lambda:self.cumulativeRecord()).grid(row = 3,column=0)
+        eventRecButton = Button(self.graphButtonFrame, text="eventRecords()", command= lambda: \
+                              self.eventRecords()).grid(row=4,column=0,sticky=N)
+        timeStampButton = Button(self.graphButtonFrame, text="timeStamps()", command= lambda: \
+                              self.timeStamps()).grid(row=5,column=0,sticky=N)       
+        modelButton = Button(self.graphButtonFrame, text="cocaineModel()", command= lambda: \
+                              self.cocaineModel()).grid(row=6,column=0,sticky=N)
+        histogramButton = Button(self.graphButtonFrame, text="histogram()", command= lambda: \
+                              self.histogram()).grid(row=7,column=0,sticky=N)
 
         # ******  IntA Frame ************
         self.graph_IntA_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
         self.graph_IntA_frame.grid(column = 0, row = 1)
         IntA_frame_lable = Label(self.graph_IntA_frame, text = "IntA").grid(row = 0, column=0)
-        IntA_event_button = Button(self.graph_IntA_frame, text="Event records", command= lambda: \
-            self.IntA_event_records()).grid(row=1,column=0,sticky=N)
-        IntA_durations_button = Button(self.graph_IntA_frame, text="Pump durations", command= lambda: \
-            self.IntA_durations()).grid(row=2,column=0,sticky=N)        
+        IntA_event_button = Button(self.graph_IntA_frame, text="eventRecordsIntA()", command= lambda: \
+            self.eventRecordsIntA()).grid(row=1,column=0,sticky=N)
+        IntA_durations_button = Button(self.graph_IntA_frame, text="pumpDurationsIntA()", command= lambda: \
+            self.pumpDurationsIntA()).grid(row=2,column=0,sticky=N)        
         IntA_histogram_block_Button = Button(self.graph_IntA_frame, text="Histogram (blocks)", command= lambda: \
             self.IntAHistogram_blocks()).grid(row=3,column=0,sticky=N)
         IntA_histogram_all_Button = Button(self.graph_IntA_frame, text="Histogram (All)", command= lambda: \
@@ -567,20 +566,22 @@ class myGUI(object):
    
 
     # **************   Procedures called from Graphs Tab  *************
+    def clearGraphTabCanvas(self):
+        self.graphCanvas.delete('all')
         
-    def drawCumulativeRecord(self):
+    def cumulativeRecord(self):
         aCanvas = self.graphCanvas
         aRecord = self.recordList[self.fileChoice.get()]
         showBP = self.showBPVar.get()
         max_x_scale = self.max_x_scale.get()
         max_y_scale = self.max_y_scale.get()    
-        gt.drawCumulativeRecord(aCanvas,aRecord,showBP,max_x_scale,max_y_scale)
+        gt.cumulativeRecord(aCanvas,aRecord,showBP,max_x_scale,max_y_scale)
 
-    def drawEventRecords(self):
+    def eventRecords(self):
         aCanvas = self.graphCanvas
         aRecordList = self.recordList
         max_x_scale = self.max_x_scale.get()
-        gt.drawEventRecords(aCanvas,aRecordList,max_x_scale)
+        gt.eventRecords(aCanvas,aRecordList,max_x_scale)
 
     def timeStamps(self):
         aCanvas = self.graphCanvas
@@ -588,23 +589,29 @@ class myGUI(object):
         max_x_scale = self.max_x_scale.get()
         gt.timeStamps(aCanvas,aRecord,max_x_scale)
 
-    def showModel(self):
+    def cocaineModel(self):
         aCanvas = self.graphCanvas
         aRecord = self.recordList[self.fileChoice.get()]
         max_x_scale = self.max_x_scale.get()
-        gt.showModel(aCanvas,aRecord,max_x_scale)
+        gt.cocaineModel(aCanvas,aRecord,max_x_scale)
 
-    def showHistogram(self):
+    def histogram(self):
         aCanvas = self.graphCanvas
         aRecord = self.recordList[self.fileChoice.get()]
         max_x_scale = self.max_x_scale.get()
-        gt.showHistogram(aCanvas,aRecord,max_x_scale)
+        gt.histogram(aCanvas,aRecord,max_x_scale)
 
-    def IntA_event_records(self):
-        # canvas is 800 x 600
+    def eventRecordsIntA(self):
         aCanvas = self.graphCanvas
         aRecord = self.recordList[self.fileChoice.get()]
-        gt.IntA_event_records(aCanvas,aRecord)
+        gt.eventRecordsIntA(aCanvas,aRecord)
+
+    def pumpDurationsIntA(self):
+        aCanvas = self.graphCanvas
+        aRecord = self.recordList[self.fileChoice.get()]
+        gt.pumpDurationsIntA(aCanvas,aRecord)
+        
+    # **************************************************    
        
     def save_TH_Figure(self):
         """
@@ -2451,9 +2458,6 @@ class myGUI(object):
     def clearTHCanvas(self):
         self.graphCanvas.delete('all')
         self.fig = plt.figure(clear=True)   # clear contents
-
-    def clearGraphTabCanvas(self):
-        self.graphCanvas.delete('all')
        
 
     def threshold_text(self):
@@ -2529,43 +2533,7 @@ class myGUI(object):
         dose = (total_pump_time * 5 * 0.000025) / 0.33
         aString = "Total dose (mg/kg): {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
         self.textBox.insert(END, aString)
-        """
-
-    def IntA_durations(self):
-        '''
-
-        '''
-        aCanvas = self.graphCanvas
-        self.clearGraphTabCanvas()
-        aRecord = self.recordList[self.fileChoice.get()]
-        pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist, -1)
-        duration_list = []
-        for data in pump_timelist:
-            duration_list.append(data[2])
-        x_zero = 75
-        y_zero = 50
-        x_pixel_width = 600
-        x_divisions = 12
-        max_x_scale = 5
-        x_divisions = 5
-        GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
-        x_scaler = x_pixel_width / (max_x_scale*60*1000)
-        y_zero = 50
-        block = 0
-        for block in range(12):
-            x = x_zero
-            y = y_zero
-            aLabel = str(block+1)
-            pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist,block)
-            aCanvas.create_text(x_zero-30, y_zero-5, fill="blue", text = aLabel) 
-            for data in pump_timelist:
-                newX = (x_zero + data[1] * x_scaler // 1)
-                aCanvas.create_line(x, y, newX, y)
-                height = int(data[2]/40)
-                aCanvas.create_line(newX, y, newX, y-height)                        
-                x = newX
-            y_zero = y_zero + 45
-            
+        """            
         
     def IntAHistogram_blocks(self):
         '''

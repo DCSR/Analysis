@@ -3,17 +3,19 @@ This file contains all the precedures called from the GraphsTab
 
 Index: (alphabetical)
 
-drawCumulativeRecord()
+cocaineModel()         OK
 
-drawEventRecords()
+cumulativeRecord()     OK
 
-IntA_event_records()
+eventRecords()         OK
 
-showModel()
+eventRecordsIntA()     OK
 
-showHistogram()
+histogram()            OK
 
-timeStamps()
+pumpDurationIntA()     OK
+
+timeStamps()           OK
 
 
 """
@@ -22,58 +24,7 @@ import GraphLib
 import model
 import ListLib
 
-def drawCumulativeRecord(aCanvas,aRecord,showBPVar,max_x_scale,max_y_scale):
-    aCanvas.delete('all')
-    # graphCanvas is 800 x 600
-    x_zero = 50
-    y_zero = 550
-    x_pixel_width = 700                               
-    y_pixel_height = 500
-    x_divisions = 12
-    if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-    y_divisions = 10
-    aTitle = aRecord.fileName
-    GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
-    GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True)
-    GraphLib.cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, \
-        aRecord.datalist,showBPVar, aTitle)
-
-
-def drawEventRecords(aCanvas,aRecordList,max_x_scale):
-    # graphCanvas is 800 x 600
-    aCanvas.delete('all')
-    x_zero = 50
-    x_pixel_width = 700
-    x_divisions = 12
-    if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-    GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
-    y_zero = 30
-    box = 0
-    # eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, datalist, charList, aLabel)
-    # aTitle = aRecord.fileName
-    for record in aRecordList:
-        y_zero = y_zero + 40
-        box = box + 1
-        aTitle = "Box "+str(box)
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, record.datalist, ["P"], aTitle)
-
-def IntA_event_records(aCanvas,aRecord):
-    # graphCanvas is 800 x 600
-    aCanvas.delete('all')
-    x_zero = 75
-    x_pixel_width = 600
-    x_divisions = 12
-    max_x_scale = 5
-    x_divisions = 5
-    GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
-    y_zero = 50
-    for block in range(12):
-        aTitle = str(block+1)
-        pump_timestamps = ListLib.get_pump_timestamps(aRecord.datalist,block)
-        GraphLib.eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, pump_timestamps, ["P","p"], aTitle)
-        y_zero = y_zero + 45
-
-def showModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
+def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
     if clear:
         aCanvas.delete('all')
     x_zero = 75
@@ -124,7 +75,59 @@ def showModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clea
     aCanvas.create_text(500, Y, fill = "red", text = tempStr)
 
 
-def showHistogram(aCanvas, aRecord,max_x_scale,clear = True):
+def cumulativeRecord(aCanvas,aRecord,showBPVar,max_x_scale,max_y_scale):
+    aCanvas.delete('all')
+    # graphCanvas is 800 x 600
+    x_zero = 50
+    y_zero = 550
+    x_pixel_width = 700                               
+    y_pixel_height = 500
+    x_divisions = 12
+    if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
+    y_divisions = 10
+    aTitle = aRecord.fileName
+    GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
+    GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True)
+    GraphLib.cumRecord(aCanvas, x_zero, y_zero, x_pixel_width, y_pixel_height, max_x_scale, max_y_scale, \
+        aRecord.datalist,showBPVar, aTitle)
+
+
+def eventRecords(aCanvas,aRecordList,max_x_scale):
+    # graphCanvas is 800 x 600
+    aCanvas.delete('all')
+    x_zero = 50
+    x_pixel_width = 700
+    x_divisions = 12
+    if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
+    GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
+    y_zero = 30
+    box = 0
+    # eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, datalist, charList, aLabel)
+    # aTitle = aRecord.fileName
+    for record in aRecordList:
+        y_zero = y_zero + 40
+        box = box + 1
+        aTitle = "Box "+str(box)
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, record.datalist, ["P"], aTitle)
+
+def eventRecordsIntA(aCanvas,aRecord):
+    # graphCanvas is 800 x 600
+    aCanvas.delete('all')
+    x_zero = 75
+    x_pixel_width = 600
+    x_divisions = 12
+    max_x_scale = 5
+    x_divisions = 5
+    GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
+    y_zero = 50
+    for block in range(12):
+        aTitle = str(block+1)
+        pump_timestamps = ListLib.get_pump_timestamps(aRecord.datalist,block)
+        GraphLib.eventRecord(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, pump_timestamps, ["P","p"], aTitle)
+        y_zero = y_zero + 45
+
+
+def histogram(aCanvas, aRecord,max_x_scale,clear = True):
     """
     Draws a histogram using the datalist from aRecord.
 
@@ -202,6 +205,36 @@ def showHistogram(aCanvas, aRecord,max_x_scale,clear = True):
     aCanvas.create_line(x_zero+int(width*meanInterval), y_zero, x_zero+int(width*meanInterval), y_zero-y_pixel_height+20, fill="red")
     tempStr = "Each Bin = "+str(binSize)+" minute"
     aCanvas.create_text(250, y_zero+50, fill = "blue", text = tempStr)
+
+def pumpDurationsIntA(aCanvas,aRecord):
+    aCanvas.delete('all')
+    pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist, -1)
+    duration_list = []
+    for data in pump_timelist:
+        duration_list.append(data[2])
+    x_zero = 75
+    y_zero = 50
+    x_pixel_width = 600
+    x_divisions = 12
+    max_x_scale = 5
+    x_divisions = 5
+    GraphLib.drawXaxis(aCanvas, x_zero, 550, x_pixel_width, max_x_scale, x_divisions)
+    x_scaler = x_pixel_width / (max_x_scale*60*1000)
+    y_zero = 50
+    block = 0
+    for block in range(12):
+        x = x_zero
+        y = y_zero
+        aLabel = str(block+1)
+        pump_timelist = ListLib.get_pump_duration_list(aRecord.datalist,block)
+        aCanvas.create_text(x_zero-30, y_zero-5, fill="blue", text = aLabel) 
+        for data in pump_timelist:
+            newX = (x_zero + data[1] * x_scaler // 1)
+            aCanvas.create_line(x, y, newX, y)
+            height = int(data[2]/40)
+            aCanvas.create_line(newX, y, newX, y-height)                        
+            x = newX
+        y_zero = y_zero + 45
     
 def timeStamps(aCanvas,aRecord,max_x_scale):
     # graphCanvas is 800 x 600
