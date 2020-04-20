@@ -262,10 +262,8 @@ class myGUI(object):
         TwoLever_frame_lable = Label(self.graph_2LPR_frame, text = "2L-PR").grid(row = 0, column=0)
         TwoLever_CR_button = Button(self.graph_2LPR_frame, text="Cum Rec", command= lambda: \
             self.TwoLeverCR()).grid(row=1,column=0,sticky=N)
-        TwoLeverFig = Button(self.graph_2LPR_frame, text="TwoLeverFig()", command= lambda: \
-            self.TwoLeverFig()).grid(row=2,column=0,sticky=N)
         TwoLever_Test2_button = Button(self.graph_2LPR_frame, text="Test 1", command= lambda: \
-            self.TwoLeverGraphTest1()).grid(row=3,column=0,sticky=N)
+            self.TwoLeverGraphTest1()).grid(row=2,column=0,sticky=N)
 
         # ******  Example Frame *********
         self.graph_example_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
@@ -640,6 +638,32 @@ class myGUI(object):
             self.testArea_MatPlot_Canvas.draw()
         else:
             plt.show()
+
+    def TwoLeverFig(self):
+        """
+        This draws figure for 2L data
+        """
+        if (self.showOn_tkCanvas.get()):
+            fig = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
+            fig.clf()
+        else:
+            fig = plt.figure(figsize=(6,6), dpi=150, constrained_layout = False)  # Newly instantaited pyplot figure
+        levers = self.leverCount.get()
+        print("Number of Levers =",levers)  # Defaults to Two Lever
+        aRecord = self.recordList[self.fileChoice.get()] 
+        max_x_scale = self.max_x_scale.get()
+        max_y_scale = self.max_y_scale.get()
+        
+        ta.TwoLeverFig(fig, aRecord, levers,max_x_scale, max_y_scale)
+
+        if (self.showOn_tkCanvas.get()):
+            self.testArea_MatPlot_Canvas.draw()
+        else:
+            plt.show()
+            fig.savefig('SavePDFTest.pdf')
+        
+
+        
 
 
     # *********************************************************************
@@ -1162,301 +1186,6 @@ class myGUI(object):
         self.fileChoice.set(3)        
         self.openWakeFiles("/Users/daveroberts/Documents/Two Lever PR/Raw Data/Final/H383/8_H383_Mar_27.str")
     
-
-    def TwoLeverFig(self, lever = 2):
-        """
-        To Do: select X axis limit from radio button.
-
-        1L-PR uses L1 ("L") as PR lever
-        1L-PR uses only one block ("B")
-
-        2L-PR uses L2 ("J") as PR lever and L1 ("L") as HD lever
-        2L_PR uses "B" to signal access to HD
-
-        Resolutions:
-        aRecord.datalist  - mSec 10800000 mSec in 180 minute session
-        cumRecTimes - transforms all times into fractions of a minute so that it can be plotted in minutes
-        binStartTimes     - fractions of a minute
-        binStartTimesSec  - second
-
-        testAreaFigureFrame    - tk container (a Frame)
-        self.matPlotTestFigure          - the thing that axes and lines are drawn on        
-        self.threshold_tk_Canvas        - drawing space for things like event records
-        self.testArea_matPlot_Canvas    - container for the MatPlotLib Figure
-                                        - This is the thing that gets redrawn after things are changed.
-        """
-        verbose = True    # local - couple to a global variable and checkbox?
-        levers = self.leverCount.get()
-        print("Number of Levers =",levers)
-        # Default to Two Lever
-        PR_lever_Char = 'J'
-        if levers == 1:
-             PR_lever_Char = 'L'
-            
-
-        if (self.showOn_tkCanvas.get()):
-            fig = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
-            fig.clf()
-        else:
-            fig = plt.figure(figsize=(6,6), dpi=150, constrained_layout = False)  # Newly instantaited pyplot figure
-        
-        max_x_scale = self.max_x_scale.get()
-        # max_x_scale = 300
-        max_y_scale = self.max_y_scale.get()
-
-        gs = gridspec.GridSpec(nrows = 4, ncols= 3)
-        """
-        For positioning graphs see:
-        https://matplotlib.org/tutorials/intermediate/gridspec.html?highlight=gridspec
-
-        GridSpec defines how the figures fits into the space.
-        Here we define a 4 row x 3 col space. The top figure uses a 2row and 3 cols 
-        and the bottom two graphs use 1 row and 3 columns. 
-
-        uses numpy two dimensional indexing for a 3x3 array
-        >>> x = np.arange(10)
-        >>> x
-        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> x[0:2]
-        array([0, 1])
-        >>> x[0:3]
-        array([0, 1, 2])
-        """
-
-        showLabels = False
-
-        aCumRecGraph = fig.add_subplot(gs[0:2,0:3],label="1")  # row [0,1] and col [0,1,2]  
-        aBarGraph = fig.add_subplot(gs[2,0:3],label="2")       # row [2]   and col [0,1,2]
-        aCocConcGraph = fig.add_subplot(gs[3,0:3],label='3')   # row [3]   and col [0,1,2]
-        
-
-        # Coc Conc graph in mSec so have to do the X axis labels maunally
-        xLabels = ['0','30','60','90','120','150','180','210','240','270','300','330','360','390']
-        
-        aRecord = self.recordList[self.fileChoice.get()]        
-        if (showLabels):
-            aCumRecGraph.set_title(aRecord.fileName)
-            
-        #aCumRecGraph.set_xlabel('Session Time (min)', fontsize = 12)
-        aCumRecGraph.patch.set_facecolor("none")
-        aCumRecGraph.spines['top'].set_color('none')
-        aCumRecGraph.spines['right'].set_color('none')
-        aCumRecGraph.set_ylabel('PR Lever Responses', fontsize = 12)
-        #aCumRecGraph.yaxis.labelpad = 15
-        aCumRecGraph.set_xscale("linear")
-        aCumRecGraph.set_yscale("linear")
-        aCumRecGraph.set_xlim(0, max_x_scale)  
-        aCumRecGraph.set_ylim(0, max_y_scale)
-        aCumRecGraph.xaxis.set_major_locator(MultipleLocator(30))       # 30 min intervals
-        aCumRecGraph.spines['left'].set_position(('axes', -0.02))
-
-        #aBarGraph.set_xlabel('Session Time (min)', fontsize = 12)
-        
-        aBarGraph.patch.set_facecolor("none")
-        aBarGraph.spines['left'].set_position(('axes', -0.02))
-        aBarGraph.spines['top'].set_color('none')
-        aBarGraph.spines['right'].set_color('none')
-        aBarGraph.set_ylabel('Dose (mg)', fontsize = 12)
-        #aBarGraph.yaxis.labelpad = 15
-        aBarGraph.set_xscale("linear")
-        aBarGraph.set_yscale("linear")
-        aBarGraph.set_xlim(0, max_x_scale)
-        aBarGraph.set_ylim(0, 1.5)
-        aBarGraph.xaxis.set_major_locator(MultipleLocator(30))       # 30 min intervals
-        #aBarGraph.set_xticklabels(xLabels)                 # Suppress tick labels
-
-        aCocConcGraph.patch.set_facecolor("none")
-        aCocConcGraph.spines['left'].set_position(('axes', -0.02))
-        aCocConcGraph.spines['top'].set_color('none')
-        aCocConcGraph.spines['right'].set_color('none')
-        aCocConcGraph.set_xlabel('Session Time (min)', fontsize = 12)
-        #aCocConcGraph.xaxis.labelpad = 20
-        aCocConcGraph.set_ylabel('Cocaine', fontsize = 12)
-        #aCocConcGraph.yaxis.labelpad = 15
-        aCocConcGraph.set_xscale("linear")
-        aCocConcGraph.set_yscale("linear")
-        aCocConcGraph.set_xlim(0, max_x_scale*60000)
-        aCocConcGraph.xaxis.set_major_locator(ticker.LinearLocator(int(max_x_scale/30)+1))
-        aCocConcGraph.set_xticklabels(xLabels) 
-        aCocConcGraph.set_ylim(0, 25)
-        
-
-        # make an array of x in fractions of a min.
-        # make an array of y - total responses.
-        pumpOn = False
-        cumRecTimes = []
-        cumRecResp = []
-        totalDrugBins = 0
-        resets = 0
-        respTotal = 0
-        binPumpTime = 0
-        totalDose = 0
-        binStartTime = 0        
-        binStartTime_mSec = 0
-        binEndTime_mSec = 0
-        totalBinTime_mSec = 0
-        binStartTimes = []
-        binStartTimesSec = []
-        tickPositionY = [] 
-        doseList = []
-        pumpTimeList = []
-        finalRatio = 0
-        trialResponses = 0
-        adjustedRespTotal = 0
-
-
-        # ************   Cummulative Record  *************************
-
-        for pairs in aRecord.datalist:
-            if pairs[1] == PR_lever_Char:           # 1l = 'L'; 2L = 'J'
-                trialResponses = trialResponses + 1
-                respTotal = respTotal + 1
-                adjustedRespTotal = respTotal - (resets * max_y_scale)
-                if adjustedRespTotal == max_y_scale:
-                    resets = resets + 1
-                    adjustedRespTotal = 0
-                x = pairs[0]/60000     # fraction of a min
-                cumRecTimes.append(x)
-                cumRecResp.append(adjustedRespTotal)       
-            elif pairs[1] == 'B':                   # If 2L then "B" controls tick mark
-                if levers == 2:
-                    binStartTime_mSec = pairs[0]                   
-                    finalRatio = trialResponses
-                    totalDrugBins = totalDrugBins + 1
-                    t = pairs[0]/1000    # in seconds
-                    binStartTimesSec.append(t)
-                    t = pairs[0]/60000   # fraction of a minute
-                    binStartTimes.append(t)
-                    tickPositionY.append(adjustedRespTotal)
-            elif pairs[1] == 'P':                   # If 1L then "P" controls tick mark
-                if levers == 1:
-                    binStartTime_mSec = pairs[0]                   
-                    finalRatio = trialResponses
-                    totalDrugBins = totalDrugBins + 1
-                    t = pairs[0]/1000    # in seconds
-                    binStartTimesSec.append(t)
-                    t = pairs[0]/60000   # fraction of a minute
-                    binStartTimes.append(t)
-                    tickPositionY.append(adjustedRespTotal)
-                pumpStartTime = pairs[0]
-                pumpOn = True
-            elif pairs[1] == 'p':
-                if pumpOn:
-                    pumpDuration = pairs[0]-pumpStartTime
-                    binPumpTime = binPumpTime + pumpDuration
-                    pumpOn = False
-                    if levers == 1:
-                        trialResponses = 0
-                        pumpTimeList.append(binPumpTime)                
-                        binDose = (binPumpTime/1000) * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
-                        totalDose = totalDose + binDose
-                        doseList.append(binDose)
-                        #print(binStartTime,binDose)
-                        binPumpTime = 0
-            elif pairs[1] == 'b':   # End of Drug Access Period
-                binEndTime_mSec = pairs[0]
-                totalBinTime_mSec = totalBinTime_mSec + (binEndTime_mSec - binStartTime_mSec) 
-                trialResponses = 0
-                pumpTimeList.append(binPumpTime)                
-                binDose = (binPumpTime/1000) * 5.0 * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
-                totalDose = totalDose + binDose
-                doseList.append(binDose)
-                #print(binStartTime,binDose)
-                binPumpTime = 0
-
-        aCumRec = Line2D(cumRecTimes,cumRecResp, color = 'black', ls = 'solid', drawstyle = 'steps')
-        aCumRec.set_lw(1.0)                     # Example of setting and getting linewidth
-        # print("line width =", aCumRec.get_linewidth())
-        aCumRecGraph.add_line(aCumRec)
-
-        # ********* Draw Ticks *********************
-
-        for i in range(len(binStartTimes)):
-            tickX = max_x_scale * 0.01  # make the tick mark proportional (1%) to the X axis length 
-            tickY = max_y_scale * 0.02  # make the tick mark proportional (2%) to the Y axis length 
-            tickMarkX = [binStartTimes[i], binStartTimes[i] + tickX]
-            tickMarkY = [tickPositionY[i], tickPositionY[i] - tickY]
-            aTickMark = Line2D(tickMarkX, tickMarkY, color = "black")
-            aTickMark.set_lw(1.0) 
-            aCumRecGraph.add_line(aTickMark)                          
-
-        # *********** Draw Bar chart of doses **************************
-        """ binStartTimes are fractions of a minute.
-            The problem was that the first bar was too thin because it was too close to the edge.
-            Here, they are rounded up to an integer and shift 1 min which helps.
-            There is still an issue that some of the bars are a slightly different width. 
-            Perhaps this has to do with the size of the x scale
-        """
-        binStartTimesInt = []
-        for num in binStartTimes:
-            binStartTimesInt.append(round(num)+1)
-
-        print("binStartTimes = ", binStartTimes)
-        print("binStartTimesInt = ", binStartTimesInt)
-        print("doseList =", doseList)
-        print("pumpTimeList = ", pumpTimeList)        
-        bar_width = 2.5     # The units correspond to X values, so will get skinny with high max_x_scale.
-
-        aBarGraph.bar(binStartTimesInt,doseList,bar_width, color = "black")
-
-        # ***********  Cocaine Concentration curve **********************
-        resolution = 5  # seconds  
-        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc, aRecord.pumpSpeed, resolution)
-        
-        # cocConcXYList returns a list of [time,conc].
-        # The following separates these into two equal length lists to be plotted
-        cocConcList = []
-        timeList = []
-        for i in range(len(cocConcXYList)):
-            timeList.append(cocConcXYList[i][0])       # essentially a list in 5 sec intervals           
-            cocConcList.append(cocConcXYList[i][1])
-            
-        cocConcLine = Line2D(timeList,cocConcList, color = 'black', ls = 'solid')
-        aCocConcGraph.add_line(cocConcLine)
-
-        # ***********  Prediction of dose selected by cocaine levels
-        # i.e. correlate binDose with the cocaine cencentration at time of the dose
-
-        cocLevels = []
-        for i in range(len(binStartTimes)):
-            t = int(binStartTimesSec[i]/5)          # Get time corresponding to 5 sec bin in cocConcList
-            cocLevel = cocConcList[t]
-            #if verbose: print(t,cocLevel,doseList[i])
-            cocLevels.append(cocLevel)              # Create a list of cocaine concentrations corresponding to binDose
-        
-
-        # **********   Create formated text strings ************************
-        averageBinLength = (totalBinTime_mSec/totalDrugBins)/1000
-        drugAccessLengthStr = "Access Period = {:.0f} sec".format(averageBinLength)
-        totalDrugBinsStr = "Break Point = {}".format(totalDrugBins)
-        finalRatioStr = "Final Ratio = {}".format(finalRatio)
-        totalDoseStr = "Total Dose = {:.3f} mg".format(totalDose)
-        rStr = ""
-        # r = pearsonr(doseList,cocLevels)
-        # print("r =",r)
-        # rStr = "r = {:.3f}".format(r[0])
-        if verbose:
-            print(drugAccessLengthStr)
-            print(totalDrugBinsStr)
-            print(finalRatioStr)
-            print(totalDoseStr)
-            print(rStr)
-        if (showLabels):
-            self.matPlotTestFigure.text(0.1, 0.96, drugAccessLengthStr)
-            self.matPlotTestFigure.text(0.1, 0.94, totalDrugBinsStr)
-            self.matPlotTestFigure.text(0.1, 0.92, finalRatioStr)        
-            self.matPlotTestFigure.text(0.1, 0.90, totalDoseStr)
-            self.matPlotTestFigure.text(0.8, 0.18, rStr)
-
-        # ********************************************************************
-
-        
-
-        if (self.showOn_tkCanvas.get()):
-            self.testArea_MatPlot_Canvas.draw()
-        else:
-            plt.show()
-            fig.savefig('SavePDFTest.pdf') 
 
     def clearFigure(self):
         self.matPlotFigure.clf()
