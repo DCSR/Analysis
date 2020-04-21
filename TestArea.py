@@ -165,7 +165,7 @@ def bin_HD_Records(aFigure,aRecord ):
     ax1.yaxis.labelpad = 35                  # Move label left or right
 
 
-def fig1_2L_PR(fig, recordList):
+def fig1_2L_PR(aFigure,aRecordList):
     """
     This function was written in a separate branch to draw a figure  the 2L-PR-HD paper
 
@@ -179,29 +179,26 @@ def fig1_2L_PR(fig, recordList):
     that can be saved as a prn file.
     
     """
-    print("fig_2L_PR() called in TestArea")
-    
-
     gs = gridspec.GridSpec(nrows = 30, ncols= 1)
 
     max_x_scale = 360
     xLabels = ['0','30','60','90','120','150','180','210','240','270','300','330','360','390']
 
     # Spacing of each subplot 
-    eventRecord0 = fig.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
-    cocGraph0 = fig.add_subplot(gs[2:8,0],label='2')   # rows 2 - 7, col 0
-    eventRecord1 = fig.add_subplot(gs[10,0],label="3")  # row [10] and col [0]]
-    cocGraph1 = fig.add_subplot(gs[12:18,0],label='4')   # rows 2 - 7, col 0
-    eventRecord2 = fig.add_subplot(gs[20,0],label="5")  # row [10] and col [0]]
-    accessLine = fig.add_subplot(gs[21,0],label="5")  # row [11] and col [0]]
-    eventRecordL2 = fig.add_subplot(gs[22,0],label="5")  # row [12] and col [0]]
-    cocGraph2 = fig.add_subplot(gs[24:30,0],label='6')   # rows 2 - 7, col 0
+    eventRecord0 = aFigure.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
+    cocGraph0 = aFigure.add_subplot(gs[2:8,0],label='2')   # rows 2 - 7, col 0
+    eventRecord1 = aFigure.add_subplot(gs[10,0],label="3")  # row [10] and col [0]]
+    cocGraph1 = aFigure.add_subplot(gs[12:18,0],label='4')   # rows 2 - 7, col 0
+    eventRecord2 = aFigure.add_subplot(gs[20,0],label="5")  # row [10] and col [0]]
+    accessLine = aFigure.add_subplot(gs[21,0],label="5")  # row [11] and col [0]]
+    eventRecordL2 = aFigure.add_subplot(gs[22,0],label="5")  # row [12] and col [0]]
+    cocGraph2 = aFigure.add_subplot(gs[24:30,0],label='6')   # rows 2 - 7, col 0
 
     # *** Top ***
     
     injNum = 0
     injTimeList = []       
-    record0 = recordList[0]
+    record0 = aRecordList[0]
     for pairs in record0.datalist:
         if pairs[1] == 'P':                     
             injNum = injNum + 1
@@ -254,7 +251,7 @@ def fig1_2L_PR(fig, recordList):
     # *** Middle ***
     injNum = 0
     injTimeList = []       
-    record1 = recordList[1]
+    record1 = aRecordList[1]
     for pairs in record1.datalist:
         if pairs[1] == 'P':                     
             injNum = injNum + 1
@@ -308,7 +305,7 @@ def fig1_2L_PR(fig, recordList):
     # *** Bottom ***
     injNum = 0
     injTimeList = []       
-    record2 = recordList[2]
+    record2 = aRecordList[2]
     for pairs in record2.datalist:
         if pairs[1] == 'J':                    
             injNum = injNum + 1
@@ -334,7 +331,7 @@ def fig1_2L_PR(fig, recordList):
     accessList = [0]
     timeList = [0]
     access = False
-    record2 = recordList[2]
+    record2 = aRecordList[2]
     for pairs in record2.datalist:
         if pairs[1] == ',':
             #draw horizontal line to timestamp then draw vertical line up
@@ -375,7 +372,7 @@ def fig1_2L_PR(fig, recordList):
 
     injNum = 0
     injTimeList = []       
-    record2 = recordList[2]
+    record2 = aRecordList[2]
     for pairs in record2.datalist:
         if pairs[1] == 'P':                    
             injNum = injNum + 1

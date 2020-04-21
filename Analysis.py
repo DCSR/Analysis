@@ -628,12 +628,14 @@ class myGUI(object):
 
         """
         if (self.showOn_tkCanvas.get()):
-            fig = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
-            fig.clf()
+            aFigure = self.matPlotTestFigure    # Previously defined Figure containing matPlotCanvas
+            aFigure.clf()
         else:
-            fig = plt.figure(figsize=(6,6), dpi=150, constrained_layout = False)  # Newly instantaited pyplot figure
-        recordList = self.recordList
-        ta.fig1_2L_PR(fig,recordList)
+            aFigure = plt.figure(figsize=(6,6), dpi=150, constrained_layout = False)  # Newly instantaited pyplot figure
+
+        aRecordList = self.recordList       
+        ta.fig1_2L_PR(aFigure,aRecordList)
+
         if (self.showOn_tkCanvas.get()):
             self.testArea_MatPlot_Canvas.draw()
         else:
