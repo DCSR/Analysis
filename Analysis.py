@@ -522,10 +522,10 @@ class myGUI(object):
         # Contains testAreaButtonFrame and testAreaFigureFrame
         #
         # testAreaFigureFrame    - tk container (a Frame)
-        #      self.matPlotTestFigure              - the thing that axes and lines are drawn on        
-        #      self.threshold_tk_Canvas         - drawing space for things like event records
-        #      self.testArea_matPlot_Canvas    - container for the MatPlotLib Figure
-        #                                       - This is the thing that gets redrawn after things are changed.
+        #      self.matPlotTestFigure         - the thing that axes and lines are drawn on        
+        #      self.threshold_tk_Canvas       - drawing space for things like event records
+        #      self.testArea_matPlot_Canvas   - container for the MatPlotLib Figure
+        #                                     - This is the thing that gets redrawn after things are changed.
 
         self.testAreaButtonFrame = Frame(self.testAreaTab, borderwidth=5, relief="sunken")
         self.testAreaButtonFrame.grid(column = 0, row = 0, sticky=N)
@@ -661,10 +661,14 @@ class myGUI(object):
         else:
             plt.show()
             fig.savefig('SavePDFTest.pdf')
-        
 
-        
-
+    def matPlotEventRecord(self):
+        aCanvas = self.testArea_MatPlot_Canvas
+        aFigure = self.matPlotTestFigure
+        aRecord = self.recordList[self.fileChoice.get()]
+        startTime = self.startTimeScale.get()
+        endTime = self.endTimeScale.get()
+        ta.matPlotEventRecord(aCanvas,aFigure,aRecord,startTime,endTime)        
 
     # *********************************************************************
     
@@ -825,35 +829,7 @@ class myGUI(object):
         plt.subplot(111)
         plt.axis([-0.1,185,0.0,1.0])
         plt.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
-        plt.show()
-
-    def matPlotEventRecord(self):
-        self.matPlotTestFigure.clf()
-        gs = gridspec.GridSpec(nrows = 10, ncols= 1)
-
-        injNum = 0
-        injTimeList = []
-        
-        aRecord = self.recordList[self.fileChoice.get()]
-        for pairs in aRecord.datalist:
-            if pairs[1] == 'P':                     
-                injNum = injNum + 1
-                injTimeList.append(pairs[0]/60000)  # Min
-
-        self.eventRecord = self.matPlotTestFigure.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
-
-        self.eventRecord.axes.get_yaxis().set_visible(False)
-        
-        self.eventRecord.set_ylabel('')
-        self.eventRecord.set_yticklabels("")                 # Suppress tick labels
-        self.eventRecord.set_xlabel('Time (minutes)')
-        self.eventRecord.set_title('Event Records using MatPlotLib.eventplot')
-        startTime = self.startTimeScale.get()
-        endTime = self.endTimeScale.get()
-        self.eventRecord.set_xlim(startTime, endTime) 
-        self.eventRecord.set_ylim(0.01, 1)
-        self.eventRecord.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
-        self.testArea_MatPlot_Canvas.draw()
+        plt.show()       
 
     def bin_HD_Records(self):
         """

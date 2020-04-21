@@ -1,13 +1,24 @@
 """
 This file contains all procedures called for the Test Area Tab
 
+
+
+
+
+Notes:
+TwoLeverCR() graphs without using matplot lib.
+
+matPlotEventRecord() 
+
+
+
 Index:
 
-self.fig1_2L_PR()
+self.fig1_2L_PR()         OK
 
-self.TwoLeverFig()
+self.TwoLeverFig()        OK
 
-self.matPlotEventRecord()
+self.matPlotEventRecord() 
 
 self.bin_HD_Records()
 
@@ -16,6 +27,7 @@ self.bin_HD_10SecCount()
 self.load_2L_PR_Files()
 
 """
+
 import model
 
 import matplotlib
@@ -570,7 +582,25 @@ def TwoLeverFig(fig,aRecord,levers,max_x_scale,max_y_scale):
     # ********************************************************************
 
     
-
+def matPlotEventRecord(aCanvas,aFigure,aRecord,startTime,endTime):
+    aFigure.clf()
+    gs = gridspec.GridSpec(nrows = 10, ncols= 1)
+    injNum = 0
+    injTimeList = []
+    for pairs in aRecord.datalist:
+        if pairs[1] == 'P':                     
+            injNum = injNum + 1
+            injTimeList.append(pairs[0]/60000)  # Min
+    eventRecord = aFigure.add_subplot(gs[0,0],label="1")  # row [0] and col [0]]
+    eventRecord.axes.get_yaxis().set_visible(False)
+    eventRecord.set_ylabel('')
+    eventRecord.set_yticklabels("")                 # Suppress tick labels
+    eventRecord.set_xlabel('Time (minutes)')
+    eventRecord.set_title('Event Records using MatPlotLib.eventplot')
+    eventRecord.set_xlim(startTime, endTime) 
+    eventRecord.set_ylim(0.01, 1)
+    eventRecord.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
+    aCanvas.draw()
 
 
 
