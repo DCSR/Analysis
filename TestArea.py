@@ -18,7 +18,7 @@ self.bin_HD_Records()     OK
 
 self.fig1_2L_PR()         OK
 
-self.bin_HD_10SecCount()
+self.bin_HD_10SecCount()  OK
 
 self.TwoLeverFig()        OK
 
@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
 import matplotlib.ticker as ticker
 
-def bin_HD_Records(aFigure,aRecord ):
+def bin_HD_Records(aFigure,aRecord):
     """
     To Do: Presently defaults to 30 second access period. Supply other options. 
 
@@ -161,6 +161,175 @@ def bin_HD_Records(aFigure,aRecord ):
 
     ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)              
     #print("totalDownTime", totalPumpTime)
+    ax1.set_ylabel('Trial Number', fontsize = 16)
+    ax1.yaxis.labelpad = 35                  # Move label left or right
+
+
+def bin_HD_10SecCount(aFigure,aRecord):
+    """
+    This procedure is almost identical to bin_HD-Records except that (1) it uses a 180 sec x scale
+    and outputs the HD durations in the first 10 seconds of each trial.
+
+    Would be straightforward to combine the two procedures with widgets controlling the
+    trial duration and the time count. 
+        
+    """
+
+    xMax = 180000
+    timeSampleSize = 10000                          # 10 sec
+    xLabels = ['0','60','120','180']                # Manually set labels 
+
+    ax1 = aFigure.add_subplot(111,label="1")
+    ax1.set_position([0.15, 0.05, 0.7, 0.80])      # Modify this to resize or move it around the canvas
+
+    ax1.text(0.5, 0.93, "Access Time (Seconds)", ha = 'center', fontsize = 14, transform = aFigure.transFigure)
+    
+    ax1.xaxis.set_ticks_position('top')             # Put x ticks and labels on the top
+    ax1.spines['top'].set_color('black')
+    ax1.spines['top'].set
+    ax1.xaxis.set_major_locator(MaxNLocator(3))     # Number of x tick intervals
+    ax1.xaxis.set_minor_locator(MaxNLocator(30))    # Number of minor tick intervals
+
+    ax1.set_xticklabels(xLabels, fontsize = 16)     # and font size
+
+    ax1.spines['top'].set_linewidth(1)              # 0.5 would be very thin
+    # x ticks and labels
+    ax1.tick_params(axis='x', colors='black', width=2, length = 8, labelcolor = 'black', direction = 'out')
+    # minor
+    ax1.tick_params(axis='x', which = 'minor', colors='black', width=1, length = 4, direction = 'in')
+
+    ax1.set_yticks([])                              # Suppress tick labels with empty list
+ 
+    ax1.spines['bottom'].set_color('none')          # Make bottom spine disappear
+    ax1.spines['left'].set_color('none')            # Make left axis disapear
+    ax1.spines['right'].set_color('none')           # Make right spine disapear
+           
+    ax1.set_xlim(0, xMax)                          # 30 seconds - data are in mSec 
+    # Max number of trials
+    maxTrials = 26
+    ax1.set_ylim(0, maxTrials)                             # (Arbitrarily) graphs a maximum of 20 trials 
+
+    pumpOnTime = 0
+    pumpDuration = 0
+    trialDuration = 0
+    totalPumpTime = 0
+    trial = 0
+    
+    firstLine = 24.5                                # Positioning of the first line
+    height = 0.6                                    # Height of event line
+    spacing = 1.4                                   # Spacing between lines
+
+    x = [0]                                         # starting x and y coordinates
+    y = [firstLine]
+    lineY = firstLine                               # This is y value of the line which will change for each trial
+    pumpOn = False
+
+    sampleTotal = 0
+    sampleList = []
+
+    # ********************  testRecord ***********************************
+    # *************  might be substituted for aRecod below  **************
+    """
+    testRecord = dm.DataRecord([],"empty")
+    
+    # Starts at 10 sec
+    # bin time 1 sec for 1 sec
+    # bin time 4 sec for 1/2 sec
+    # bin time 9 sec for 2 sec
+    # bin time 15 sec for 2 sec 
+    # Ends at 30 sec
+
+    testRecord.datalist = [[10000, 'B'], \
+                        [10500, 'P'], [11500, 'p'], \
+                        [14000, 'P'], [14500, 'p'], \
+                        [19000, 'P'], [21020, 'p'], \
+                        [25000, 'P'], [27000, 'p'], \
+                        [40000, 'b'], \
+                        [60000, 'B'], \
+                        [60500, 'P'], [61500, 'p'], \
+                        [64000, 'P'], [64500, 'p'], \
+                        [69000, 'P'], [71020, 'p'], \
+                        [75000, 'P'], [77000, 'p'], \
+                        [90000, 'b']]
+    """
+    #********************************** End testRecord *******************
+    
+    for pairs in aRecord.datalist:
+        #if len(blockEndList) < 8:                   
+            #print(pairs)
+            if pairs[1] == 'P':
+                pumpStartTime = pairs[0]-startTime  # Calculate time of pump going on in "bin" time
+                x.append(pumpStartTime)              # Store binStartTime as x coordinate 
+                y.append(lineY)                     # Store the y coordinate of start time to 0
+                x.append(pairs[0]-startTime)        # Store the bin time again
+                y.append(lineY+height)              # Set value = 1, this produces an upward line
+                pumpOn = True
+                pumpOnTime = pairs[0]
+            elif pairs[1] == 'p':                   # Pump goes off
+                if pumpOn:                          # This ignores "safety" instructions sent while pump is off
+                    pumpStopTime = pairs[0]-startTime  # Calculate time of pump going off in "bin" time
+                    x.append(pumpStopTime)                      # Store binStopTime as x coordinate
+                    # Store the x coordinate of pump going off in "bin" time
+                    y.append(lineY+height)          # Store the y coordinate of pump going off at high level
+                    x.append(pairs[0]-startTime)    # Store the x coordinate again
+                    y.append(lineY)                 # Store the y coordinate at low level - creating a downward line
+                    pumpDuration = pairs[0]-pumpOnTime              # Calculate and store pumpDuration
+                    trialDuration = trialDuration + pumpDuration
+                    totalPumpTime = totalPumpTime + pumpDuration
+                    # changes to bin_HD_Records
+                    if pumpStartTime < timeSampleSize:
+                        if pumpStopTime < timeSampleSize:    # Add to total if within time criteria
+                            sampleTotal = sampleTotal + pumpDuration
+                        else:
+                            timeOver = pumpStopTime - timeSampleSize # Time past criteria
+                            sampleTotal = sampleTotal + pumpDuration - timeOver                       
+                    pumpOn = False
+            elif pairs[1] == 'B':                   # Drug access period starts
+                startTime = pairs[0]                # Get startTime
+                x = [0]                             # Reset x coordinate to start of line                    
+                lineY = firstLine-(trial*spacing)   # Calculate y coodinate for line - counting down from top
+                y = [lineY]                         # Assign y coordinate
+            elif pairs[1] == 'b':                   # Drug access period ends
+                x.append(xMax)                     # Assign x coordinate to draw line to end
+                if pumpOn == False:                 # Normally the pump is off
+                    y.append(lineY)                 # so assign y coordinate to draw a line to the end
+                else:                               # But if the pump is ON
+                    y.append(lineY+height)          # Draw a line to end in up position
+                    x.append(xMax)                 # Then draw a downward line at the very end
+                    y.append(lineY)
+
+                line1 = Line2D(x,y, color = 'black', ls = 'solid', marker = 'None')
+                ax1.add_line(line1)
+
+                sampleList.append(sampleTotal)
+                sampleTotal = 0
+
+                trial = trial + 1
+                
+                # ax1.transData means it will use the data coordinates
+                # Whereas aFigure.transFigure would use x/y coordinates based on the entire figure - see Title above
+                # Write trial number to left of line
+                ax1.text(-500, lineY, str(trial), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                # Write pump trialDuration to the right of the line
+                ax1.text(xMax+30000, lineY, str(trialDuration), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                trialDuration = 0
+
+
+    if len(sampleList) > 0:
+        print("Time Sample Size =", timeSampleSize, "First sample", sampleList[0])
+    total = 0
+    for i in range(len(sampleList)):
+        total = total + sampleList[i]
+    print('total:', total) 
+    print(sampleList)
+        
+
+    # ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)
+               
+    #print("totalDownTime", totalPumpTime)
+
     ax1.set_ylabel('Trial Number', fontsize = 16)
     ax1.yaxis.labelpad = 35                  # Move label left or right
 
@@ -702,6 +871,9 @@ def TwoLeverFig(fig,aRecord,levers,max_x_scale,max_y_scale):
 
     
 def matPlotEventRecord(aCanvas,aFigure,aRecord,startTime,endTime):
+    """
+    Proof of principle using MatPlotLib.eventplot
+    """
     aFigure.clf()
     gs = gridspec.GridSpec(nrows = 10, ncols= 1)
     injNum = 0
