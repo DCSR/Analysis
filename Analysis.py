@@ -660,7 +660,7 @@ class myGUI(object):
             self.testArea_MatPlot_Canvas.draw()
         else:
             plt.show()
-            fig.savefig('SavePDFTest.pdf')
+            # fig.savefig('SavePDFTest.pdf')
 
     def matPlotEventRecord(self):
         aCanvas = self.testArea_MatPlot_Canvas
@@ -668,300 +668,16 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         startTime = self.startTimeScale.get()
         endTime = self.endTimeScale.get()
-        ta.matPlotEventRecord(aCanvas,aFigure,aRecord,startTime,endTime)        
-
-    # *********************************************************************
-    
-       
-    def save_TH_Figure(self):
-        """
-        None > save a "Figure.png" in current directory.
-        This will overwrite current file. Rename if you want to keep it. 
-
-        self.fig is defined in myGUI and used as a container in all pyplot plots.
-        This procedure saves the current self.fig to Figure.png
-        Changing the extension will change the format:  eg. ".pdf" 
-
-        """
-        print("Saving Figure.png")
-        self.matPlotFigure.savefig('Figure.png')
-
-
-    def openWakeFiles(self,filename):
-        """
-        The procedure will read Wake datafiles that originate either from OMNI (.str) or from the
-        Feather system (.dat).  If a filename is passed to this procedure then it will be opened. This
-        is how filename Speed Buttons are handled.
-        If no filename ("") is passed, then a File Open Dialog is spawned. One or several files can
-        be selected and loaded.
-        """       
-        fileList = []
-        fPath = ""
-        if filename == "":
-            fileList = filedialog.askopenfilenames(initialdir=self.initialDir)
-        else:
-            fileList.append(filename)
-        """
-        filenum = 0
-        for file in fileList:
-            filenum = filenum + 1
-            fName = file[file.rfind('/')+1:]
-            fPath = file[0:file.rfind('/')+1]
-            print('File ',str(filenum), file)
-        self.initialDir = fPath
-        print("Path =", self.initialDir)
-        """
-        selected = self.fileChoice.get()
-        for fName in fileList:
-            if (selected < 10):
-                print("Selection number:",selected)                
-                self.recordList[selected].datalist = []
-                name = fName[fName.rfind('/')+1:]
-                path = fName[0:fName.rfind('/')+1]
-                self.initialDir = path
-                # print('path =',path)
-                self.recordList[selected].fileName = name
-                self.fileNameList[selected].set(name)
-                # OMNI pump times
-                # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
-                #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
-                self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
-                                                          0.200,0.130,0.080,0.050,0.030,0.020]
-                self.recordList[selected].cocConc = 5.0
-                self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
-                # textBox.insert('1.0', name+" opened \n\n")
-                if fName.find(".str") > 0:
-                    self.recordList[selected].datalist = stream01.read_str_file(fName)               
-                elif fName.find(".dat") > 0:
-                    aFile = open(fName,'r')
-                    for line in  aFile:
-                        pair = line.split()
-                        pair[0] = int(pair[0])
-                        self.recordList[selected].datalist.append(pair)
-                    aFile.close()
-                self.recordList[selected].extractStatsFromList()
-
-                # ------------  fillLists ---------
-                verbose = True
-                pumpStarttime = 0
-                blockNum = -1 
-                pumpOn = False
-                leverTotal = 0       
-                pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
-                responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
-                """
-                This procedure assumes the datafile if a Threshold file and fills the
-                response and consumption lists accordingly - i.e. 12 bins.
-                But a PR daatfile could have many more bins which could throw an error.
-                So for now, if the bin number does not count higher than 11.
-
-                Eventually, 
-
-                """
-                for pairs in self.recordList[selected].datalist:
-                    if pairs[1] == 'B':
-                        if blockNum < 11:
-                            blockNum= blockNum + 1
-                    elif pairs[1] == 'P':
-                        pumpStartTime = pairs[0]
-                        pumpOn = True
-                        responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
-                        leverTotal = leverTotal + 1                        # using pump for responses
-                    elif pairs[1] == 'p':
-                        if pumpOn:
-                            duration = pairs[0]-pumpStartTime
-                            if blockNum <= 12:
-                                pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
-                            pumpOn = False
-                    # else no nothing
-                # print("responseList = ", responseList)
-                consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
-                mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
-                if verbose:
-                    print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
-                    print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
-                    print("cocaine mg/sec:", mgPerSec)
-                for i in range(12):
-                    consumptionList[i] = pumpTimeList[i] * mgPerSec
-                    if consumptionList[i] == 0:
-                        consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
-                totalResp = 0
-                totalIntake = 0
-                for i in range(12):
-                    totalResp = totalResp + responseList[i]
-                    totalIntake = totalIntake + consumptionList[i]
-                print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
-                priceList = []      
-                for i in range(12):
-                    # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
-                    dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
-                                      self.recordList[selected].cocConc * \
-                                      (self.recordList[selected].pumpSpeed)
-                    price = round(1/dosePerResponse,2)
-                    priceList.append(price)
-                self.recordList[selected].priceList = priceList
-                self.recordList[selected].consumptionList = consumptionList
-                self.recordList[selected].responseList = responseList
-
-                # ------------- end fillLists -----------------
-                print(self.recordList[selected])
-                selected = selected + 1
-            else:
-                print("More files selected than spots available")
-        print("Path =", self.initialDir)
-
-
-        # **********************  The Controllers  ***********************************
-        # Controllers converts user input into calls on functions that manipulate data
-        # ****************************************************************************
-
-    def pyPlotEventRecord(self):
-        injNum = 0
-        injTimeList = []
-        
-        aRecord = self.recordList[self.fileChoice.get()]
-        for pairs in aRecord.datalist:
-            if pairs[1] == 'P':                     
-                injNum = injNum + 1
-                injTimeList.append(pairs[0]/60000)  # Min
-
-        plt.figure(figsize=(9,3))
-        plt.subplot(111)
-        plt.axis([-0.1,185,0.0,1.0])
-        plt.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
-        plt.show()       
+        ta.matPlotEventRecord(aCanvas,aFigure,aRecord,startTime,endTime)
 
     def bin_HD_Records(self):
-        """
-        To Do: Presently defaults to 30 second access period. Supply other options. 
-
-        This graph can be rendered either to the tkinter canvas or to a pyplot window
-        by selecting the appropriate radio button in the header row. The pyplot window
-        can be used to save the graph to a *.prn file.
-
-        This function uses the MatplotLib Object Oriented style. That is, it uses the Figure
-        and Axes objects rather than the shorthand plt.* instruction set. 
-
-        B, b = Start and stop of a drug lever block
-        P, p = Pump on and off
-
-        This has been checked against "L" and "l" (lever down and up) and it is within a few milliseconds.
-
-        The first trial line is plotted at y = 20 and the subsequent trails are drawn below.
-        
-        
-        """
-        
-        #from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
-
         if (self.showOn_tkCanvas.get()):
-            fig = self.matPlotTestFigure                # Previously defined Figure containing matPlotCanvas
-            fig.clf()
+            aFigure = self.matPlotTestFigure  # Previously defined Figure containing matPlotCanvas
+            aFigure.clf()
         else:
-            fig = plt.figure(figsize=(9,8), dpi=80, constrained_layout = True)  # Newly instantaited pyplot figure
-
-        ax1 = fig.add_subplot(111,label="1")
-        ax1.set_position([0.15, 0.05, 0.7, 0.80])      # Modify this to resize or move it around the canvas
-
-        ax1.text(0.5, 0.93, "Access Time (Seconds)", ha = 'center', fontsize = 14, transform = fig.transFigure)
-        
-        ax1.xaxis.set_ticks_position('top')             # Put x ticks and labels on the top
-        ax1.spines['top'].set_color('black')
-        ax1.spines['top'].set
-        ax1.xaxis.set_major_locator(MaxNLocator(3))     # Number of x tick intervals
-        ax1.xaxis.set_minor_locator(MaxNLocator(30))    # Number of minor tick intervals
-        xLabels = ['0','10','20','30']                  # Manually set labels
-        ax1.set_xticklabels(xLabels, fontsize = 16)     # and font size
-
-        ax1.spines['top'].set_linewidth(1)              # 0.5 would be very thin
-        # x ticks and labels
-        ax1.tick_params(axis='x', colors='black', width=2, length = 8, labelcolor = 'black', direction = 'out')
-        # minor
-        ax1.tick_params(axis='x', which = 'minor', colors='black', width=1, length = 4, direction = 'in')
-
-        ax1.set_yticks([])                              # Suppress tick labels with empty list
-     
-        ax1.spines['bottom'].set_color('none')          # Make bottom spine disappear
-        ax1.spines['left'].set_color('none')            # Make left axis disapear
-        ax1.spines['right'].set_color('none')           # Make right spine disapear
-               
-        ax1.set_xlim(0, 30000)                          # 30 seconds - data are in mSec 
-        # Max number of trials
-        maxTrials = 26
-        ax1.set_ylim(0, maxTrials)                             # (Arbitrarily) graphs a maximum of 20 trials 
-
-        pumpOnTime = 0
-        pumpDuration = 0
-        trialDuration = 0
-        totalPumpTime = 0
-        trial = 0
-        
-        firstLine = 24.5                                # Positioning of the first line
-        height = 0.6                                    # Height of event line
-        spacing = 1.4                                   # Spacing between lines
-
-        x = [0]                                         # starting x and y coordinates
-        y = [firstLine]
-        lineY = firstLine                               # This is y value of the line which will change for each trial
-        pumpOn = False
+            aFigure = plt.figure(figsize=(9,8), dpi=80, constrained_layout = True)  # Newly instantaited pyplot figure
         aRecord = self.recordList[self.fileChoice.get()]
-        
-        for pairs in aRecord.datalist:
-            #if len(blockEndList) < 8:                   
-                #print(pairs)
-                if pairs[1] == 'P':
-                    x.append(pairs[0]-startTime)        # Store the x coordinate of pump going on in "bin" time
-                    y.append(lineY)                     # Store the y coordinate of start time to 0
-                    x.append(pairs[0]-startTime)        # Store the bin time again
-                    y.append(lineY+height)              # Set value = 1, this produces an upward line
-                    pumpOn = True
-                    pumpOnTime = pairs[0]
-                elif pairs[1] == 'p':                   # Pump goes off
-                    if pumpOn:                          # This ignores "safety" instructions sent while pump is off
-                        x.append(pairs[0]-startTime)    # Store the x coordinate of pump going off in "bin" time
-                        y.append(lineY+height)          # Store the y coordinate of pump going off at high level
-                        x.append(pairs[0]-startTime)    # Store the x coordinate again
-                        y.append(lineY)                 # Store the y coordinate at low level - creating a downward line
-                        pumpDuration = pairs[0]-pumpOnTime              # Calculate and store pumpDuration
-                        trialDuration = trialDuration + pumpDuration
-                        totalPumpTime = totalPumpTime + pumpDuration
-                        pumpOn = False
-                elif pairs[1] == 'B':                   # Drug access period starts
-                    startTime = pairs[0]                # Get startTime
-                    x = [0]                             # Reset x coordinate to start of line                    
-                    lineY = firstLine-(trial*spacing)   # Calculate y coodinate for line - counting down from top
-                    y = [lineY]                         # Assign y coordinate
-                elif pairs[1] == 'b':                   # Drug access period ends
-                    x.append(30000)                     # Assign x coordinate to draw line to end
-                    if pumpOn == False:                 # Normally the pump is off
-                        y.append(lineY)                 # so assign y coordinate to draw a line to the end
-                    else:                               # But if the pump is ON
-                        y.append(lineY+height)          # Draw a line to end in up position
-                        x.append(30000)                 # Then draw a downward line at the very end
-                        y.append(lineY)
-
-                    line1 = Line2D(x,y, color = 'black', ls = 'solid', marker = 'None')
-                    ax1.add_line(line1)
-
-                    trial = trial + 1
-                    
-                    # ax1.transData means it will use the data coordinates
-                    # Whereas fig.transFigure would use x/y coordinates based on the entire figure - see Title above
-                    # Write trial number to left of line
-                    ax1.text(-500, lineY, str(trial), ha = 'right', fontsize = 14, transform=ax1.transData)
-
-                    # Write pump trialDuration to the right of the line
-                    ax1.text(35000, lineY, str(trialDuration), ha = 'right', fontsize = 14, transform=ax1.transData)
-
-                    trialDuration = 0
-
-        ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)
-                   
-        #print("totalDownTime", totalPumpTime)
-
-        ax1.set_ylabel('Trial Number', fontsize = 16)
-        ax1.yaxis.labelpad = 35                  # Move label left or right
-            
+        ta.bin_HD_Records(aFigure,aRecord)
         if (self.showOn_tkCanvas.get()):
             self.testArea_MatPlot_Canvas.draw()
         else:
@@ -1144,6 +860,169 @@ class myGUI(object):
             self.testArea_MatPlot_Canvas.draw()
         else:
             plt.show()
+
+
+    # *********************************************************************
+    
+       
+    def save_TH_Figure(self):
+        """
+        None > save a "Figure.png" in current directory.
+        This will overwrite current file. Rename if you want to keep it. 
+
+        self.fig is defined in myGUI and used as a container in all pyplot plots.
+        This procedure saves the current self.fig to Figure.png
+        Changing the extension will change the format:  eg. ".pdf" 
+
+        """
+        print("Saving Figure.png")
+        self.matPlotFigure.savefig('Figure.png')
+
+
+    def openWakeFiles(self,filename):
+        """
+        The procedure will read Wake datafiles that originate either from OMNI (.str) or from the
+        Feather system (.dat).  If a filename is passed to this procedure then it will be opened. This
+        is how filename Speed Buttons are handled.
+        If no filename ("") is passed, then a File Open Dialog is spawned. One or several files can
+        be selected and loaded.
+        """       
+        fileList = []
+        fPath = ""
+        if filename == "":
+            fileList = filedialog.askopenfilenames(initialdir=self.initialDir)
+        else:
+            fileList.append(filename)
+        """
+        filenum = 0
+        for file in fileList:
+            filenum = filenum + 1
+            fName = file[file.rfind('/')+1:]
+            fPath = file[0:file.rfind('/')+1]
+            print('File ',str(filenum), file)
+        self.initialDir = fPath
+        print("Path =", self.initialDir)
+        """
+        selected = self.fileChoice.get()
+        for fName in fileList:
+            if (selected < 10):
+                print("Selection number:",selected)                
+                self.recordList[selected].datalist = []
+                name = fName[fName.rfind('/')+1:]
+                path = fName[0:fName.rfind('/')+1]
+                self.initialDir = path
+                # print('path =',path)
+                self.recordList[selected].fileName = name
+                self.fileNameList[selected].set(name)
+                # OMNI pump times
+                # self.recordList[selected].TH_PumpTimes = [3.162,1.780,1.000,0.562,0.316,0.188, \
+                #                                         0.100,0.056,0.031,0.018,0.010,0.0056]
+                self.recordList[selected].TH_PumpTimes = [3.160,2.000,1.260,0.790,0.500,0.320, \
+                                                          0.200,0.130,0.080,0.050,0.030,0.020]
+                self.recordList[selected].cocConc = 5.0
+                self.recordList[selected].pumpSpeed = 0.025 # Wake default 0.1 mls/4 sec = 0.025 / sec 
+                # textBox.insert('1.0', name+" opened \n\n")
+                if fName.find(".str") > 0:
+                    self.recordList[selected].datalist = stream01.read_str_file(fName)               
+                elif fName.find(".dat") > 0:
+                    aFile = open(fName,'r')
+                    for line in  aFile:
+                        pair = line.split()
+                        pair[0] = int(pair[0])
+                        self.recordList[selected].datalist.append(pair)
+                    aFile.close()
+                self.recordList[selected].extractStatsFromList()
+
+                # ------------  fillLists ---------
+                verbose = True
+                pumpStarttime = 0
+                blockNum = -1 
+                pumpOn = False
+                leverTotal = 0       
+                pumpTimeList = [0,0,0,0,0,0,0,0,0,0,0,0]     #Temp list of 12 pairs: price and total pump time
+                responseList = [0,0,0,0,0,0,0,0,0,0,0,0]
+                """
+                This procedure assumes the datafile if a Threshold file and fills the
+                response and consumption lists accordingly - i.e. 12 bins.
+                But a PR daatfile could have many more bins which could throw an error.
+                So for now, if the bin number does not count higher than 11.
+
+                Eventually, 
+
+                """
+                for pairs in self.recordList[selected].datalist:
+                    if pairs[1] == 'B':
+                        if blockNum < 11:
+                            blockNum= blockNum + 1
+                    elif pairs[1] == 'P':
+                        pumpStartTime = pairs[0]
+                        pumpOn = True
+                        responseList[blockNum] = responseList[blockNum] + 1  # inc Bin_responses
+                        leverTotal = leverTotal + 1                        # using pump for responses
+                    elif pairs[1] == 'p':
+                        if pumpOn:
+                            duration = pairs[0]-pumpStartTime
+                            if blockNum <= 12:
+                                pumpTimeList[blockNum] = pumpTimeList[blockNum] + duration
+                            pumpOn = False
+                    # else no nothing
+                # print("responseList = ", responseList)
+                consumptionList = [0,0,0,0,0,0,0,0,0,0,0,0]
+                mgPerSec = self.recordList[selected].cocConc * (self.recordList[selected].pumpSpeed * 0.001)
+                if verbose:
+                    print("Cocaine Conc (mg/ml):", self.recordList[selected].cocConc)
+                    print("Pump Speed ( mls/msec):", self.recordList[selected].pumpSpeed)
+                    print("cocaine mg/sec:", mgPerSec)
+                for i in range(12):
+                    consumptionList[i] = pumpTimeList[i] * mgPerSec
+                    if consumptionList[i] == 0:
+                        consumptionList[i] = 0.01  #so as not to have a zero value that would crash in a log function
+                totalResp = 0
+                totalIntake = 0
+                for i in range(12):
+                    totalResp = totalResp + responseList[i]
+                    totalIntake = totalIntake + consumptionList[i]
+                print('Total Intake = ',totalIntake,';  Total Responses = ',totalResp)
+                priceList = []      
+                for i in range(12):
+                    # dosePerResponse = pumptime(mSec) * mg/ml * ml/sec)
+                    dosePerResponse = self.recordList[selected].TH_PumpTimes[i] * \
+                                      self.recordList[selected].cocConc * \
+                                      (self.recordList[selected].pumpSpeed)
+                    price = round(1/dosePerResponse,2)
+                    priceList.append(price)
+                self.recordList[selected].priceList = priceList
+                self.recordList[selected].consumptionList = consumptionList
+                self.recordList[selected].responseList = responseList
+
+                # ------------- end fillLists -----------------
+                print(self.recordList[selected])
+                selected = selected + 1
+            else:
+                print("More files selected than spots available")
+        print("Path =", self.initialDir)
+
+
+        # **********************  The Controllers  ***********************************
+        # Controllers converts user input into calls on functions that manipulate data
+        # ****************************************************************************
+
+    def pyPlotEventRecord(self):
+        injNum = 0
+        injTimeList = []
+        
+        aRecord = self.recordList[self.fileChoice.get()]
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':                     
+                injNum = injNum + 1
+                injTimeList.append(pairs[0]/60000)  # Min
+
+        plt.figure(figsize=(9,3))
+        plt.subplot(111)
+        plt.axis([-0.1,185,0.0,1.0])
+        plt.eventplot(injTimeList,lineoffsets = 0, linelengths=1.5)
+        plt.show()       
+
 
     def load_2L_PR_Files(self):
         """

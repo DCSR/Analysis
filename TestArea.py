@@ -14,15 +14,19 @@ matPlotEventRecord()
 
 Index:
 
+self.bin_HD_Records()     OK
+
 self.fig1_2L_PR()         OK
+
+self.bin_HD_10SecCount()
 
 self.TwoLeverFig()        OK
 
-self.matPlotEventRecord() 
+self.matPlotEventRecord() OK
 
-self.bin_HD_Records()
 
-self.bin_HD_10SecCount()
+
+
 
 self.load_2L_PR_Files()
 
@@ -41,6 +45,124 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from matplotlib.ticker import (MultipleLocator, MaxNLocator, FormatStrFormatter, AutoMinorLocator)
 import matplotlib.ticker as ticker
+
+def bin_HD_Records(aFigure,aRecord ):
+    """
+    To Do: Presently defaults to 30 second access period. Supply other options. 
+
+    This graph can be rendered either to the tkinter canvas or to a pyplot window
+    by selecting the appropriate radio button in the header row. The pyplot window
+    can be used to save the graph to a *.prn file.
+
+    This function uses the MatplotLib Object Oriented style. That is, it uses the Figure
+    and Axes objects rather than the shorthand plt.* instruction set. 
+
+    B, b = Start and stop of a drug lever block
+    P, p = Pump on and off
+
+    This has been checked against "L" and "l" (lever down and up) and it is within a few milliseconds.
+
+    The first trial line is plotted at y = 20 and the subsequent trails are drawn below.   
+    """
+    
+    ax1 = aFigure.add_subplot(111,label="1")
+    ax1.set_position([0.15, 0.05, 0.7, 0.80])      # Modify this to resize or move it around the canvas
+
+    ax1.text(0.5, 0.93, "Access Time (Seconds)", ha = 'center', fontsize = 14, transform = aFigure.transFigure)
+    
+    ax1.xaxis.set_ticks_position('top')             # Put x ticks and labels on the top
+    ax1.spines['top'].set_color('black')
+    ax1.spines['top'].set
+    ax1.xaxis.set_major_locator(MaxNLocator(3))     # Number of x tick intervals
+    ax1.xaxis.set_minor_locator(MaxNLocator(30))    # Number of minor tick intervals
+    xLabels = ['0','10','20','30']                  # Manually set labels
+    ax1.set_xticklabels(xLabels, fontsize = 16)     # and font size
+
+    ax1.spines['top'].set_linewidth(1)              # 0.5 would be very thin
+    # x ticks and labels
+    ax1.tick_params(axis='x', colors='black', width=2, length = 8, labelcolor = 'black', direction = 'out')
+    # minor
+    ax1.tick_params(axis='x', which = 'minor', colors='black', width=1, length = 4, direction = 'in')
+
+    ax1.set_yticks([])                              # Suppress tick labels with empty list
+ 
+    ax1.spines['bottom'].set_color('none')          # Make bottom spine disappear
+    ax1.spines['left'].set_color('none')            # Make left axis disapear
+    ax1.spines['right'].set_color('none')           # Make right spine disapear
+           
+    ax1.set_xlim(0, 30000)                          # 30 seconds - data are in mSec 
+    # Max number of trials
+    maxTrials = 26
+    ax1.set_ylim(0, maxTrials)                             # (Arbitrarily) graphs a maximum of 20 trials 
+
+    pumpOnTime = 0
+    pumpDuration = 0
+    trialDuration = 0
+    totalPumpTime = 0
+    trial = 0
+    
+    firstLine = 24.5                                # Positioning of the first line
+    height = 0.6                                    # Height of event line
+    spacing = 1.4                                   # Spacing between lines
+
+    x = [0]                                         # starting x and y coordinates
+    y = [firstLine]
+    lineY = firstLine                               # This is y value of the line which will change for each trial
+    pumpOn = False
+    
+    for pairs in aRecord.datalist:
+        #if len(blockEndList) < 8:                   
+            #print(pairs)
+            if pairs[1] == 'P':
+                x.append(pairs[0]-startTime)        # Store the x coordinate of pump going on in "bin" time
+                y.append(lineY)                     # Store the y coordinate of start time to 0
+                x.append(pairs[0]-startTime)        # Store the bin time again
+                y.append(lineY+height)              # Set value = 1, this produces an upward line
+                pumpOn = True
+                pumpOnTime = pairs[0]
+            elif pairs[1] == 'p':                   # Pump goes off
+                if pumpOn:                          # This ignores "safety" instructions sent while pump is off
+                    x.append(pairs[0]-startTime)    # Store the x coordinate of pump going off in "bin" time
+                    y.append(lineY+height)          # Store the y coordinate of pump going off at high level
+                    x.append(pairs[0]-startTime)    # Store the x coordinate again
+                    y.append(lineY)                 # Store the y coordinate at low level - creating a downward line
+                    pumpDuration = pairs[0]-pumpOnTime              # Calculate and store pumpDuration
+                    trialDuration = trialDuration + pumpDuration
+                    totalPumpTime = totalPumpTime + pumpDuration
+                    pumpOn = False
+            elif pairs[1] == 'B':                   # Drug access period starts
+                startTime = pairs[0]                # Get startTime
+                x = [0]                             # Reset x coordinate to start of line                    
+                lineY = firstLine-(trial*spacing)   # Calculate y coodinate for line - counting down from top
+                y = [lineY]                         # Assign y coordinate
+            elif pairs[1] == 'b':                   # Drug access period ends
+                x.append(30000)                     # Assign x coordinate to draw line to end
+                if pumpOn == False:                 # Normally the pump is off
+                    y.append(lineY)                 # so assign y coordinate to draw a line to the end
+                else:                               # But if the pump is ON
+                    y.append(lineY+height)          # Draw a line to end in up position
+                    x.append(30000)                 # Then draw a downward line at the very end
+                    y.append(lineY)
+
+                line1 = Line2D(x,y, color = 'black', ls = 'solid', marker = 'None')
+                ax1.add_line(line1)
+
+                trial = trial + 1
+                
+                # ax1.transData means it will use the data coordinates
+                # Whereas aFigure.transFigure would use x/y coordinates based on the entire figure - see Title above
+                # Write trial number to left of line
+                ax1.text(-500, lineY, str(trial), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                # Write pump trialDuration to the right of the line
+                ax1.text(35000, lineY, str(trialDuration), ha = 'right', fontsize = 14, transform=ax1.transData)
+
+                trialDuration = 0
+
+    ax1.text(35000, 26, 'mSec', ha = 'right', fontsize = 14, transform=ax1.transData)              
+    #print("totalDownTime", totalPumpTime)
+    ax1.set_ylabel('Trial Number', fontsize = 16)
+    ax1.yaxis.labelpad = 35                  # Move label left or right
 
 
 def fig1_2L_PR(fig, recordList):
