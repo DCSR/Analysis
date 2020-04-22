@@ -33,3 +33,70 @@ def summaryText(aTextBox,aRecord):
     aTextBox.insert(tk.END,"Mean interval = "+str(round(meanInterval/1000,1))+" sec, ("+str(round(meanInterval/60000,2))+" min)\n")
     aTextBox.insert(tk.END,"Rate (inj/hr) = "+str(round(60/(meanInterval/60000),3))+"\n")
     aTextBox.insert(tk.END,"***************************\n")
+
+
+# work on adding injection times
+
+def injectionTimesText(aTextBox, aRecord):
+    
+        injection = 0
+        previousInjTime = 0
+        aTextBox.insert(tk.END,"Inj Duration   Time (sec)   Time (min) Interval (sec)\n")
+        pumpOn = False
+        for pairs in aRecord.datalist:
+            if pairs[1] == 'P':
+                pumpStartTime = pairs[0]
+                injection = injection + 1
+                secTime = pairs[0]/1000
+                minTime = secTime/60
+                interval = secTime - previousInjTime
+                previousInjTime = secTime
+                pumpOn = True
+            if pairs[1] == 'p':
+                if pumpOn:
+                    pumpOn = False
+                    duration = pairs[0]-pumpStartTime
+                    if injection == 1:
+                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,duration,secTime,minTime,interval)
+                    else:
+                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f} {4:10.2f}".format(injection,duration,secTime,minTime,interval)
+                    aTextBox.insert(tk.END,tempString+"\n")
+                
+        aTextBox.insert(tk.END,"Number of injections: "+str(injection)+"\n") 
+
+### unchanged for ref
+
+
+#prodecure called from the Text tab ref
+##
+##def summaryText(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]       
+##        tt.summaryText(aTextBox,aRecord)
+
+##def injectionTimesText(self):
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        injection = 0
+##        previousInjTime = 0
+##        self.textBox.insert(END,"Inj Duration   Time (sec)   Time (min) Interval (sec)\n")
+##        pumpOn = False
+##        for pairs in aRecord.datalist:
+##            if pairs[1] == 'P':
+##                pumpStartTime = pairs[0]
+##                injection = injection + 1
+##                secTime = pairs[0]/1000
+##                minTime = secTime/60
+##                interval = secTime - previousInjTime
+##                previousInjTime = secTime
+##                pumpOn = True
+##            if pairs[1] == 'p':
+##                if pumpOn:
+##                    pumpOn = False
+##                    duration = pairs[0]-pumpStartTime
+##                    if injection == 1:
+##                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,duration,secTime,minTime,interval)
+##                    else:
+##                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f} {4:10.2f}".format(injection,duration,secTime,minTime,interval)
+##                    self.textBox.insert(END,tempString+"\n")
+##                
+##        self.textBox.insert(END,"Number of injections: "+str(injection)+"\n") 

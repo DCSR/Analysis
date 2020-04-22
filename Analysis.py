@@ -627,6 +627,11 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]       
         tt.summaryText(aTextBox,aRecord)
 
+    def injectionTimesText(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        tt.injectionTimesText(aTextBox,aRecord)
+
     # Steven: Note that the above could be written as a single line:
     #
     # tt.summaryText(self.textBox,self.recordList[self.fileChoice.get())
@@ -1545,32 +1550,32 @@ class myGUI(object):
         GraphLib.drawLog_X_Axis(aCanvas,x_zero,y_zero,x_pixel_width,x_startValue,x_logRange,x_caption)
         GraphLib.drawLog_Y_Axis(aCanvas,x_zero+x_pixel_width,y_zero,y_pixel_height,y_startValue,y_logRange,y_caption, test = True, leftLabel=False)
                
-    def injectionTimesText(self):
-        aRecord = self.recordList[self.fileChoice.get()]
-        injection = 0
-        previousInjTime = 0
-        self.textBox.insert(END,"Inj Duration   Time (sec)   Time (min) Interval (sec)\n")
-        pumpOn = False
-        for pairs in aRecord.datalist:
-            if pairs[1] == 'P':
-                pumpStartTime = pairs[0]
-                injection = injection + 1
-                secTime = pairs[0]/1000
-                minTime = secTime/60
-                interval = secTime - previousInjTime
-                previousInjTime = secTime
-                pumpOn = True
-            if pairs[1] == 'p':
-                if pumpOn:
-                    pumpOn = False
-                    duration = pairs[0]-pumpStartTime
-                    if injection == 1:
-                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,duration,secTime,minTime,interval)
-                    else:
-                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f} {4:10.2f}".format(injection,duration,secTime,minTime,interval)
-                    self.textBox.insert(END,tempString+"\n")
-                
-        self.textBox.insert(END,"Number of injections: "+str(injection)+"\n")
+##    def injectionTimesText(self):
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        injection = 0
+##        previousInjTime = 0
+##        self.textBox.insert(END,"Inj Duration   Time (sec)   Time (min) Interval (sec)\n")
+##        pumpOn = False
+##        for pairs in aRecord.datalist:
+##            if pairs[1] == 'P':
+##                pumpStartTime = pairs[0]
+##                injection = injection + 1
+##                secTime = pairs[0]/1000
+##                minTime = secTime/60
+##                interval = secTime - previousInjTime
+##                previousInjTime = secTime
+##                pumpOn = True
+##            if pairs[1] == 'p':
+##                if pumpOn:
+##                    pumpOn = False
+##                    duration = pairs[0]-pumpStartTime
+##                    if injection == 1:
+##                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f}".format(injection,duration,secTime,minTime,interval)
+##                    else:
+##                        tempString = "{0} {1:10.2f} {2:10.2f} {3:10.2f} {4:10.2f}".format(injection,duration,secTime,minTime,interval)
+##                    self.textBox.insert(END,tempString+"\n")
+##                
+##        self.textBox.insert(END,"Number of injections: "+str(injection)+"\n")
 
     def doseReport(self):
         aRecord = self.recordList[self.fileChoice.get()]
