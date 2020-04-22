@@ -1,6 +1,11 @@
 """
 This file contains all the precedures called from the GraphsTab
 
+There are several ways to graph stuff. Much of what is in this files draws to a ttk canvas,
+in this case self.graphCanvas.
+
+The other way is to use matplotlib.  
+
 Index: (alphabetical)
 
 cocaineModel()         OK

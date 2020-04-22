@@ -15,6 +15,7 @@ from datetime import datetime
 import DataModel as dm
 import GraphsTab as gt
 import TestArea as ta
+import TextTab as tt
 import stream01
 import math
 import os
@@ -620,7 +621,19 @@ class myGUI(object):
 
 
     # **************   Procedures called from Text Tab  *************
-        
+
+    def summaryText(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]       
+        tt.summaryText(aTextBox,aRecord)
+
+    # Steven: Note that the above could be written as a single line:
+    #
+    # tt.summaryText(self.textBox,self.recordList[self.fileChoice.get())
+    #
+    # but I find the expanded version (with obvious definitions) a bit easier to read
+
+    
         
     # **************   Procedures called from Test Area Tab  *************
 
@@ -716,8 +729,7 @@ class myGUI(object):
         self.fileChoice.set(3)        
         self.openWakeFiles("/Users/daveroberts/Documents/Two Lever PR/Raw Data/Final/H383/8_H383_Mar_27.str")
 
-    # *********************************************************************
-    
+    # *********************************************************************   
        
     def save_TH_Figure(self):
         """
@@ -1831,35 +1843,6 @@ class myGUI(object):
     def clearText(self):
         self.textBox.delete("1.0",END)
 
-    def summaryText(self):
-        # print(dataRecordList[self.fileChoice.get()])    # This will print to the Python Shell
-        self.textBox.insert("1.0",self.recordList[self.fileChoice.get()])
-
-        aRecord = self.recordList[self.fileChoice.get()]
-
-        timeFirstInjection = 0
-        T1 = 0
-        numInj = 0
-        numIntervals = 0
-        totalIntervals = 0       
-        for pairs in aRecord.datalist:
-            if pairs[1] == "P":
-                if numInj == 0: timeFirstInjection = pairs[0]
-                numInj = numInj + 1
-                T2 = pairs[0]
-                if T1 > 0:
-                    numIntervals = numIntervals + 1
-                    interval = T2-T1
-                    totalIntervals = totalIntervals + interval
-                T1 = T2
-        timeLastInjection = T1
-        self.textBox.insert(END,"First inj = "+str(round(timeFirstInjection/1000,1))+" sec ("+str(round(timeFirstInjection/60000,0))+" min)\n")
-        self.textBox.insert(END,"Last inj  = "+str(round(timeLastInjection/ 1000,1))+" sec ("+str(round(timeLastInjection/ 60000,0))+" min)\n")
-        self.textBox.insert(END,"Total of "+str(numIntervals)+" intervals = "+str(round(totalIntervals/ 1000,1))+" sec, ("+str(round(totalIntervals/60000,0))+" min)\n")
-        meanInterval = totalIntervals/numIntervals
-        self.textBox.insert(END,"Mean interval = "+str(round(meanInterval/1000,1))+" sec, ("+str(round(meanInterval/60000,2))+" min)\n")
-        self.textBox.insert(END,"Rate (inj/hr) = "+str(round(60/(meanInterval/60000),3))+"\n")
-        self.textBox.insert(END,"***************************\n")
 
     def periodic_check(self):
         thisTime = datetime.now()
