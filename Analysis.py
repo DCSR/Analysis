@@ -172,9 +172,9 @@ class myGUI(object):
         self.thresholdTab = Frame(myNotebook)
         self.textTab = Frame(myNotebook)
         self.testAreaTab = Frame(myNotebook)
+        myNotebook.add(self.textTab,text = "Text")
         myNotebook.add(self.graphTab,text = "Graphs")
         myNotebook.add(self.thresholdTab,text = "Threshold")
-        myNotebook.add(self.textTab,text = "Text")
         myNotebook.add(self.testAreaTab,text = "Test Area")
         myNotebook.grid(row=0,column=0)
 
@@ -457,56 +457,83 @@ class myGUI(object):
         # *****************************************************************
         # *******************   Text Tab     ******************************
         # *****************************************************************
+
+     
+        
+        #dose report frame
+        self.dosereportFrame = Frame(self.textTab, borderwidth=1, relief="solid") # add , relief="sunken" if you want sunken border
+        self.dosereportFrame.grid(column = 0, row = 0, sticky=S)
+        
          
-        self.textButtonFrame = Frame(self.textTab, borderwidth=5, relief="sunken")
+        self.textButtonFrame = Frame(self.textTab, borderwidth=1)
         self.textButtonFrame.grid(column = 0, row = 0, sticky=N)
 
-        self.textBox = Text(self.textTab, width=100, height=43)
+        self.textBox = Text(self.textTab, width=100, height=47)
         self.textBox.grid(column = 1, row = 0, rowspan = 2)
         
-        cleartextButton = Button(self.textButtonFrame, text="Clear", command= lambda: \
-                              self.clearText()).grid(row=0,column=0,columnspan = 2,sticky=N)
-        summarytextButton = Button(self.textButtonFrame, text="Summary", command= lambda: \
-                              self.summaryText()).grid(row=1,column=0,columnspan = 2,sticky=N)
-        injectionTimesButton = Button(self.textButtonFrame, text="Injection Times", command= lambda: \
-                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=N)        
+        cleartextButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Clear", command= lambda: \
+                              self.clearText()).grid(row=0,column=0,columnspan = 2, sticky=EW)
+        summarytextButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Summary", command= lambda: \
+                              self.summaryText()).grid(row=1,column=0,columnspan = 2,sticky=EW)
+        injectionTimesButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times", command= lambda: \
+                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=EW)
+        #SeaChange 03012020
+        injectionTimesMinButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times (min only)", command= lambda: \
+                              self.injectionTimesTextMin()).grid(row=13,column=0,columnspan = 2,sticky=EW)
+        #SeaChange 03012020
+        intervalButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Interval Times (min only)", command= lambda: \
+                              self.intervalText()).grid(row=14,column=0,columnspan = 2,sticky=EW)
+        #SeaChange 03162020
+        bintimebutton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Bin Times (min only)", command= lambda: \
+                              self.bintimeText()).grid(row=15,column=0,columnspan = 2,sticky=EW)
 
-        pyPlotEventButton = Button(self.textButtonFrame, text="PyPlot Event Record", command= lambda: \
-                              self.pyPlotEventRecord()).grid(row=3,column=0,columnspan=2,sticky=N)
+        pyPlotEventButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="PyPlot Event Record", command= lambda: \
+                              self.pyPlotEventRecord()).grid(row=16,column=0,columnspan=2,sticky=EW)
 
-        doseReportButton = Button(self.textButtonFrame, text="Dose Report", command= lambda: \
-                              self.doseReport()).grid(row=4,column=0,columnspan = 2,sticky=N)
+        doseReportButton = Button(self.dosereportFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Dose Report", command= lambda: \
+                              self.doseReport()).grid(row=20,column=0,columnspan = 2,sticky=EW)
 
-        self.startTimeLabel = Label(self.textButtonFrame, text = "T1").grid(row=5,column=0,sticky=W)        
+        self.startTimeLabel = Label(self.dosereportFrame, font=('Helvetica', 10, 'bold'), text = "T1").grid(row=5,column=0,sticky=E)        
 
-        self.startTimeScale = Scale(self.textButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
+        self.startTimeScale = Scale(self.dosereportFrame, orient=HORIZONTAL, length=100, resolution = 1, \
                                   from_=0, to=360, variable = self.startTimeVar)
         self.startTimeScale.grid(row=5,column=1)
         self.startTimeScale.set(0)
 
-        self.endTimeLabel = Label(self.textButtonFrame, text = "T2").grid(row=6,column=0,sticky=W) 
+        #entry for T1 here
+        self.starttimeEntry = Entry(self.dosereportFrame, width=6,textvariable = self.startTimeVar)
+        self.starttimeEntry.grid(row = 6, column = 1)
+        self.starttimeEntryLabel = Label(self.dosereportFrame, font=('Helvetica', 12, 'bold'), text = "T1 Entry").grid(row=6,column=0,sticky=E)
 
-        self.endTimeScale = Scale(self.textButtonFrame, orient=HORIZONTAL, length=100, resolution = 5, \
+        self.endTimeLabel = Label(self.dosereportFrame, font=('Helvetica', 10, 'bold'), text = "T2").grid(row=8,column=0,sticky=E) 
+
+        self.endTimeScale = Scale(self.dosereportFrame, orient=HORIZONTAL, length=100, resolution = 1, \
                                   from_=0, to=360, variable = self.endTimeVar)
-        self.endTimeScale.grid(row=6,column=1)
+        self.endTimeScale.grid(row=8,column=1)
         self.endTimeScale.set(360)
+
+        #entry for T2 here
+        self.endtimeEntry = Entry(self.dosereportFrame, width=6,textvariable = self.endTimeVar)
+        self.endtimeEntry.grid(row = 7, column = 1)
+        self.starttimeEntryLabel = Label(self.dosereportFrame, font=('Helvetica', 12, 'bold'), text = "T2 Entry").grid(row=7,column=0,sticky=E)
         
-        concentrationLabel = Label(self.textButtonFrame, text="Conc (mg/ml)")
-        concentrationLabel.grid(row = 7, column = 0)
+        concentrationLabel = Label(self.dosereportFrame, font=('Helvetica', 10, 'bold'), text="Conc (mg/ml)")
+        concentrationLabel.grid(row = 9, column = 0, sticky=E)
         
-        self.concentrationEntry = Entry(self.textButtonFrame, width=6,textvariable = self.drugConcStr)
-        self.concentrationEntry.grid(row = 7, column = 1)
+        self.concentrationEntry = Entry(self.dosereportFrame, width=6,textvariable = self.drugConcStr)
+        self.concentrationEntry.grid(row = 9, column = 1)
 
-        weightLabel = Label(self.textButtonFrame, text="Body weight (gms)")
-        weightLabel.grid(row = 8, column = 0)
+        weightLabel = Label(self.dosereportFrame, font=('Helvetica', 10, 'bold'), text="Body Wt (gms)")
+        weightLabel.grid(row = 10, column = 0)
 
-        self.weightEntry = Entry(self.textButtonFrame, width=6,textvariable = self.weightStr)
-        self.weightEntry.grid(row = 8, column = 1)
+        self.weightEntry = Entry(self.dosereportFrame, width=6,textvariable = self.weightStr)
+        self.weightEntry.grid(row = 10, column = 1)
 
-        intA_text_button = Button(self.textButtonFrame, text="IntA", command= lambda: \
-                              self.intA_text()).grid(row = 9,column = 0, columnspan = 2,sticky=N)
-        TH_text_button = Button(self.textButtonFrame, text="Threshold (TH)", command= lambda: \
-                              self.threshold_text()).grid(row = 10,column = 0, columnspan = 2,sticky=N)
+        intA_text_button = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="IntA", command= lambda: \
+                              self.intA_text()).grid(row = 11,column = 0, columnspan = 2,sticky=EW)
+        TH_text_button = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Threshold (TH)", command= lambda: \
+                              self.threshold_text()).grid(row = 12,column = 0, columnspan = 2,sticky=EW)
+
 
         #***************** 2L-PR stuff **************
         self.text_2LPR_Frame = Frame(self.textTab, borderwidth=5, relief="sunken")
@@ -554,7 +581,7 @@ class myGUI(object):
         Button2 = Button(self.testAreaButtonFrame, text="TwoLeverFig()", command= lambda: \
                               self.TwoLeverFig()).grid(row=1,column=0,columnspan=2,sticky=N)
         Button3 = Button(self.testAreaButtonFrame, text="MatPlot Event Record", command= lambda: \
-                              self.matPlotEventRecord()).grid(row=3,column=0,columnspan=2, sticky=N)
+                              self.Record()).grid(row=3,column=0,columnspan=2, sticky=N)
         Button4 = Button(self.testAreaButtonFrame, text="bin_HD_Records()", command= lambda: \
                               self.bin_HD_Records()).grid(row=4,column=0,columnspan=2, sticky=N)
         Button5 = Button(self.testAreaButtonFrame, text="bin_HD_10SecCount()", command= lambda: \
@@ -624,13 +651,50 @@ class myGUI(object):
 
     def summaryText(self):
         aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]       
+        aRecord = self.recordList[self.fileChoice.get()]
         tt.summaryText(aTextBox,aRecord)
 
     def injectionTimesText(self):
         aTextBox = self.textBox
         aRecord = self.recordList[self.fileChoice.get()]
         tt.injectionTimesText(aTextBox,aRecord)
+        
+    def doseReport(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        aStartTimeScale = self.startTimeScale.get()
+        aEndTimeScale = self.endTimeScale.get()
+        aConcentrationEntry = self.concentrationEntry.get()
+        aWeightEntry = self.weightEntry.get()
+        tt.doseReport(aTextBox,aRecord,aStartTimeScale,aEndTimeScale,aConcentrationEntry,aWeightEntry)
+
+    def threshold_text(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        tt.threshold_text(aTextBox,aRecord)
+
+    def injectionTimesTextMin(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        tt.injectionTimesTextMin(aTextBox,aRecord)
+
+    def intervalText(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        tt.intervalText(aTextBox,aRecord)
+
+    def bintimeText(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        tt.bintimeText(aTextBox,aRecord)
+
+    def injectionTimesText(self):
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        tt.injectionTimesText(aTextBox,aRecord)
+
+        
+        
 
     # Steven: Note that the above could be written as a single line:
     #
@@ -1577,57 +1641,57 @@ class myGUI(object):
 ##                
 ##        self.textBox.insert(END,"Number of injections: "+str(injection)+"\n")
 
-    def doseReport(self):
-        aRecord = self.recordList[self.fileChoice.get()]
-        pumpOn = False
-        injections = 0
-        totalPumpDuration = 0
-        lastTime = 0
-        time1 = self.startTimeScale.get()
-        time2 = self.endTimeScale.get()
-        for pairs in aRecord.datalist:
-            if pairs[1] == 'P':
-                minTime = pairs[0]/60000
-                if (minTime >= time1) and (minTime < time2):
-                    injections = injections + 1
-                    pumpStartTime = pairs[0]
-                    lastTime = pumpStartTime
-                    pumpOn = True
-            if pairs[1] == 'p':
-                if pumpOn:
-                    duration = pairs[0]-pumpStartTime
-                    pumpOn = False
-                    totalPumpDuration = totalPumpDuration + duration
-                    
-                    
-        aString = "Injections between "+str(time1)+" and "+str(time2)+" minutes = "+str(injections)+"\n"
-        self.textBox.insert(END,aString)
-
-        try:
-            conc = float(self.concentrationEntry.get())
-            weight = int(self.weightEntry.get())         # in grams
-            aString = "Drug Concentration = {0:5.3f} mg/ml\nWeight = {1:3d} grams \n".format(conc,weight)            
-        except ValueError:
-            aString = "Error getting Conc and/or Body weight \n"
-        self.textBox.insert(END,aString)
-
-        if injections > 0:
-                aString = "Total Pump Duration = {0:6d} mSec \n".format(totalPumpDuration)
-                self.textBox.insert(END,aString)
-                averagePumpTime = round(totalPumpDuration / injections,2)
-                aString = "Average Pump Time = {0:5.3f} mSec \n".format(averagePumpTime)
-                self.textBox.insert(END,aString)
-                totalDose = (totalPumpDuration/1000) * conc * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
-                totalDosePerKg = totalDose/(weight/1000)
-                aString = "Total Dose = {0:5.3f} mg;  {1:5.3f} mg/kg \n".format(totalDose, totalDosePerKg)
-                self.textBox.insert(END,aString)
-                averageDose = (totalDose / injections)
-                averageDosePerKg = averageDose / (weight/1000)
-                aString = "Average Dose = {0:5.3f} mg;  {1:5.3f} mg/kg \n".format(averageDose, averageDosePerKg)
-                self.textBox.insert(END,aString)
-
-        
-        self.textBox.insert(END,"********************************\n")
+##    def doseReport(self):
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        pumpOn = False
+##        injections = 0
+##        totalPumpDuration = 0
+##        lastTime = 0
+##        time1 = self.startTimeScale.get()
+##        time2 = self.endTimeScale.get()
+##        for pairs in aRecord.datalist:
+##            if pairs[1] == 'P':
+##                minTime = pairs[0]/60000
+##                if (minTime >= time1) and (minTime < time2):
+##                    injections = injections + 1
+##                    pumpStartTime = pairs[0]
+##                    lastTime = pumpStartTime
+##                    pumpOn = True
+##            if pairs[1] == 'p':
+##                if pumpOn:
+##                    duration = pairs[0]-pumpStartTime
+##                    pumpOn = False
+##                    totalPumpDuration = totalPumpDuration + duration
+##                    
+##                    
+##        aString = "Injections between "+str(time1)+" and "+str(time2)+" minutes = "+str(injections)+"\n"
+##        self.textBox.insert(END,aString)
+##
+##        try:
+##            conc = float(self.concentrationEntry.get())
+##            weight = int(self.weightEntry.get())         # in grams
+##            aString = "Drug Concentration = {0:5.3f} mg/ml\nWeight = {1:3d} grams \n".format(conc,weight)            
+##        except ValueError:
+##            aString = "Error getting Conc and/or Body weight \n"
+##        self.textBox.insert(END,aString)
+##
+##        if injections > 0:
+##                aString = "Total Pump Duration = {0:6d} mSec \n".format(totalPumpDuration)
+##                self.textBox.insert(END,aString)
+##                averagePumpTime = round(totalPumpDuration / injections,2)
+##                aString = "Average Pump Time = {0:5.3f} mSec \n".format(averagePumpTime)
+##                self.textBox.insert(END,aString)
+##                totalDose = (totalPumpDuration/1000) * conc * 0.025  # pumptime(mSec) * mg/ml * ml/sec)
+##                totalDosePerKg = totalDose/(weight/1000)
+##                aString = "Total Dose = {0:5.3f} mg;  {1:5.3f} mg/kg \n".format(totalDose, totalDosePerKg)
+##                self.textBox.insert(END,aString)
+##                averageDose = (totalDose / injections)
+##                averageDosePerKg = averageDose / (weight/1000)
+##                aString = "Average Dose = {0:5.3f} mg;  {1:5.3f} mg/kg \n".format(averageDose, averageDosePerKg)
+##                self.textBox.insert(END,aString)
+##
+##        
+##        self.textBox.insert(END,"********************************\n")
 
     def selectList(self):
         """
@@ -1642,36 +1706,36 @@ class myGUI(object):
         self.fig = plt.figure(clear=True)   # clear contents
        
 
-    def threshold_text(self):
-        aRecord = self.recordList[self.fileChoice.get()]
-        aList = aRecord.datalist
-        count = ListLib.count_char('L',aList)
-        aString = 'Number of responses: '+str(count)
-        self.textBox.insert(END,aString+"\n")
-        
-        count = ListLib.count_char('P',aList)
-        aString = 'Number of injections: '+str(count)
-        self.textBox.insert(END,aString+"\n")
-
-        blockCount = ListLib.count_char('B',aList)
-        aString = 'Number of blocks: '+str(blockCount)
-        self.textBox.insert(END,aString+"\n")
-
-        pump_count_list = ListLib.get_pump_count_per_block(aList)
-        aString = 'Injections per block: '
-        for item in pump_count_list:
-            aString = aString + str(item) + ' '
-        self.textBox.insert(END,aString+"\n")
-        print(pump_count_list)
-
-        for b in range (blockCount):    
-            pump_duration_list = ListLib.get_pump_duration_list(aList, b)
-            aString = 'Block '+str(b)+': '
-            for i in range (len(pump_duration_list)):
-                list_item = pump_duration_list[i]
-                aString = aString + str(list_item[2]) + ' '
-            self.textBox.insert(END,aString+"\n")
-        #print("Block "+str(b), pump_duration_list)
+##    def threshold_text(self):
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        aList = aRecord.datalist
+##        count = ListLib.count_char('L',aList)
+##        aString = 'Number of responses: '+str(count)
+##        self.textBox.insert(END,aString+"\n")
+##        
+##        count = ListLib.count_char('P',aList)
+##        aString = 'Number of injections: '+str(count)
+##        self.textBox.insert(END,aString+"\n")
+##
+##        blockCount = ListLib.count_char('B',aList)
+##        aString = 'Number of blocks: '+str(blockCount)
+##        self.textBox.insert(END,aString+"\n")
+##
+##        pump_count_list = ListLib.get_pump_count_per_block(aList)
+##        aString = 'Injections per block: '
+##        for item in pump_count_list:
+##            aString = aString + str(item) + ' '
+##        self.textBox.insert(END,aString+"\n")
+##        print(pump_count_list)
+##
+##        for b in range (blockCount):    
+##            pump_duration_list = ListLib.get_pump_duration_list(aList, b)
+##            aString = 'Block '+str(b)+': '
+##            for i in range (len(pump_duration_list)):
+##                list_item = pump_duration_list[i]
+##                aString = aString + str(list_item[2]) + ' '
+##            self.textBox.insert(END,aString+"\n")
+##        #print("Block "+str(b), pump_duration_list)
         
 
     def intA_text(self):
