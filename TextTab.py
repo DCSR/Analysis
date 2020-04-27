@@ -12,12 +12,14 @@ def summaryText(aTextBox,aRecord):
     In this case, see DataModel.py -> DatRecord 
 
     """
-    aTextBox.insert("1.0",aRecord)
+    aTextBox.insert(tk.END,aRecord)
     timeFirstInjection = 0
     T1 = 0
     numInj = 0
     numIntervals = 0
     totalIntervals = 0
+    sessionEnd = 0
+    meanInterval = 0.0
     for pairs in aRecord.datalist:
         if pairs[1] == "P":
             if numInj == 0: timeFirstInjection = pairs[0]
@@ -29,23 +31,24 @@ def summaryText(aTextBox,aRecord):
                 totalIntervals = totalIntervals + interval
             T1 = T2
 
-            
+        if pairs[1] == "E":
+            sessionEnd = pairs[0] #finds session lengh
 
-            if pairs[1] == "E": sessionEnd = pairs[0] #finds session lengh
- 
-            
-            
     timeLastInjection = T1
 
-
-    
     aTextBox.insert(tk.END,"First inj = "+str(round(timeFirstInjection/1000,1))+" sec ("+str(round(timeFirstInjection/60000,0))+" min)\n")
     aTextBox.insert(tk.END,"Last inj  = "+str(round(timeLastInjection/ 1000,1))+" sec ("+str(round(timeLastInjection/ 60000,0))+" min)\n")
     aTextBox.insert(tk.END,"Total of "+str(numIntervals)+" intervals = "+str(round(totalIntervals/ 1000,1))+" sec, ("+str(round(totalIntervals/60000,0))+" min)\n")
-    meanInterval = totalIntervals/numIntervals
-    aTextBox.insert(tk.END,"Mean interval = "+str(round(meanInterval/1000,1))+" sec, ("+str(round(meanInterval/60000,2))+" min)\n")
-    aTextBox.insert(tk.END,"Rate (inj/hr) = "+str(round(60/(meanInterval/60000),3))+"\n")
-    aTextBox.insert(tk.END,"session length (min)= "+str(round((sessionEnd/60000),0))+"\n") #bug being generated here
+    if numIntervals > 0:
+        meanInterval = totalIntervals/numIntervals
+        aTextBox.insert(tk.END,"Mean interval = "+str(round(meanInterval/1000,1))+" sec, ("+str(round(meanInterval/60000,2))+" min)\n")
+        aTextBox.insert(tk.END,"Rate (inj/hr) = "+str(round(60/(meanInterval/60000),3))+"\n")
+    else:
+        aTextBox.insert(tk.END,"Mean interval = 0\n")
+    if sessionEnd > 0:
+        aTextBox.insert(tk.END,"session length (min) = "+str(round((sessionEnd/60000),0))+"\n") #bug being generated here
+    else:
+        aTextBox.insert(tk.END,"session length (min) = 0\n")
     aTextBox.insert(tk.END,"***************************\n")
 
 ##    aString = "Total Pump Duration = {0:6d} mSec \n".format(totalPumpDuration)
