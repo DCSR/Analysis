@@ -16,6 +16,7 @@ import DataModel as dm
 import GraphsTab as gt
 import TestArea as ta
 import TextTab as tt
+import ExcelStuff
 import stream01
 import math
 import os
@@ -490,6 +491,11 @@ class myGUI(object):
         pyPlotEventButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="PyPlot Event Record", command= lambda: \
                               self.pyPlotEventRecord()).grid(row=16,column=0,columnspan=2,sticky=EW)
 
+        pushToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push To Excel", command= lambda: \
+                              self.pushToExcel()).grid(row=17,column=0,columnspan=2,sticky=EW)
+
+        #*************
+
         doseReportButton = Button(self.dosereportFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Dose Report", command= lambda: \
                               self.doseReport()).grid(row=20,column=0,columnspan = 2,sticky=EW)
 
@@ -693,9 +699,11 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         tt.injectionTimesText(aTextBox,aRecord)
 
-        
-        
+    def pushToExcel(self):
+        aRecordList = self.recordList
+        ExcelStuff.pushToExcel(aRecordList)
 
+        
     # Steven: Note that the above could be written as a single line:
     #
     # tt.summaryText(self.textBox,self.recordList[self.fileChoice.get())
