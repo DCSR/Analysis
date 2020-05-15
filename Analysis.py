@@ -476,23 +476,26 @@ class myGUI(object):
                               self.clearText()).grid(row=0,column=0,columnspan = 2, sticky=EW)
         summarytextButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Summary", command= lambda: \
                               self.summaryText()).grid(row=1,column=0,columnspan = 2,sticky=EW)
-        injectionTimesButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times", command= lambda: \
-                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=EW)
-        #SeaChange 03012020
-        injectionTimesMinButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times (min only)", command= lambda: \
-                              self.injectionTimesTextMin()).grid(row=13,column=0,columnspan = 2,sticky=EW)
-        #SeaChange 03012020
-        intervalButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Interval Times (min only)", command= lambda: \
-                              self.intervalText()).grid(row=14,column=0,columnspan = 2,sticky=EW)
-        #SeaChange 03162020
-        bintimebutton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Bin Times (min only)", command= lambda: \
-                              self.bintimeText()).grid(row=15,column=0,columnspan = 2,sticky=EW)
+##        injectionTimesButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times", command= lambda: \
+##                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=EW)
+##        #SeaChange 03012020
+##        injectionTimesMinButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times (min only)", command= lambda: \
+##                              self.injectionTimesTextMin()).grid(row=13,column=0,columnspan = 2,sticky=EW)
+##        #SeaChange 03012020
+##        intervalButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Interval Times (min only)", command= lambda: \
+##                              self.intervalText()).grid(row=14,column=0,columnspan = 2,sticky=EW)
+##        #SeaChange 03162020
+##        bintimebutton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Bin Times (min only)", command= lambda: \
+##                              self.bintimeText()).grid(row=15,column=0,columnspan = 2,sticky=EW)
 
         pyPlotEventButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="PyPlot Event Record", command= lambda: \
                               self.pyPlotEventRecord()).grid(row=16,column=0,columnspan=2,sticky=EW)
 
-        pushToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push To Excel", command= lambda: \
-                              self.pushToExcel()).grid(row=17,column=0,columnspan=2,sticky=EW)
+        pushInjTimesToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push Inj Times To Excel", command= lambda: \
+                              self.pushInjTimesToExcel()).grid(row=17,column=0,columnspan=2,sticky=EW)
+
+        pushTHToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push TH To Excel", command= lambda: \
+                              self.pushTHToExcel()).grid(row=18,column=0,columnspan=2,sticky=EW)
 
         #*************
 
@@ -679,29 +682,34 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         tt.threshold_text(aTextBox,aRecord)
 
-    def injectionTimesTextMin(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.injectionTimesTextMin(aTextBox,aRecord)
+##    def injectionTimesTextMin(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.injectionTimesTextMin(aTextBox,aRecord)
+##
+##    def intervalText(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.intervalText(aTextBox,aRecord)
+##
+##    def bintimeText(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.bintimeText(aTextBox,aRecord)
+##
+##    def injectionTimesText(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.injectionTimesText(aTextBox,aRecord)
 
-    def intervalText(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.intervalText(aTextBox,aRecord)
-
-    def bintimeText(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.bintimeText(aTextBox,aRecord)
-
-    def injectionTimesText(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.injectionTimesText(aTextBox,aRecord)
-
-    def pushToExcel(self):
+    def pushInjTimesToExcel(self):
         aRecordList = self.recordList
-        ExcelStuff.pushToExcel(aRecordList)
+        ExcelStuff.pushInjTimesToExcel(aRecordList)
+
+    def pushTHToExcel(self):
+        aRecordList = self.recordList
+        ExcelStuff.pushTHToExcel(aRecordList)
+
 
         
     # Steven: Note that the above could be written as a single line:
