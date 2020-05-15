@@ -29,19 +29,19 @@ import GraphLib
 import model
 import ListLib
 
-def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
+def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clear = True, max_y_scale = 20):
     if clear:
         aCanvas.delete('all')
     x_zero = 75
     y_zero = 350
-    x_pixel_width = 700
-    y_pixel_height = 200
+    x_pixel_width = 500 #700
+    y_pixel_height = 150 #200
     x_divisions = 12
-    y_divisions = 5
+    y_divisions = 4
     if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-    GraphLib.eventRecord(aCanvas, x_zero, 100, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "Test")
-    GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "red")
-    GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "blue")
+    GraphLib.eventRecord(aCanvas, x_zero+5, 185, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "")
+    GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
+    GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "black")
     x_scaler = x_pixel_width / (max_x_scale*60*1000)
     y_scaler = y_pixel_height / max_y_scale
     cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc,aRecord.pumpSpeed,resolution)
@@ -75,9 +75,9 @@ def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", c
     X1 = x_zero + (startAverageTime * x_scaler) // 1
     Y  = y_zero-((averageConc) * y_scaler) // 1
     X2 = x_zero + (endAverageTime * x_scaler) // 1
-    aCanvas.create_line(X1, Y, X2, Y, fill= "red")
-    tempStr = "Average Conc (10-180 min): "+str(averageConc)
-    aCanvas.create_text(500, Y, fill = "red", text = tempStr)
+    # aCanvas.create_line(X1, Y, X2, Y, fill= "red")
+    # tempStr = "Average Conc (10-180 min): "+str(averageConc)
+    # aCanvas.create_text(500, Y, fill = "red", text = tempStr)
 
 
 def cumulativeRecord(aCanvas,aRecord,showBPVar,max_x_scale,max_y_scale):

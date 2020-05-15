@@ -757,11 +757,13 @@ class myGUI(object):
         
         ta.TwoLeverFig(fig, aRecord, levers,max_x_scale, max_y_scale)
 
+        print("A directory: ",self.initialDir)
+
         if (self.showOn_tkCanvas.get()):
             self.testArea_MatPlot_Canvas.draw()
         else:
             plt.show()
-            # fig.savefig('SavePDFTest.pdf')
+            # plt.savefig('/Users/daveroberts/Documents/Two Lever PR/Figures/Figure5/Figure5.eps', format='eps', dpi=1000)
 
     def matPlotEventRecord(self):
         aCanvas = self.testArea_MatPlot_Canvas
@@ -878,9 +880,20 @@ class myGUI(object):
                 elif fName.find(".dat") > 0:
                     aFile = open(fName,'r')
                     for line in  aFile:
-                        pair = line.split()
-                        pair[0] = int(pair[0])
-                        self.recordList[selected].datalist.append(pair)
+                        if line[0] == "#":
+                            self.recordList[selected].iniLine = line
+                            params = line.split()
+                            print("IDstr =", params[1])
+                            print("Weight =", params[2])
+                            print("Protocol =", params[3])
+                            print("FR value =", params[4])
+                            print("SessionLength =", params[5])
+                            print("PumpTime =", params[6])
+                            print("Calculate Pump Time =", params[7])             
+                        else:
+                            pair = line.split()
+                            pair[0] = int(pair[0])
+                            self.recordList[selected].datalist.append(pair)
                     aFile.close()
                 self.recordList[selected].extractStatsFromList()
 
@@ -979,7 +992,9 @@ class myGUI(object):
         self.threshold_matPlot_Canvas.draw()
 
     def testStuff2(self):
-        print("testStuff3")
+        print("testStuff2")
+        aRecord = self.recordList[self.fileChoice.get()]
+        print(aRecord.datalist[0])
 
     def testStuff3(self):
         print("testStuff3")

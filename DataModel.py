@@ -23,6 +23,7 @@ class DataRecord:
         self.responseList = []
         self.deltaList = []
         self.notes = "test"
+        self.iniLine = ""
 
     def __str__(self):
         """
