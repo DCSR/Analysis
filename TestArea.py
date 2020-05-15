@@ -723,11 +723,13 @@ def TwoLeverFig(fig,aRecord,levers,max_x_scale,max_y_scale):
     trialResponses = 0
     adjustedRespTotal = 0
 
+    maxTime = 360
+
 
     # ************   Cummulative Record  *************************
 
     for pairs in aRecord.datalist:
-        if pairs[1] == PR_lever_Char:           # 1l = 'L'; 2L = 'J'
+        if pairs[1] == PR_lever_Char:           # 1l = 'L'; 2L = 'J'           
             trialResponses = trialResponses + 1
             respTotal = respTotal + 1
             adjustedRespTotal = respTotal - (resets * max_y_scale)
@@ -735,8 +737,9 @@ def TwoLeverFig(fig,aRecord,levers,max_x_scale,max_y_scale):
                 resets = resets + 1
                 adjustedRespTotal = 0
             x = pairs[0]/60000     # fraction of a min
-            cumRecTimes.append(x)
-            cumRecResp.append(adjustedRespTotal)       
+            if x < maxTime:
+                cumRecTimes.append(x)
+                cumRecResp.append(adjustedRespTotal)       
         elif pairs[1] == 'B':                   # If 2L then "B" controls tick mark
             if levers == 2:
                 binStartTime_mSec = pairs[0]                   

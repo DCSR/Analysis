@@ -749,11 +749,13 @@ class myGUI(object):
         
         ta.TwoLeverFig(fig, aRecord, levers,max_x_scale, max_y_scale)
 
+        print("A directory: ",self.initialDir)
+
         if (self.showOn_tkCanvas.get()):
             self.testArea_MatPlot_Canvas.draw()
         else:
             plt.show()
-            # fig.savefig('SavePDFTest.pdf')
+            # plt.savefig('/Users/daveroberts/Documents/Two Lever PR/Figures/Figure5/Figure5.eps', format='eps', dpi=1000)
 
     def matPlotEventRecord(self):
         aCanvas = self.testArea_MatPlot_Canvas
