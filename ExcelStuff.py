@@ -10,7 +10,7 @@ from openpyxl import Workbook
 import ListLib
 
 
-def pushToExcel(aRecordList):
+def pushInjTimesToExcel(aRecordList):
 
     startRow = 2
     startColumn = 2
@@ -78,7 +78,91 @@ def pushToExcel(aRecordList):
 
     myWorkBook.save(filename="ExcelTest.xlsx")
 
+
+            #**** work on push TH to excel here ****
+
+def pushTHToExcel(aRecordList):
+
+    startRow = 2
+    startColumn = 2
+
+    myWorkBook = Workbook()
+    sheet = myWorkBook.active
+    sheet.title = 'TH Data'
+
+
+    for aRecord in aRecordList:
+        if aRecord.fileName != "empty":
+            injPerBlock = ['Inj per block']
+##            injections = ['Injections']
+##            blockCount = ['Blocks']
+##            responses = ['Responses']
+
+            
+            my2DList = [injPerBlock]
+
+            aList = aRecord.datalist
+
+            pump_count_list = ListLib.get_pump_count_per_block(aList)
+            for item in pump_count_list:
+                injPerBlock.append(item)
+                print(str(item))
+
+
+            
+                #*** this code works so long as injPerBlock is not used
+                #*** use for another TH button or find a way to integrate?
+
+##            aList = aRecord.datalist
+##            
+##            count = ListLib.count_char('L',aList)
+##            responses.append(count)
+##            print(responses)
+##            
+##            count = ListLib.count_char('P',aList)
+##            injections.append(count)
+
+##    
+##            count = ListLib.count_char('B',aList)
+##            blockCount.append(count)
+            
+##             ****working inj per block****
+##            pump_count_list = ListLib.get_pump_count_per_block(aList)
+##            for item in pump_count_list:
+##                injPerBlock.append(item)
+##                print(str(item))
+
+
+
+            print(my2DList)
+
+                # ************ openpyxl stuff **************
+
+            categories = len(my2DList)
+            dataLength = len(my2DList[0])
+
+            cellID = sheet.cell(row=1,column=startColumn)
+            cellID.value = aRecord.fileName
+
+
+
+            for d in range(0,dataLength):
+                for c in range(0,categories):    
+                    cellID = sheet.cell(row=startRow+d,column=startColumn+c) # The list is zero based, sheet is not
+                    cellID.value = my2DList[c][d] #this only seems to work when a lists are the same length, figure out
+                                                    #a way to do this with lists of different lengths
+
+            startColumn = sheet.max_column + 1
+
+        print('WorkSheet size =', sheet.max_row,'x',sheet.max_column)
+
+        myWorkBook.save(filename="ExcelTest.xlsx")
+
+
    
     
+
+          
+
 
           

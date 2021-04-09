@@ -499,8 +499,14 @@ class myGUI(object):
         pyPlotEventButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="PyPlot Event Record", command= lambda: \
                               self.pyPlotEventRecord()).grid(row=16,column=0,columnspan=2,sticky=EW)
 
-        pushToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push To Excel", command= lambda: \
-                              self.pushToExcel()).grid(row=17,column=0,columnspan=2,sticky=EW)
+        ## pushToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push To Excel", command= lambda: \
+        ##                       self.pushToExcel()).grid(row=17,column=0,columnspan=2,sticky=EW)
+
+        pushInjTimesToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push Inj Times To Excel", command= lambda: \
+                              self.pushInjTimesToExcel()).grid(row=17,column=0,columnspan=2,sticky=EW)
+
+        pushTHToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push TH To Excel", command= lambda: \
+                              self.pushTHToExcel()).grid(row=18,column=0,columnspan=2,sticky=EW)
 
         #*************
 
@@ -686,6 +692,7 @@ class myGUI(object):
         aTextBox = self.textBox
         aRecord = self.recordList[self.fileChoice.get()]
         tt.threshold_text(aTextBox,aRecord)
+    """
 
     def injectionTimesTextMin(self):
         aTextBox = self.textBox
@@ -710,15 +717,16 @@ class myGUI(object):
     def pushToExcel(self):
         aRecordList = self.recordList
         ExcelStuff.pushToExcel(aRecordList)
+    """
 
-        
-    # Steven: Note that the above could be written as a single line:
-    #
-    # tt.summaryText(self.textBox,self.recordList[self.fileChoice.get())
-    #
-    # but I find the expanded version (with obvious definitions) a bit easier to read
+    def pushInjTimesToExcel(self):
+        aRecordList = self.recordList
+        ExcelStuff.pushInjTimesToExcel(aRecordList)
 
-    
+    def pushTHToExcel(self):
+        aRecordList = self.recordList
+        ExcelStuff.pushTHToExcel(aRecordList)
+
         
     # **************   Procedures called from Test Area Tab  *************
 
