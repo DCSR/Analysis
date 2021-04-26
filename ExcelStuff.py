@@ -19,6 +19,8 @@ def pushInjTimesToExcel(aRecordList):
     sheet = myWorkBook.active
     sheet.title = 'SEAWAKE Data'
 
+
+
     for aRecord in aRecordList:
         if aRecord.fileName != "empty": 
             injections = ['Inj']
@@ -161,8 +163,5 @@ def pushTHToExcel(aRecordList):
 
    
     
-
-          
-
 
           
