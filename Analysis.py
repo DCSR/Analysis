@@ -1,5 +1,8 @@
 
 """
+
+April 25th. This note added to document change to Test2 Branch
+
 April 15, 2020
 
 Move Test Model and Axes Example to GraphsTab.py
@@ -16,6 +19,7 @@ import DataModel as dm
 import GraphsTab as gt
 import TestArea as ta
 import TextTab as tt
+import ExcelStuff
 import stream01
 import math
 import os
@@ -475,20 +479,28 @@ class myGUI(object):
                               self.clearText()).grid(row=0,column=0,columnspan = 2, sticky=EW)
         summarytextButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Summary", command= lambda: \
                               self.summaryText()).grid(row=1,column=0,columnspan = 2,sticky=EW)
-        injectionTimesButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times", command= lambda: \
-                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=EW)
-        #SeaChange 03012020
-        injectionTimesMinButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times (min only)", command= lambda: \
-                              self.injectionTimesTextMin()).grid(row=13,column=0,columnspan = 2,sticky=EW)
-        #SeaChange 03012020
-        intervalButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Interval Times (min only)", command= lambda: \
-                              self.intervalText()).grid(row=14,column=0,columnspan = 2,sticky=EW)
-        #SeaChange 03162020
-        bintimebutton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Bin Times (min only)", command= lambda: \
-                              self.bintimeText()).grid(row=15,column=0,columnspan = 2,sticky=EW)
+##        injectionTimesButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times", command= lambda: \
+##                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=EW)
+##        #SeaChange 03012020
+##        injectionTimesMinButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times (min only)", command= lambda: \
+##                              self.injectionTimesTextMin()).grid(row=13,column=0,columnspan = 2,sticky=EW)
+##        #SeaChange 03012020
+##        intervalButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Interval Times (min only)", command= lambda: \
+##                              self.intervalText()).grid(row=14,column=0,columnspan = 2,sticky=EW)
+##        #SeaChange 03162020
+##        bintimebutton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Bin Times (min only)", command= lambda: \
+##                              self.bintimeText()).grid(row=15,column=0,columnspan = 2,sticky=EW)
 
         pyPlotEventButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="PyPlot Event Record", command= lambda: \
                               self.pyPlotEventRecord()).grid(row=16,column=0,columnspan=2,sticky=EW)
+
+        pushInjTimesToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push Inj Times To Excel", command= lambda: \
+                              self.pushInjTimesToExcel()).grid(row=17,column=0,columnspan=2,sticky=EW)
+
+        pushTHToExcelButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Push TH To Excel", command= lambda: \
+                              self.pushTHToExcel()).grid(row=18,column=0,columnspan=2,sticky=EW)
+
+        #*************
 
         doseReportButton = Button(self.dosereportFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Dose Report", command= lambda: \
                               self.doseReport()).grid(row=20,column=0,columnspan = 2,sticky=EW)
@@ -673,29 +685,36 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         tt.threshold_text(aTextBox,aRecord)
 
-    def injectionTimesTextMin(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.injectionTimesTextMin(aTextBox,aRecord)
+##    def injectionTimesTextMin(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.injectionTimesTextMin(aTextBox,aRecord)
+##
+##    def intervalText(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.intervalText(aTextBox,aRecord)
+##
+##    def bintimeText(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.bintimeText(aTextBox,aRecord)
+##
+##    def injectionTimesText(self):
+##        aTextBox = self.textBox
+##        aRecord = self.recordList[self.fileChoice.get()]
+##        tt.injectionTimesText(aTextBox,aRecord)
 
-    def intervalText(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.intervalText(aTextBox,aRecord)
+    def pushInjTimesToExcel(self):
+        aRecordList = self.recordList
+        ExcelStuff.pushInjTimesToExcel(aRecordList)
 
-    def bintimeText(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.bintimeText(aTextBox,aRecord)
+    def pushTHToExcel(self):
+        aRecordList = self.recordList
+        ExcelStuff.pushTHToExcel(aRecordList)
 
-    def injectionTimesText(self):
-        aTextBox = self.textBox
-        aRecord = self.recordList[self.fileChoice.get()]
-        tt.injectionTimesText(aTextBox,aRecord)
 
         
-        
-
     # Steven: Note that the above could be written as a single line:
     #
     # tt.summaryText(self.textBox,self.recordList[self.fileChoice.get())
@@ -741,11 +760,13 @@ class myGUI(object):
         
         ta.TwoLeverFig(fig, aRecord, levers,max_x_scale, max_y_scale)
 
+        print("A directory: ",self.initialDir)
+
         if (self.showOn_tkCanvas.get()):
             self.testArea_MatPlot_Canvas.draw()
         else:
             plt.show()
-            # fig.savefig('SavePDFTest.pdf')
+            # plt.savefig('/Users/daveroberts/Documents/Two Lever PR/Figures/Figure5/Figure5.eps', format='eps', dpi=1000)
 
     def matPlotEventRecord(self):
         aCanvas = self.testArea_MatPlot_Canvas
@@ -862,9 +883,20 @@ class myGUI(object):
                 elif fName.find(".dat") > 0:
                     aFile = open(fName,'r')
                     for line in  aFile:
-                        pair = line.split()
-                        pair[0] = int(pair[0])
-                        self.recordList[selected].datalist.append(pair)
+                        if line[0] == "#":
+                            self.recordList[selected].iniLine = line
+                            params = line.split()
+                            print("IDstr =", params[1])
+                            print("Weight =", params[2])
+                            print("Protocol =", params[3])
+                            print("FR value =", params[4])
+                            print("SessionLength =", params[5])
+                            print("PumpTime =", params[6])
+                            print("Calculate Pump Time =", params[7])             
+                        else:
+                            pair = line.split()
+                            pair[0] = int(pair[0])
+                            self.recordList[selected].datalist.append(pair)
                     aFile.close()
                 self.recordList[selected].extractStatsFromList()
 
@@ -963,7 +995,9 @@ class myGUI(object):
         self.threshold_matPlot_Canvas.draw()
 
     def testStuff2(self):
-        print("testStuff3")
+        print("testStuff2")
+        aRecord = self.recordList[self.fileChoice.get()]
+        print(aRecord.datalist[0])
 
     def testStuff3(self):
         print("testStuff3")

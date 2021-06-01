@@ -29,19 +29,19 @@ import GraphLib
 import model
 import ListLib
 
-def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clear = True, max_y_scale = 25):
+def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", clear = True, max_y_scale = 20):
     if clear:
         aCanvas.delete('all')
     x_zero = 75
     y_zero = 350
-    x_pixel_width = 700
-    y_pixel_height = 200
+    x_pixel_width = 500 #700
+    y_pixel_height = 150 #200
     x_divisions = 12
-    y_divisions = 5
+    y_divisions = 4
     if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
-    GraphLib.eventRecord(aCanvas, x_zero, 100, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "Test")
-    GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "red")
-    GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "blue")
+    GraphLib.eventRecord(aCanvas, x_zero+5, 185, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "")
+    GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
+    GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "black")
     x_scaler = x_pixel_width / (max_x_scale*60*1000)
     y_scaler = y_pixel_height / max_y_scale
     cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc,aRecord.pumpSpeed,resolution)
@@ -75,9 +75,9 @@ def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", c
     X1 = x_zero + (startAverageTime * x_scaler) // 1
     Y  = y_zero-((averageConc) * y_scaler) // 1
     X2 = x_zero + (endAverageTime * x_scaler) // 1
-    aCanvas.create_line(X1, Y, X2, Y, fill= "red")
-    tempStr = "Average Conc (10-180 min): "+str(averageConc)
-    aCanvas.create_text(500, Y, fill = "red", text = tempStr)
+    # aCanvas.create_line(X1, Y, X2, Y, fill= "red")
+    # tempStr = "Average Conc (10-180 min): "+str(averageConc)
+    # aCanvas.create_text(500, Y, fill = "red", text = tempStr)
 
 
 def cumulativeRecord(aCanvas,aRecord,showBPVar,max_x_scale,max_y_scale):
@@ -245,27 +245,50 @@ def timeStamps(aCanvas,aRecord,max_x_scale):
     # graphCanvas is 800 x 600
     aCanvas.delete('all')
     x_zero = 100
-    y_zero = 500
+    y_zero = 550
     x_pixel_width = 650
     x_divisions = 12
     if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
+
+    # Axis at (100,550)
     GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-400, x_pixel_width, max_x_scale, aRecord.datalist, ["L"], "L1 active")       
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-360, x_pixel_width, max_x_scale, aRecord.datalist, ["A","a"], "A a")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-340, x_pixel_width, max_x_scale, aRecord.datalist, [">"], "L1 inactive")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-310, x_pixel_width, max_x_scale, aRecord.datalist, ["J"], "L2 active")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-290, x_pixel_width, max_x_scale, aRecord.datalist, ["<"], "L2 inactive") 
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-260, x_pixel_width, max_x_scale, aRecord.datalist, ["P","p"], "Pump")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-230, x_pixel_width, max_x_scale, aRecord.datalist, ["S","s"], "Stim 1")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-210, x_pixel_width, max_x_scale, aRecord.datalist, ["C","c"], "Stim 2")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-180, x_pixel_width, max_x_scale, aRecord.datalist, ["=","."], "Lever 1")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-160, x_pixel_width, max_x_scale, aRecord.datalist, ["-",","], "Lever 2")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-130, x_pixel_width, max_x_scale, aRecord.datalist, ["T"], "T")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-100, x_pixel_width, max_x_scale, aRecord.datalist, ["F"], "Food Tray")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-70,  x_pixel_width, max_x_scale, aRecord.datalist, ["B","b"], "Access")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-50,  x_pixel_width, max_x_scale, aRecord.datalist, ["H","h"], "Houselight")
-    GraphLib.eventRecord(aCanvas, x_zero, y_zero-30,  x_pixel_width, max_x_scale, aRecord.datalist, ["G","E"], "Session")
-  
+
+    startTime = 0;
+    if len(aRecord.datalist) > 0:
+        firstEntry=(aRecord.datalist[0])
+        if (firstEntry[1] == 'M'):
+            startTime = firstEntry[0]
+            #print("StartTime =",startTime)
+
+    topRow = 40
+    spacing = 18
+    GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions)
+
+    GraphLib.eventRecord(aCanvas, x_zero, topRow, x_pixel_width, max_x_scale, aRecord.datalist, ["T","t"], "L1 Trial")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing),   x_pixel_width, max_x_scale, aRecord.datalist, ["=","."], "Lever 1")        
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*2), x_pixel_width, max_x_scale, aRecord.datalist, ["L"], "L1 Resp")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*3), x_pixel_width, max_x_scale, aRecord.datalist, [">"], "L1 inactive")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*4), x_pixel_width, max_x_scale, aRecord.datalist, ["J"], "L2 active")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*5), x_pixel_width, max_x_scale, aRecord.datalist, ["<"], "L2 inactive")  
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*6), x_pixel_width, max_x_scale, aRecord.datalist, ["P","p"], "Pump")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*7), x_pixel_width, max_x_scale, aRecord.datalist, ["S","s"], "Stim")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*8), x_pixel_width, max_x_scale, aRecord.datalist, ["C","c"], "Stim 2")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*9), x_pixel_width, max_x_scale, aRecord.datalist, ["O","o"], "TimeOut")        
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*10), x_pixel_width, max_x_scale, aRecord.datalist, ["Z","z"], "HD Trial")  
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*11), x_pixel_width, max_x_scale, aRecord.datalist, ["~",","], "Lever 2")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*12), x_pixel_width, max_x_scale, aRecord.datalist, ["H","h"], "HD Resp")     
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*13), x_pixel_width, max_x_scale, aRecord.datalist, ["B","b"], "Block")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*14), x_pixel_width, max_x_scale, aRecord.datalist, ["I","i"], "IBI")  
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*15), x_pixel_width, max_x_scale, aRecord.datalist, ["G","E"], "Session")
+    aCanvas.create_text(15, topRow+(spacing*16)+4, fill="red", text="Errors", anchor = "w")
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*18),  x_pixel_width, max_x_scale, aRecord.datalist, ["@"], "@ Input", t_zero = startTime)       
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*19),  x_pixel_width, max_x_scale, aRecord.datalist, ["#"], "# Recover", t_zero = startTime)
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*20),  x_pixel_width, max_x_scale, aRecord.datalist, ["$"], "$ Output", t_zero = startTime)
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*21),  x_pixel_width, max_x_scale, aRecord.datalist, ["%"], "% Recover", t_zero = startTime)
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*22),  x_pixel_width, max_x_scale, aRecord.datalist, ["&"], "& Reset", t_zero = startTime)
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*23),  x_pixel_width, max_x_scale, aRecord.datalist, ["!"], "! Abort",t_zero = startTime)
+    GraphLib.eventRecord(aCanvas, x_zero, topRow+(spacing*24),  x_pixel_width, max_x_scale, aRecord.datalist, ["("], "( Safe",t_zero = startTime)
+
 
 
 
