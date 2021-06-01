@@ -479,6 +479,8 @@ class myGUI(object):
                               self.clearText()).grid(row=0,column=0,columnspan = 2, sticky=EW)
         summarytextButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Summary", command= lambda: \
                               self.summaryText()).grid(row=1,column=0,columnspan = 2,sticky=EW)
+        TH_text_button = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="IntA/TH Text", command= lambda: \
+                              self.IntA_TH_text()).grid(row = 3,column = 0, columnspan = 2,sticky=EW)
 ##        injectionTimesButton = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Injection Times", command= lambda: \
 ##                              self.injectionTimesText()).grid(row=2,column=0,columnspan = 2,sticky=EW)
 ##        #SeaChange 03012020
@@ -540,12 +542,6 @@ class myGUI(object):
 
         self.weightEntry = Entry(self.dosereportFrame, width=6,textvariable = self.weightStr)
         self.weightEntry.grid(row = 10, column = 1)
-
-        intA_text_button = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="IntA", command= lambda: \
-                              self.intA_text()).grid(row = 11,column = 0, columnspan = 2,sticky=EW)
-        TH_text_button = Button(self.textButtonFrame, bg="white", font=('Helvetica', 12, 'bold'), text="Threshold (TH)", command= lambda: \
-                              self.threshold_text()).grid(row = 12,column = 0, columnspan = 2,sticky=EW)
-
 
         #***************** 2L-PR stuff **************
         self.text_2LPR_Frame = Frame(self.textTab, borderwidth=5, relief="sunken")
@@ -680,7 +676,7 @@ class myGUI(object):
         aWeightEntry = self.weightEntry.get()
         tt.doseReport(aTextBox,aRecord,aStartTimeScale,aEndTimeScale,aConcentrationEntry,aWeightEntry)
 
-    def threshold_text(self):
+    def IntA_TH_text(self):
         aTextBox = self.textBox
         aRecord = self.recordList[self.fileChoice.get()]
         tt.threshold_text(aTextBox,aRecord)
@@ -1737,83 +1733,8 @@ class myGUI(object):
 
     def clearTHCanvas(self):
         self.graphCanvas.delete('all')
-        self.fig = plt.figure(clear=True)   # clear contents
-       
-
-##    def threshold_text(self):
-##        aRecord = self.recordList[self.fileChoice.get()]
-##        aList = aRecord.datalist
-##        count = ListLib.count_char('L',aList)
-##        aString = 'Number of responses: '+str(count)
-##        self.textBox.insert(END,aString+"\n")
-##        
-##        count = ListLib.count_char('P',aList)
-##        aString = 'Number of injections: '+str(count)
-##        self.textBox.insert(END,aString+"\n")
-##
-##        blockCount = ListLib.count_char('B',aList)
-##        aString = 'Number of blocks: '+str(blockCount)
-##        self.textBox.insert(END,aString+"\n")
-##
-##        pump_count_list = ListLib.get_pump_count_per_block(aList)
-##        aString = 'Injections per block: '
-##        for item in pump_count_list:
-##            aString = aString + str(item) + ' '
-##        self.textBox.insert(END,aString+"\n")
-##        print(pump_count_list)
-##
-##        for b in range (blockCount):    
-##            pump_duration_list = ListLib.get_pump_duration_list(aList, b)
-##            aString = 'Block '+str(b)+': '
-##            for i in range (len(pump_duration_list)):
-##                list_item = pump_duration_list[i]
-##                aString = aString + str(list_item[2]) + ' '
-##            self.textBox.insert(END,aString+"\n")
-##        #print("Block "+str(b), pump_duration_list)
-        
-
-    def intA_text(self):
-
-        aRecord = self.recordList[self.fileChoice.get()]
-        self.textBox.insert(END,aRecord.fileName+"\n")
-        aList = aRecord.datalist
-
-        count = ListLib.count_char('L',aList)
-        aString = 'Number of Responses: '+str(count)
-        self.textBox.insert(END,aString+"\n")
-
-        count = ListLib.count_char('P',aList)
-        aString = 'Number of Injections: '+str(count)
-        self.textBox.insert(END,aString+"\n")
-
-        count = ListLib.count_char('B',aList)
-        aString = 'Number of Blocks: '+str(count)
-        self.textBox.insert(END,aString+"\n")
-
-        durations_list = ListLib.pump_durations_per_block(aList)
-        print("Total durations per block:", durations_list)
-
-        pump_duration_list = ListLib.get_pump_duration_list(aRecord.datalist, block = -1)
-        print(pump_duration_list)     # prints a list of [pump_start_time, duration]  in mSec
-        # pumptimes_per_bin = ListLib.get_pumptimes_per_bin(pump_timelist, bin_size = 5000)
-
-        """
-        # ***********************************************
-        self.textBox.insert(END,"Total Pump Time (mSec): "+str(aRecord.totalPumpDuration)+"\n")
-        self.textBox.insert(END,"Cummulative pump time per 5 second bin\n")
-        aString = ""
-        for t in range(len(pumptimes_per_bin)):
-            aString = aString+str(pumptimes_per_bin[t])+' '
-            #aString = aString + '{0:6d}'.format(pumptimes_per_bin[t])     
-        self.textBox.insert(END,aString+"\n")
-        total_pump_time = 0
-        for t in range(len(pumptimes_per_bin)):
-            total_pump_time = total_pump_time + pumptimes_per_bin[t]
-        self.textBox.insert(END,"Total Pump Time (sum of bins): "+str(total_pump_time)+"\n")
-        dose = (total_pump_time * 5 * 0.000025) / 0.33
-        aString = "Total dose (mg/kg): {0:6.2f} mg/kg".format(dose)     # Format float to 2 decimal points in 6 character field
-        self.textBox.insert(END, aString)
-        """            
+        self.fig = plt.figure(clear=True)   # clear contents       
+           
         
     def IntAHistogram_blocks(self):
         '''
