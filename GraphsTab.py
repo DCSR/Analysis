@@ -45,7 +45,7 @@ def cocaineModel(aCanvas,aRecord,max_x_scale,resolution = 60, aColor = "blue", c
     x_scaler = x_pixel_width / (max_x_scale*60*1000)
     y_scaler = y_pixel_height / max_y_scale
     cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc,aRecord.pumpSpeed,resolution)
-    # print(modelList)
+    # print(cocConcXYList)
     x = x_zero
     y = y_zero
     totalConc = 0

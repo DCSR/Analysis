@@ -15,6 +15,7 @@ from tkinter import *
 from tkinter.ttk import Notebook
 from tkinter import filedialog
 from datetime import datetime
+import tkinter as tk
 import DataModel as dm
 import GraphsTab as gt
 import TestArea as ta
@@ -28,6 +29,9 @@ import model
 import Examples
 import numpy as np
 import ListLib
+import sys
+
+# ExcelStuff requires pip3.13 install openpyxl
 
 from scipy.optimize import curve_fit
 from scipy.stats.stats import pearsonr
@@ -191,8 +195,8 @@ class myGUI(object):
                               self.openWakeFiles("1L_PR.str")).grid(row=0,column=4,sticky=N, padx = 20)
         loadTestButton2 = Button(headerFrame, text="TH_FEATHER.dat", command= lambda: \
                               self.openWakeFiles("TH_FEATHER.dat")).grid(row=0,column=5,sticky=N, padx = 20)
-        loadTestButton3 = Button(headerFrame, text="TH_OMNI1.str", command= lambda: \
-                              self.openWakeFiles("TH_OMNI1.str")).grid(row=0,column=6,sticky=N, padx = 20)
+        loadTestButton3 = Button(headerFrame, text="2_H578_Sep_7.str", command= lambda: \
+                              self.openWakeFiles("2_H578_Sep_7.str")).grid(row=0,column=6,sticky=N, padx = 20)
         loadTestButton4 = Button(headerFrame, text="2L-PR-HD1.str", command= lambda: \
                               self.openWakeFiles("2L-PR-HD1.str")).grid(row=0,column=7,sticky=N, padx = 20)
         
@@ -245,8 +249,10 @@ class myGUI(object):
                               self.timeStamps()).grid(row=5,column=0,sticky=N)       
         modelButton = Button(self.graphButtonFrame, text="cocaineModel()", command= lambda: \
                               self.cocaineModel()).grid(row=6,column=0,sticky=N)
+        loadingButton = Button(self.graphButtonFrame, text="loadingData()", command= lambda: \
+                              self.loadingData()).grid(row=7,column=0,sticky=N)
         histogramButton = Button(self.graphButtonFrame, text="histogram()", command= lambda: \
-                              self.histogram()).grid(row=7,column=0,sticky=N)
+                              self.histogram()).grid(row=8,column=0,sticky=N)
 
         # ******  IntA Frame ************
         self.graph_IntA_frame = Frame(self.columnFrame, borderwidth=2, relief="sunken")
@@ -635,6 +641,129 @@ class myGUI(object):
         aRecord = self.recordList[self.fileChoice.get()]
         max_x_scale = self.max_x_scale.get()
         gt.cocaineModel(aCanvas,aRecord,max_x_scale)
+
+    def loadingData(self):
+        """
+        This began as an adaptation of cocaineModel()
+        At some point it could be moved to GraphsTab.py
+        """
+        aCanvas = self.graphCanvas
+        aTextBox = self.textBox
+        aRecord = self.recordList[self.fileChoice.get()]
+        max_x_scale = 180
+        resolution = 60
+        aColor = "blue"
+        clear = True
+        max_y_scale = 20
+        if clear:
+            aCanvas.delete('all')
+        x_zero = 75
+        y_zero = 350
+        x_pixel_width = 500 #700
+        y_pixel_height = 150 #200
+        x_divisions = 12
+        y_divisions = 4
+        if (max_x_scale == 10) or (max_x_scale == 30): x_divisions = 10
+        GraphLib.eventRecord(aCanvas, x_zero+5, 185, x_pixel_width, max_x_scale, aRecord.datalist, ["P"], "")
+        GraphLib.drawXaxis(aCanvas, x_zero, y_zero, x_pixel_width, max_x_scale, x_divisions, color = "black")
+        GraphLib.drawYaxis(aCanvas, x_zero, y_zero, y_pixel_height, max_y_scale, y_divisions, True, color = "black")
+        x_scaler = x_pixel_width / (max_x_scale*60*1000)
+        y_scaler = y_pixel_height / max_y_scale
+        cocConcXYList = model.calculateCocConc(aRecord.datalist,aRecord.cocConc,aRecord.pumpSpeed,resolution)
+        # print(modelList)
+        x = x_zero
+        y = y_zero
+        totalConc = 0
+        totalRecords = 0
+        startAverageTime = 10 * 60000    # 10 min
+        endAverageTime = 180 * 60000     # 120 min
+        for pairs in cocConcXYList:
+            if pairs[0] >= startAverageTime:
+                if pairs[0] < endAverageTime:
+                    totalRecords = totalRecords + 1
+                    totalConc = totalConc + pairs[1]
+            concentration = round(pairs[1],2)
+            newX = x_zero + pairs[0] * x_scaler // 1
+            newY = y_zero - concentration * y_scaler // 1
+            aCanvas.create_line(x, y, newX, newY, fill= aColor)
+            # aCanvas.create_oval(newX-2, newY-2, newX+2, newY+2, fill=aColor)
+            x = newX
+            y = newY
+        aCanvas.create_text(300, 400, fill = "blue", text = aRecord.fileName)
+
+        dose = 2.8*aRecord.cocConc * aRecord.pumpSpeed
+        tempStr = "Duration (2.8 sec) * Pump Speed ("+str(aRecord.pumpSpeed)+" ml/sec) * cocConc ("+str(aRecord.cocConc)+" mg/ml) = Unit Dose "+ str(round(dose,3))+" mg/inj"
+        aCanvas.create_text(300, 450, fill = "blue", text = tempStr)
+
+        averageConc = round((totalConc/totalRecords),3)
+        # draw average line
+        X1 = x_zero + (startAverageTime * x_scaler) // 1
+        Y  = y_zero-((averageConc) * y_scaler) // 1
+        X2 = x_zero + (endAverageTime * x_scaler) // 1
+        aCanvas.create_line(X1, Y, X2, Y, fill= "red")
+        tempStr = "Average Conc (10-180 min): "+str(averageConc)
+        aCanvas.create_text(300, 550, fill = "red", text = tempStr)
+
+        # Test for calculating loading data
+        # aTextBox.insert(tk.END,aRecord) <- this prints the datarecord variables
+        
+        # extractStatsFromList(self):
+
+        # self.numberOfL1Responses = 0
+        # self.numberOfL2Responses = 0
+        injOneLatency = 0
+        firstInjection = True
+        totalInfusions = 0
+        infLoadingTime1 = 0
+        infLoadingTime2 = 0
+        infLoadingTime3 = 0
+        totalPumpDuration = 0
+        averagePumpTime = 0
+        durationLoadingTime1 = 0
+        durationLoadingTime2 = 0
+        durationLoadingTime3 = 0
+        loadingTime1 =  60000  # 1 min
+        loadingTime2 = 120000  # 2 min
+        loadingTime3 = 180000  # 3 min
+        pumpOn = False
+        lastTime = 0
+        delta = 0
+        for pairs in aRecord.datalist:                                 
+            if (pairs[1] == 'P'):
+                if (firstInjection):
+                    injOneLatency = pairs[0]
+                    firstInjection = False
+                totalInfusions = totalInfusions + 1
+                if (pairs[0] < (loadingTime1 + injOneLatency)):
+                    infLoadingTime1 = infLoadingTime1 + 1
+                if (pairs[0] < (loadingTime2 + injOneLatency)):
+                    infLoadingTime2 = infLoadingTime2 + 1
+                if (pairs[0] < (loadingTime3 + injOneLatency)):
+                    infLoadingTime3 = infLoadingTime3 + 1               
+                pumpStartTime = pairs[0]
+                delta = pumpStartTime - lastTime
+                # deltaList.append(round(delta/(1000*60)))
+                lastTime = pumpStartTime
+                pumpOn = True
+            if pairs[1] == 'p':
+                if pumpOn:
+                    duration = pairs[0]-pumpStartTime
+                    pumpOn = False
+                    totalPumpDuration = totalPumpDuration + duration
+                    if (pairs[0] < (loadingTime1 + injOneLatency)):
+                        durationLoadingTime1 = durationLoadingTime1 + duration
+                    if (pairs[0] < (loadingTime2 + injOneLatency)):
+                        durationLoadingTime2 = durationLoadingTime2 + duration
+                    if (pairs[0] < (loadingTime3 + injOneLatency)):
+                        durationLoadingTime3 = durationLoadingTime3 + duration
+                        
+            if totalInfusions > 0:
+                averagePumpTime = round(totalPumpDuration / totalInfusions,2)
+        print("injOneLatency (mSec)",injOneLatency)
+        print("totalInfusions",totalInfusions)
+        print("totalPumpDuration",totalPumpDuration)
+        print("averagePumpTime",averagePumpTime)
+        print(aRecord.fileName,infLoadingTime1, infLoadingTime2, infLoadingTime3,durationLoadingTime1,durationLoadingTime2,durationLoadingTime3)
 
     def histogram(self):
         aCanvas = self.graphCanvas
@@ -1799,7 +1928,8 @@ class myGUI(object):
         """        
         # testRecord1  5 sec infusion
         testRecord1 = dm.DataRecord([],"5 sec") 
-        testRecord1.datalist = [[10000, 'P'],[15000, 'p']]
+        testRecord1.datalist = [[600000, 'P'],[615000, 'p']]
+        #testRecord1.datalist = []
         testRecord1.pumpSpeed = 0.025   # Wake default 0.1 mls/4 sec = 0.025 / sec
         testRecord1.cocConc = 4.0
         testRecord1.TH_PumpTimes = WakePumpTimes
@@ -1807,6 +1937,8 @@ class myGUI(object):
         duration = testRecord1.totalPumpDuration
         dose = (testRecord1.totalPumpDuration * testRecord1.cocConc * (testRecord1.pumpSpeed/1000)/0.330)
         print("testRecord1 Duration = {0}; Total Dose = {1:2.1f}".format(duration,dose))
+
+        """
         # testRecord2  50 sec infusion
         duration = 50
         testRecord2 = dm.DataRecord([],"50 sec") 
@@ -1841,10 +1973,17 @@ class myGUI(object):
         duration = testRecord3.totalPumpDuration
         dose = (testRecord3.totalPumpDuration * testRecord3.cocConc * (testRecord3.pumpSpeed/1000)/0.330)
         print("testRecord3 Duration = {0}; Total Dose = {1:2.1f}".format(duration,dose))
+        """
 
-        self.showModel(testRecord1, resolution = 5, aColor = "black", max_y_scale = 10)
-        self.showModel(testRecord2, resolution = 5, aColor = "red", clear = False, max_y_scale = 10)
-        self.showModel(testRecord3, resolution = 5, aColor = "blue", clear = False, max_y_scale = 10)
+        aCanvas = self.graphCanvas
+        max_x_scale = self.max_x_scale.get()
+        gt.cocaineModel(aCanvas, testRecord1, max_x_scale, clear = False)
+        # gt.cocaineModel(aCanvas, testRecord2, max_x_scale, clear = False)
+        # gt.cocaineModel(aCanvas, testRecord3, max_x_scale, aColor = "red", clear = False)
+        
+        #self.showModel(testRecord1, resolution = 5, aColor = "black", max_y_scale = 10)
+        # self.showModel(testRecord2, resolution = 5, aColor = "red", clear = False, max_y_scale = 10)
+        # self.showModel(testRecord3, resolution = 5, aColor = "blue", clear = False, max_y_scale = 10)
 
     def test(self):
         self.clearGraphTabCanvas()
